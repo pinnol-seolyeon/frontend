@@ -27,15 +27,15 @@ const LoginButton = styled.button`
   padding: 1vw 2vw;
   margin: 2.5vw;
   font-size: clamp(10px, 2.5vw, 14px); /* 최소폰트크기,뷰포트 너비 기반 크기, 최대 폰트 */
-  background-color: #1a73e8;
+  background-color: #F7E64C;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 25px;
   cursor: pointer;
   transition: background-color 0.3s;
 
   &:hover {
-    background-color: #0f5dc2;
+    background-color: #F6B62E;
   }
 `;
 

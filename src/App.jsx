@@ -1,5 +1,6 @@
 import React from 'react';
 import Login from '../src/pages/Login';
+import StudyPage from '../src/pages/StudyPage';
 import {createGlobalStyle} from "styled-components";
 import {useState} from "react";
 import {BrowserRouter as Router,Routes,Route} from "react-router-dom";
@@ -44,6 +45,7 @@ function App() {
           path="/login"
           element={<Login login={login} setLogin={setLogin} />}
         ></Route>
+        <Route path="/study" element={<StudyPage login={login} setLogin={setLogin}/>}></Route>
       </Routes>
     </Router>
   );

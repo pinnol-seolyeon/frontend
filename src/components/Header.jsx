@@ -1,4 +1,6 @@
 import styled from 'styled-components';
+import finnolLogo from '../assets/finnol-logo.png';
+import { useNavigate } from 'react-router-dom';
 
 export const MainLayout = styled.div`
   min-height: 100vh;
@@ -7,7 +9,7 @@ export const MainLayout = styled.div`
 
 export const MainHeader = styled.header`
   background-color: white;
-  padding: 1rem 2rem;
+  padding: 0.5rem 1.5rem; /*상하 좌우*/
   display: flex;
   justify-content: space-between;
   align-items: center;
