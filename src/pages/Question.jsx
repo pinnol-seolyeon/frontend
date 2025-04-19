@@ -1,10 +1,16 @@
-import styled from "styled-components";
+import React,{useState,useEffect,useRef} from 'react';
+import {useNavigate} from 'react-router-dom';
+
+import styled,{keyframes} from "styled-components";
+import axios from 'axios';
+
 import Header from "../components/Header";
 import Box from "../components/Box";
 import tiger from "../assets/tiger-upperbody1.png";
-import testImage from "../assets/testImage.png";
+import me from "../assets/me.png";
+import mic from "../assets/mic.png";
 
-/*학습하기-3단계-4*/
+/*질문 버튼 눌렀을 때*/
 
 
 const Wrapper=styled.div`
@@ -18,165 +24,247 @@ const Wrapper=styled.div`
 
 `;
 
-const YourWrapper=styled.div`
-    position:relative;
+const QuestionWrapper=styled.div`
+    flex-grow:1;
+    overflow-y:auto;
     display:flex;
-    align-items:flex-start;
-    // justify-content:center;
-    gap:12px;
+    flex-direction:column;
+    align-items:center;
+    // padding-bottom:12vh;
 `
 
+///페이드인 애니메이션 정의 
+const fadeIn=keyframes`
+    from{
+        opacity:0;
+        transform:translateY(20px);
+    }
+    to{
+        opacity:1;
+        transofrm:translateY(0);
+    }
+`;
+
+const MessageList=styled.div`
+    width:100%;
+    margin-bottom:20px;
+    flex-grow:1;
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+`;
 
 
-const Image=styled.img`
-    width:100%; 
+const TigerImg=styled.img`
+    width:10%; 
     height:auto;
     object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    max-width:380px;
+    max-width:70px;
     display:block;
     
-     /*가로 중앙 정렬, 세로 원하는 위치에 자유롭게 배치*/
-    // align-self:center;/*가로 중앙 정렬*/
-    margin-top:120px;
+    align-self:flex-start;
+    margin-top:10px;
     margin-bottom:0px;
 
 `;
 
-const SpeechBubble=styled.div`
-    display:flex;
-    width:80%;
-    // height:100%;
-    min-height:120px;
-    padding:20px;
-    
-    background-color:#FEF3E1;
-
-    border-radius:0px 50px 50px 0px;
-    border:0.2px solid black;
-
-    position:relative;
-    box-sizing:border-box; /*패딩 포함*/
-
-`;
-
-const TextBox = styled.div`
-  width: 100%;
-  font-size: clamp(20px, 5vw, 25px);
-  line-height: 1.5;
-
-  padding:20px;
-
-  word-break: keep-all;   /* 단어 기준 줄바꿈 (한국어에 좋음) */
-  white-space: pre-wrap;  /* 줄바꿈 문자도 반영 */
-//   overflow:auto;
-`;
-
-
-const BubbleButton = styled.button`
-  width: 50%;               /* 고정된 버튼 너비 */
-  padding: 12px 0;            /* 텍스트 세로 여백만 유지 */
-  text-align: center;         /* 텍스트 가운데 정렬 */
-  
-
-  background-color: #2774B2;
-  color: white;
-  border-radius: 30px;
-  cursor: pointer;
-  border: 0.2px solid black;
-
-  transition: background-color 0.3s;
-  &:hover {
-    background-color: #1b5c91;
-  }
-`;
-
-
-const QuestionButton = styled.button`
-  position: absolute;
-  right: 20px;
-  bottom: 20px;
-
-  padding: 16px 16px;
-  background-color: #2774B2;
-  color: white;
-  border-radius: 15px;
-  cursor: pointer;
-  border:0.2px solid black;
-
-  transition: background-color 0.3s;
-  &:hover {
-    background-color: #1b5c91;
-  }
-`;
-
-const SpeechWrapper=styled.div`
-    position:relative;
-    width:100%;
-    // height:20%;
-    display:flex;
-    align-items:stretch;
-    flex-direction: row;
-    gap:0px; /*형제 요소 사이의 간격*/
-
-`
-
-const ButtonWrapper=styled.div`
-    position:relative;
-    width:20%;
-    height:100%;
-
-
-    display:flex;
-    align-items:flex-start;
-    flex-direction:column;
-    justify-content:center;
-
-    gap:12px;
-    padding: 0px 0px 0px 20px;
-
-`
-
-const TestImage=styled.img`
-    display:flex;
-    width:50%; 
+const MyImg=styled.img`
+    width:10%; 
     height:auto;
     object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    max-width:300px;
+    max-width:60px;
     display:block;
-    // margin:0 auto; /*가로 중앙 정렬*/
-    padding:30px;
 
-    // position:absolute;
-    // left:20px;
-    // bottom:20px;
+    align-self:flex-end;
+    margin-top:10px;
+    margin-right:10px;
+
+`;
+
+const ReceiveMessage = styled.div`
+    background-color: #FEF3E1;
+    border-top: 0.2px solid black;
+    border-bottom: 0.2px solid black;
+    border-right: 0.2px solid black;
+
+    border-radius: 0px 30px 30px 0px;
+    padding: 20px;
+    font-weight: bold;
+
+    margin-bottom: 10px;
+    max-width: 60%;
+    word-wrap: break-word;
+    align-self: flex-start;
+    white-space: pre-wrap;
+    animation: ${fadeIn} 0.5s ease-out;
+`;
+
+const Message=styled.div`
+    background-color:#FBC344;
+    border-top: 0.2px solid black;
+    border-bottom: 0.2px solid black;
+    border-left: 0.2px solid black;
+    
+    border-radius:30px 0px 0px 30px;
+    padding:20px;
+    font-weight: bold;
+
+    margin-bottom:10px;
+    margin-top:5px;
+
+    max-width:60%;
+    word-wrap:break-word; 
+    align-self:flex-end;
+    white-space:pre-wrap;
+    animation:${fadeIn} 0.5s ease-out;
+`;
+
+const MicButton=styled.button`
+    background:none;
+    border:none;
+    padding:0;
+    cursor:pointer;
+
+    margin-bottom:20px;
+`;
+
+const MicIcon=styled.img`
+    width:80px;
+    height:auto;
+`;
+
+const TranscriptBox = styled.div`
+  width: 80%;
+  height: 80px;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+`;
+
+const TranscriptWrapper = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding-bottom:20px;
 `;
 
 
-function StudyPage(props){
+
+function Question(props){
     
+    const[messages,setMessages]=useState([]);
+    const messageEndRef=useRef(null);
+    const[loading,setLoading]=useState(false);
+    const[isListening,setIsListening]=useState(false);
+    const[transcript,setTranscript]=useState(''); //음성 인식 결과
+
+    const navigate=useNavigate();
+
+    const handleClick=()=>{
+        console.log("마이크 버튼 클릭");
+
+        setIsListening(true); //MicButton 사라지고 TranscriptBox 보이게 
+    };
+
+    const handleMessage=async(newMessage)=>{
+        console.log("input:",newMessage);
+        if(newMessage){
+            //보낸 메시지 추가
+            setMessages(prevMessages=>[
+                ...prevMessages,
+                {text:newMessage,type:'sent'} //보낸 메시지는 'sent'타입
+            ]);
+            try{
+                setLoading(true);
+                //메시지를 서버로 POST 요청
+                const response=await axios.post('http://localhost:8080/api/questions',{
+                    message:newMessage
+                });
+
+                const serverResponse=response.data.response; //서버의 응답 메시지
+                console.log('서버 응답:',serverResponse);
+
+                //서버 응답 메시지 추가
+                setMessages(prevMessages=>[
+                    ...prevMessages,
+                    {text:serverResponse,type:'received'} //받은 메시지는 'received' 타입
+                ]);
+                setLoading(false);
+            }catch(error){
+                console.error("메시지 전송 실패",error);
+                alert("메시지 전송 실패");
+                setLoading(false);
+            }
+        }
+    };
+    
+    useEffect(()=>{
+        if(messageEndRef.current){
+            messageEndRef.current.scrollIntoView({behavior:"smooth"});
+        }
+    },[messages]);
+
+    useEffect(() => {
+        const fetchDummyData = () => {
+            setTimeout(() => {
+                const dummyMessages = [
+                    "테스트 ✏️"
+                ];
+
+                dummyMessages.forEach(message => {
+                    setMessages(prevMessages => [
+                        ...prevMessages,
+                        { text: message, type: 'received' },
+                        { text: message, type: 'sent' }
+                    ]);
+                });
+            }, 1000);
+        };
+
+        fetchDummyData();
+    },[]);
+
     return(
     <>
         <Header login={props.login} setLogin={props.setLogin}/>
         <Wrapper>
             <Box>
-            <YourWrapper>
-                <Image src={tiger} alt="샘플" />
-                <TestImage src={testImage} alt="샘플" />
-                <QuestionButton>질문</QuestionButton>
-            </YourWrapper>
-            <SpeechWrapper>
-                <SpeechBubble>
-                    <TextBox>돈 많은 백수가 되고 싶다 .. </TextBox>
-                </SpeechBubble>
-                <ButtonWrapper>
-                    <BubbleButton>잘 모르겠어..</BubbleButton>
-                    <BubbleButton>이해했어!</BubbleButton>
-                </ButtonWrapper>
-            </SpeechWrapper>
+                <QuestionWrapper>
+                    <MessageList>
+                        {messages.map((msg, index) =>
+                            msg.type === 'sent' ? (
+                                <>
+                                    <MyImg src={me} alt="샘플" />
+                                    <Message key={index}>{msg.text}</Message>
+                                </>
+                            ) : (
+                                <>
+                                    <TigerImg src={tiger} alt="샘플" />
+                                    <ReceiveMessage key={index}>{msg.text}</ReceiveMessage>
+                                </>
+                            )
+                            )}
+                        <div ref={messageEndRef} />
+                        {loading}
+                    </MessageList>
+                </QuestionWrapper>
+                {isListening?(
+                    <TranscriptWrapper>
+                        <TranscriptBox value={transcript} readOnly placeholder="음성 인식 중..."/>
+                    </TranscriptWrapper>
+                ):(
+                    <MicButton onClick={handleClick}>
+                        <MicIcon src={mic} alt="마이크 버튼"/>
+                    </MicButton>
+                )}
             </Box>
         </Wrapper>
     </>
     );
 }
 
-export default StudyPage;
+
+export default Question;
