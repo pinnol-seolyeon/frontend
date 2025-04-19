@@ -1,8 +1,8 @@
 import styled from "styled-components";
-import Header from "../components/Header";
-import Box from "../components/study/Box";
-import tigerPencil from "../assets/tiger-pencil.png";
-import Button from "../components/Button";
+import Header from "../../components/Header";
+import Box from "../../components/Box";
+import tigerPencil from "../../assets/tiger-pencil.png";
+import Button from "../../components/Button";
 
 
 /*학습하기-1단계-2*/

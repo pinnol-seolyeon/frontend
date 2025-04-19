@@ -1,6 +1,6 @@
 // components/study/Box.jsx
 import styled from "styled-components";
-import MiniHeader from "./MiniHeader"; // 경로는 위치에 따라 조정
+import MiniHeader from "./study/MiniHeader"; // 경로는 위치에 따라 조정
 
 const StyleBox = styled.div`
   display: flex;
@@ -11,6 +11,7 @@ const StyleBox = styled.div`
   border-radius: 24px;
   border: 0.5px solid black;
 
+ 
   position:relative;
 `;
 
@@ -23,4 +24,4 @@ function Box({ children }) {
   );
 }
 
-export default Box;
+export default Box;  

@@ -1,8 +1,11 @@
 import styled from "styled-components";
 import Header from "../components/Header";
-import Box from "../components/study/Box";
+import Box from "../components/Box";
 import tigerPencil from "../assets/tiger-pencil.png";
-import Button from "../components/Button";
+
+
+/*질문 버튼 눌렀을 때 */
+
 
 const Wrapper=styled.div`
     width:100%;
@@ -67,7 +70,7 @@ const BubbleButton = styled.button`
 `;
 
 
-function StudyPage(props){
+function QuestionPage(props){
     
     return(
     <>
@@ -85,4 +88,4 @@ function StudyPage(props){
     );
 }
 
-export default StudyPage;
+export default QuestionPage;

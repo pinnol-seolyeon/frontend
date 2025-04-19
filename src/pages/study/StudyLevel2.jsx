@@ -1,8 +1,8 @@
 import styled from "styled-components";
-import Header from "../components/Header";
-import Box from "../components/study/Box";
-import testImage from "../assets/testImage.png";
-import Button from "../components/Button";
+import Header from "../../components/Header";
+import Box from "../../components/Box";
+import testImage from "../../assets/testImage.png";
+
 
 /*AI학습자료*/
 
