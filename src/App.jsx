@@ -1,6 +1,8 @@
 import React from 'react';
 import Login from '../src/pages/Login';
-import StudyPage from '../src/pages/StudyPage';
+import StudyPage1 from '../src/pages/StudyPage1';
+import StudyPage2 from '../src/pages/StudyPage2';
+import StudyLevel2 from '../src/pages/StudyLevel2';
 import {createGlobalStyle} from "styled-components";
 import {useState} from "react";
 import {BrowserRouter as Router,Routes,Route} from "react-router-dom";
@@ -45,7 +47,9 @@ function App() {
           path="/login"
           element={<Login login={login} setLogin={setLogin} />}
         ></Route>
-        <Route path="/study" element={<StudyPage login={login} setLogin={setLogin}/>}></Route>
+        <Route path="/study/1" element={<StudyPage1 login={login} setLogin={setLogin}/>}></Route>
+        <Route path="/study/2" element={<StudyPage2 login={login} setLogin={setLogin}/>}></Route>
+        <Route path="/study/level2" element={<StudyLevel2 login={login} setLogin={setLogin}/>}></Route>
       </Routes>
     </Router>
   );

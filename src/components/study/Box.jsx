@@ -10,6 +10,8 @@ const StyleBox = styled.div`
   background-color: white;
   border-radius: 24px;
   border: 0.5px solid black;
+
+  position:relative;
 `;
 
 function Box({ children }) {

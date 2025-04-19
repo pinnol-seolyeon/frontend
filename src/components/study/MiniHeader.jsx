@@ -12,6 +12,7 @@ const HeaderWrapper = styled.div`
   align-items: center;
   border-radius: 24px 24px 0px 0px;
   box-sizing: border-box;
+  
 `;
 
 const TextArea = styled.div`
