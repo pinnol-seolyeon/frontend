@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import Header from "../components/Header";
 import Box from "../components/study/Box";
-import Button from "../components/Button";
+import tigerPencil from "../assets/tiger-pencil.png";
 
 const Wrapper=styled.div`
     width:100%;
@@ -14,7 +14,12 @@ const Wrapper=styled.div`
 
 `;
 
-
+const Image=styled.img`
+    width:100%; 
+    height:auto;
+    object-fit:contain;
+    max-width:300px;
+`
 
 
 function StudyPage(props){
@@ -24,7 +29,7 @@ function StudyPage(props){
         <Header login={props.login} setLogin={props.setLogin}/>
         <Wrapper>
             <Box>
-                <Button onClick={()=>alert("다음 단계로")}>다음 단계</Button>
+                <Image src={tigerPencil} alt="샘플" />
             </Box>
         </Wrapper>
     </>
