@@ -5,6 +5,8 @@ import StudyPage2 from './pages/study/StudyPage2';
 import StudyLevel2 from './pages/study/StudyLevel2';
 import StudyLevel3 from './pages/study/StudyLevel3';
 import StudyLevel3_2 from './pages/study/StudyLevel3_2';
+import StudyLevel6 from './pages/study/level6/StudyLevel6'; 
+import StudyLv6_2 from './pages/study/level6/StudyLv6_2'; 
 import Question from './pages/Question';
 import {createGlobalStyle} from "styled-components";
 import {useState} from "react";
@@ -55,6 +57,8 @@ function App() {
         <Route path="/study/level2" element={<StudyLevel2 login={login} setLogin={setLogin}/>}></Route>
         <Route path="/study/level3" element={<StudyLevel3 login={login} setLogin={setLogin}/>}></Route>
         <Route path="/study/level3/2" element={<StudyLevel3_2 login={login} setLogin={setLogin}/>}></Route>
+        <Route path="/study/level6" element={<StudyLevel6 login={login} setLogin={setLogin}/>}></Route>
+        <Route path="/study/level6/2" element={<StudyLv6_2 login={login} setLogin={setLogin}/>}></Route>
         <Route path="/question" element={<Question login={login} setLogin={setLogin}/>}></Route>
       </Routes>
     </Router>

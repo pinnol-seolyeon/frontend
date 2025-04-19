@@ -34,10 +34,10 @@ const StyledButton = styled.div`
 
 
 
-function Button({children,onClick}){
+function Button({children,onClick,className}){
 
     return(
-        <StyledButton onClick={onClick}>
+        <StyledButton onClick={onClick} className={className}>
             {children}
         </StyledButton>
     );
