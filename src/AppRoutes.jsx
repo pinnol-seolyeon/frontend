@@ -1,7 +1,7 @@
 // AppRoutes.jsx
 import React from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import Login from '../src/pages/Login';
+import Login from './pages/login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
 import StudyPage1 from './pages/study/StudyPage1';
 import StudyPage2 from './pages/study/StudyPage2';
