@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import logo from '../assets/finnol-logo.png';
+import login from "../assets/login.png";
 
 const Wrapper=styled.div`
     width:100%;
@@ -9,6 +10,9 @@ const Wrapper=styled.div`
     flex-direction:column;
     align-items:center;
     justify-content:center;
+
+    gap:30px;
+
 
 `;
 
@@ -20,23 +24,16 @@ const Image=styled.img`
 `
 
 
-const LoginButton = styled.button`
-  width: 20%;
-  height: 50px;
+const KakaoLoginImg=styled.img`
+    width:220px;
+    height:auto;
+    cursor:pointer;
+    trasnsition:transform 0.2s;
 
-  padding: 1vw 2vw;
-  margin: 2.5vw;
-  font-size: clamp(10px, 2.5vw, 14px); /* 최소폰트크기,뷰포트 너비 기반 크기, 최대 폰트 */
-  background-color: #F7E64C;
-  color: white;
-  border: none;
-  border-radius: 25px;
-  cursor: pointer;
-  transition: background-color 0.3s;
+    &:hover{
+        transform:scale(1.02);
+    }
 
-  &:hover {
-    background-color: #F6B62E;
-  }
 `;
 
 
@@ -44,8 +41,13 @@ function Login(){
     return(
         <Wrapper>
             <Image src={logo} alt="샘플" />
-            <LoginButton>카카오로 로그인</LoginButton>
-            부모님의 계정으로 가입해주세요
+            <KakaoLoginImg 
+            src={login} 
+            alt="카카오로 로그인"
+            onClick={()=>{
+                //로그인 로직 실행
+            }}
+            ></KakaoLoginImg>
         </Wrapper>
     );
 }

@@ -34,7 +34,7 @@ const Image=styled.img`
     width:100%; 
     height:auto;
     object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    max-width:380px;
+    max-width:300px;
     display:block;
     
      /*가로 중앙 정렬, 세로 원하는 위치에 자유롭게 배치*/
@@ -47,7 +47,7 @@ const Image=styled.img`
 const SpeechBubble=styled.div`
     display:flex;
     width:100%;
-    height:25%;
+    height:20%;
     background-color:#FEF3E1;
     
 

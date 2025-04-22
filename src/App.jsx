@@ -8,11 +8,15 @@ import StudyLevel3_2 from './pages/study/StudyLevel3_2';
 import StudyLevel6 from './pages/study/level6/StudyLevel6'; 
 import StudyLv6_2 from './pages/study/level6/StudyLv6_2'; 
 import Question from './pages/Question';
+
+
+
 import {createGlobalStyle} from "styled-components";
 import {useState} from "react";
 import {BrowserRouter as Router,Routes,Route} from "react-router-dom";
 import reset from "styled-reset"; //브라우저 기본 스타일 초기화하는 CSS코드 
 import './App.css';
+
 
 
 const GlobalStyles=createGlobalStyle`
@@ -47,7 +51,7 @@ function App() {
     <Router basename={process.env.PUBLIC_URL}>
       <GlobalStyles/>
       <Routes>
-        {/* <Route path="/" element={<Mainpage login={login} setLogin={setLogin}/>}></Route> */}
+        {/* <Route path="/" element={<HomePage login={login} setLogin={setLogin}/>}></Route> */}
         <Route
           path="/login"
           element={<Login login={login} setLogin={setLogin} />}
@@ -60,6 +64,7 @@ function App() {
         <Route path="/study/level6" element={<StudyLevel6 login={login} setLogin={setLogin}/>}></Route>
         <Route path="/study/level6/2" element={<StudyLv6_2 login={login} setLogin={setLogin}/>}></Route>
         <Route path="/question" element={<Question login={login} setLogin={setLogin}/>}></Route>
+
       </Routes>
     </Router>
   );

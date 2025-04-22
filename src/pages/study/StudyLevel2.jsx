@@ -22,7 +22,7 @@ const Image=styled.img`
     width:80%; 
     height:auto;
     object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    max-width:380px;
+    max-width:300px;
     display:block;
     margin:0 auto; /*가로 중앙 정렬*/
     padding:50px;

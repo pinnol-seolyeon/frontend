@@ -139,8 +139,10 @@ const TranscriptBox = styled.div`
   height: 80px;
   padding: 10px;
   font-size: 16px;
-  border-radius: 8px;
+  border-radius: 30px;
+
   border: 1px solid #ccc;
+  background-color: #FEF3E1;
 `;
 
 const TranscriptWrapper = styled.div`

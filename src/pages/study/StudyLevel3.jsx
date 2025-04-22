@@ -1,8 +1,10 @@
 import styled from "styled-components";
+
 import Header from "../../components/Header";
 import Box from "../../components/Box";
 import tiger from "../../assets/tiger-upperbody1.png";
 import Button from "../../components/Button";
+import { useNavigate } from "react-router-dom";
 
 /*학습하기-3단계-1*/
 
@@ -34,12 +36,12 @@ const Image=styled.img`
     width:100%; 
     height:auto;
     object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    max-width:380px;
+    max-width:300px;
     display:block;
     
      /*가로 중앙 정렬, 세로 원하는 위치에 자유롭게 배치*/
     align-self:center;/*가로 중앙 정렬*/
-    margin-top:120px;
+    margin-top:100px;
     margin-bottom:0px;
 
 `;
@@ -105,6 +107,12 @@ const QuestionButton = styled.button`
 
 
 function StudyPage(props){
+
+    const navigate=useNavigate();
+
+   const navigateToQuestion=()=>{
+        navigate("/question");
+   }
     
     return(
     <>
@@ -113,7 +121,8 @@ function StudyPage(props){
             <Box>
             <ImageWrapper>
                 <Image src={tiger} alt="샘플" />
-                <QuestionButton>질문</QuestionButton>
+                <QuestionButton onClick={navigateToQuestion}
+                >질문</QuestionButton>
             </ImageWrapper>
                 <SpeechBubble>
                     <TextBox>안녕</TextBox>
