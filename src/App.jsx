@@ -1,4 +1,5 @@
 import React from 'react';
+
 import Login from '../src/pages/Login';
 import StudyPage1 from './pages/study/StudyPage1';
 import StudyPage2 from './pages/study/StudyPage2';
@@ -52,6 +53,7 @@ function App() {
       <GlobalStyles/>
       <Routes>
         {/* <Route path="/" element={<HomePage login={login} setLogin={setLogin}/>}></Route> */}
+        <Route path="/" element={<Dashboard />} />
         <Route
           path="/login"
           element={<Login login={login} setLogin={setLogin} />}
@@ -64,6 +66,7 @@ function App() {
         <Route path="/study/level6" element={<StudyLevel6 login={login} setLogin={setLogin}/>}></Route>
         <Route path="/study/level6/2" element={<StudyLv6_2 login={login} setLogin={setLogin}/>}></Route>
         <Route path="/question" element={<Question login={login} setLogin={setLogin}/>}></Route>
+
 
       </Routes>
     </Router>

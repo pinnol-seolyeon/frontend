@@ -1,0 +1,12 @@
+.calendarWrapper {
+    width: 100%;
+  }
+  
+  /* 공부한 날짜 동그라미 표시 */
+  .attendedDay {
+    background: #f8d62d !important;
+    border-radius: 100% !important;
+    color: black !important;
+    font-weight: bold;
+  }
+  
