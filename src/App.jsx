@@ -1,6 +1,6 @@
 import React from 'react';
 
-import Login from '../src/pages/Login';
+import Login from './pages/login/Login';
 import StudyPage1 from './pages/study/StudyPage1';
 import StudyPage2 from './pages/study/StudyPage2';
 import StudyLevel2 from './pages/study/StudyLevel2';
@@ -9,6 +9,7 @@ import StudyLevel3_2 from './pages/study/StudyLevel3_2';
 import StudyLevel6 from './pages/study/level6/StudyLevel6'; 
 import StudyLv6_2 from './pages/study/level6/StudyLv6_2'; 
 import Question from './pages/Question';
+import Dashboard from './pages/Dashboard/Dashboard';
 
 
 
