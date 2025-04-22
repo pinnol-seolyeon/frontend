@@ -34,14 +34,13 @@ export default function QuizChart({ data }) {
           }}
         />
 
-        {/* 점수 먼저 그려서 틀린 문제 수가 위에 오게 */}
         <Area
           type="monotone"
-          dataKey="score"
+          dataKey="questionMark"
           stroke="#FBC344"
           fill="#FBC344"
           fillOpacity={0.3}
-          name="점수"
+          name="별표"
           dot={{
             r: 4,
             stroke: '#FBC344',

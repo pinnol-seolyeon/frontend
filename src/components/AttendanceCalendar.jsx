@@ -4,11 +4,11 @@ import 'react-calendar/dist/Calendar.css';
 import styles from './AttendanceCalendar.module.css';
 
 export default function AttendanceCalendar({ attendedDates }) {
-  const attendedDateSet = new Set(attendedDates); // ["2025-04-17", "2025-04-18"]
+  const attendedDateSet = new Set(attendedDates); //
 
   const tileClassName = ({ date, view }) => {
     if (view === 'month') {
-      const dateStr = date.toISOString().slice(0, 10); // yyyy-MM-dd
+      const dateStr = date.toLocaleDateString('sv-SE'); //
       if (attendedDateSet.has(dateStr)) {
         return styles.attendedDay;
       }
