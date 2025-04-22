@@ -68,8 +68,6 @@ const NextButton = styled(Button)`
   right:20px;
 `;
 
-
-
 function StudyLevel6(props){
     
     return(
