@@ -11,6 +11,7 @@ import StudyLevel3_2 from './pages/study/StudyLevel3_2';
 import StudyLevel6 from './pages/study/level6/StudyLevel6'; 
 import StudyLv6_2 from './pages/study/level6/StudyLv6_2'; 
 import Question from './pages/Question';
+import ChildInfo from './pages/login/ChildInfo';
 import KakaoCallback from './pages/login/KakaoCallback';
 
 import {createGlobalStyle} from "styled-components";
@@ -49,8 +50,8 @@ export default function AppRoutes({ login, setLogin }) {
       {!isDashboard && <GlobalStyles />}
       <Routes>
         <Route path="/" element={<Dashboard />} />
-        <Route path="/login" element={<Login login={login} setLogin={setLogin} />} />'
-        <Route path="/callback" element={<KakaoCallback />} />
+        <Route path="/login" element={<Login login={login} setLogin={setLogin} />} />
+        <Route path="/childInfo" element={<ChildInfo login={login} setLogin={setLogin} />}/>
 
 
         <Route path="/study/1" element={<StudyPage1 login={login} setLogin={setLogin} />} />
