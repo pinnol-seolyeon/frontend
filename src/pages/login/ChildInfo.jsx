@@ -4,6 +4,7 @@ import login from "../../assets/login.png";
 import MiniHeader from "../../components/study/MiniHeader";
 import Button from "../../components/Button";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Wrapper=styled.div`
     width:100%;
@@ -87,6 +88,7 @@ const StyledButton=styled(Button)`
 
 
 function ChildInfo(){
+    const navigate=useNavigate();
 
     const [childName,setChildName]=useState("");
     const [childAge,setChildAge]=useState("");
@@ -122,7 +124,7 @@ function ChildInfo(){
           .then((data) => {
             alert("✅ 자녀 정보가 성공적으로 저장되었습니다!");
             console.log(data);
-            // 필요하다면 페이지 이동 or 상태 변경
+            navigate("/");
           })
           .catch((err) => {
             console.error(err);
