@@ -80,7 +80,6 @@ function StudyLevel6_2(props){
     
     return(
     <>
-        <Header login={props.login} setLogin={props.setLogin}/>
         <Wrapper>
             <Box>
                 <Title>토론해보자!</Title>

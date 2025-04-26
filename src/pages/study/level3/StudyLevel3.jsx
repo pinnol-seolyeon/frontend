@@ -1,9 +1,9 @@
 import styled from "styled-components";
 
-import Header from "../../components/Header";
-import Box from "../../components/Box";
-import tiger from "../../assets/tiger-upperbody1.png";
-import Button from "../../components/Button";
+import Header from "../../../components/Header";
+import Box from "../../../components/Box";
+import tiger from "../../../assets/tiger-upperbody1.png";
+import Button from "../../../components/Button";
 import { useNavigate } from "react-router-dom";
 
 /*학습하기-3단계-1*/
@@ -116,7 +116,6 @@ function StudyPage(props){
     
     return(
     <>
-        <Header login={props.login} setLogin={props.setLogin}/>
         <Wrapper>
             <Box>
             <ImageWrapper>

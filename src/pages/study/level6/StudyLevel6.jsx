@@ -72,7 +72,6 @@ function StudyLevel6(props){
     
     return(
     <>
-        <Header login={props.login} setLogin={props.setLogin}/>
         <Wrapper>
             <Box>
                 <Title>오늘의 학습 요약</Title>
