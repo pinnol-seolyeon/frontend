@@ -5,6 +5,7 @@ import styled,{keyframes} from "styled-components";
 import axios from 'axios';
 
 import Header from "../components/Header";
+import MiniHeader from "../components/study/MiniHeader";
 import Box from "../components/Box";
 import tiger from "../assets/tiger-upperbody1.png";
 import me from "../assets/me.png";
@@ -168,6 +169,20 @@ const StopButton = styled.button`
   }
 `;
 
+const CloseButton=styled.button`
+
+    background-color:transparent;
+    color:white;
+    font-size:20px;
+
+    border:none;
+
+    &:hover {
+    color:black;
+  }
+
+`;
+
 
 function Question({}){
     
@@ -227,13 +242,13 @@ useEffect(()=>{
         console.log("input:",newMessage);
         if(newMessage){
             //보낸 메시지 추가
-            setMessages(prevMessages=>[
+            setMessages(prevMessages=>[ //기존에 쌓여 있던 메시지 배열인 prevMessages 맨 뒤에 새로운 메시지 추가 
                 ...prevMessages,
                 {text:newMessage,type:'sent'} //보낸 메시지는 'sent'타입
             ]);
             try{
                 setLoading(true);
-                //메시지를 서버로 POST 요청
+                //메시지를 서버로 POST 요청 //await: 비동기 처리로 서버 응답 기다림
                 const response=await axios.post('http://localhost:8080/api/question',{
                     message:newMessage
                 });
@@ -286,6 +301,10 @@ useEffect(()=>{
     <>
         <Wrapper>
             <Box>
+                <MiniHeader onClose={
+                    <CloseButton onClick={()=>navigate(-1)}>X</CloseButton>
+                }>
+                </MiniHeader>
                 <QuestionWrapper>
                     <MessageList>
                         {messages.map((msg, index) =>

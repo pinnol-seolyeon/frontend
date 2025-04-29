@@ -18,7 +18,7 @@ const StyleBox = styled.div`
 function Box({ children }) {
   return (
     <StyleBox>
-      <MiniHeader />
+      {/* <MiniHeader /> */}
       {children}
     </StyleBox>
   );

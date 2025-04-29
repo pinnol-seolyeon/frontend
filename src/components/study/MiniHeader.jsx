@@ -13,21 +13,33 @@ const HeaderWrapper = styled.div`
   border-radius: 24px 24px 0px 0px;
   box-sizing: border-box;
   
+
 `;
 
-const TextArea = styled.div`
-  font-size: 1rem;
+const TitleArea = styled.div`
+  font-size: 1.2rem;
   color: white;
   text-align: center;
   flex: 1;
 `;
 
-function MiniHeader({ children, onPrev, onNext }) {
+const RightArea = styled.div`
+  position: absolute;
+  right: 20px;
+  display: flex;
+  align-items: center;
+`;
+
+
+function MiniHeader({ children, onClose }) {
   return (
     <HeaderWrapper>
-      {/* <Button onClick={onPrev}>이전</Button> */}
-      <TextArea>{children}</TextArea>
-      {/* <Button onClick={onNext}>다음 단계</Button> */}
+      <TitleArea>{children}</TitleArea>
+      {onClose&&(
+        <RightArea>
+          {onClose}
+        </RightArea>
+      )}
     </HeaderWrapper>
   );
 }
