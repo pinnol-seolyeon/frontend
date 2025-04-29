@@ -21,8 +21,8 @@ const Wrapper=styled.div`
 `;
 
 const Box=styled.div`
-    width:40%;
-    height:50vh;
+    width:400px;
+    height:500px;
 
     display:flex;
     flex-direction:column;
@@ -83,6 +83,11 @@ const StyledButton=styled(Button)`
 
 `;
 
+const Text=styled.div`
+    color:#808080;
+    font-size:13px;
+
+`
 
 
 
@@ -92,6 +97,7 @@ function ChildInfo(){
 
     const [childName,setChildName]=useState("");
     const [childAge,setChildAge]=useState("");
+    const [phoneNumber,setPhoneNumber]=useState("");
 
 
     const handleNameChange=(e)=>{
@@ -103,6 +109,10 @@ function ChildInfo(){
         setChildAge(e.target.value);
     };
 
+    const handlePhoneNumberChange=(e)=>{
+        setPhoneNumber(e.target.value);
+    }
+
 
     const writeChildInfo=()=>{
         fetch("http://localhost:8080/api/user/child",{
@@ -113,7 +123,8 @@ function ChildInfo(){
             credentials:"include",
             body: JSON.stringify({
                 childName: childName,
-                childAge: Number(childAge)
+                childAge: Number(childAge),
+                phoneNumber:phoneNumber
             })
         })
 
@@ -145,6 +156,12 @@ function ChildInfo(){
                 <InputWrapper>
                     <Label>나이</Label>
                     <UnderlinedInput type="number" value={childAge} onChange={handleAgeChange}/>
+                </InputWrapper>
+
+                <InputWrapper>
+                    <Label>전화번호</Label>
+                    <Text>부모님의 전화번호를 입력해주세요(000-0000-0000)</Text>
+                    <UnderlinedInput type="text" value={phoneNumber} onChange={handlePhoneNumberChange}/>
                 </InputWrapper>
 
                 <StyledButton onClick={writeChildInfo}>입력</StyledButton>

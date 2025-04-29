@@ -15,7 +15,8 @@ import StudyLevel6 from './pages/study/level6/StudyLevel6';
 import StudyLv6_2 from './pages/study/level6/StudyLv6_2';
 import Question from './pages/Question';
 import ChildInfo from './pages/login/ChildInfo';
-import KakaoCallback from './pages/login/KakaoCallback';
+import Main from './pages/main/Main';
+import ReviewPage from './pages/review/ReviewPage';
 
 const GlobalStyles = createGlobalStyle`
   ${reset};
@@ -42,6 +43,7 @@ const routes = [
   { path: '/', element: <Dashboard /> },
   { path: '/login', element: <Login /> },
   { path: '/childInfo', element: <ChildInfo /> },
+  { path: '/main',element:<Main/>},
   { path: '/study/1', element: <StudyPage1 /> },
   { path: '/study/2', element: <StudyPage2 /> },
   { path: '/study/level2', element: <StudyLevel2 /> },
@@ -50,6 +52,7 @@ const routes = [
   { path: '/study/level6', element: <StudyLevel6 /> },
   { path: '/study/level6/2', element: <StudyLv6_2 /> },
   { path: '/question', element: <Question /> },
+  { path: '/review', element: <ReviewPage/> },
 ];
 
 export default function AppRoutes({ login, setLogin, user }) {
@@ -64,7 +67,7 @@ export default function AppRoutes({ login, setLogin, user }) {
           <Route 
             key={path}
             path={path}
-            element={React.cloneElement(element, { login, setLogin, user })}
+            element={React.cloneElement(element, { login, setLogin, user })} //원래의 컴포넌트에 login,setLogin,user props를 주입 -> 코드 반복 제거.
           />
         ))}
       </Routes>

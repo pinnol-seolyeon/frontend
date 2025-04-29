@@ -137,9 +137,10 @@ const MicIcon=styled.img`
 const TranscriptBox = styled.div`
   width: 80%;
   height: 80px;
-  padding: 10px;
+//   padding: 10px;
   font-size: 16px;
   border-radius: 30px;
+  margin:15px;
 
   border: 1px solid #ccc;
   background-color: #FEF3E1;
@@ -153,23 +154,74 @@ const TranscriptWrapper = styled.div`
   padding-bottom:20px;
 `;
 
+const StopButton = styled.button`
+  background-color: red;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin:15px;
+
+  &:hover {
+    background-color: darkred;
+  }
+`;
 
 
-function Question(props){
+function Question({}){
     
     const[messages,setMessages]=useState([]);
     const messageEndRef=useRef(null);
     const[loading,setLoading]=useState(false);
     const[isListening,setIsListening]=useState(false);
     const[transcript,setTranscript]=useState(''); //음성 인식 결과
-
+    const recognitionRef=useRef(null); //recognition 매번 호출 비효율 문제 해결
     const navigate=useNavigate();
+
+    //컴포넌트가 처음 마운트될 때 한 번만 실행됨 
+useEffect(()=>{
+    //Web Speech API 설정
+    const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+    const recognition=new SpeechRecognition();
+    recognition.lang='ko-KR';
+    recognition.continuous=true;
+    recognition.interimResults=true;
+
+    
+
+
+    //사용자가 말하는 내용을 실시간으로 transcript에 저장 
+    recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0])
+          .map(result => result.transcript)
+          .join('');
+        setTranscript(transcript);
+      };
+    recognitionRef.current=recognition;
+},[]);
+      
+
+    const handleStop=()=>{
+        console.log("녹음 정지");
+        setIsListening(false);
+        recognitionRef.current.stop();
+        // onRecordComplete(transcript); //인식된 transcript를 부모 컴포넌트로 넘김
+        handleMessage(transcript);
+    };
 
     const handleClick=()=>{
         console.log("마이크 버튼 클릭");
-
+        setTranscript('');
         setIsListening(true); //MicButton 사라지고 TranscriptBox 보이게 
+        recognitionRef.current.start();
     };
+
+
+
+
+    
 
     const handleMessage=async(newMessage)=>{
         console.log("input:",newMessage);
@@ -182,7 +234,7 @@ function Question(props){
             try{
                 setLoading(true);
                 //메시지를 서버로 POST 요청
-                const response=await axios.post('http://localhost:8080/api/questions',{
+                const response=await axios.post('http://localhost:8080/api/question',{
                     message:newMessage
                 });
 
@@ -230,8 +282,8 @@ function Question(props){
     },[]);
 
     return(
+        
     <>
-        <Header login={props.login} setLogin={props.setLogin}/>
         <Wrapper>
             <Box>
                 <QuestionWrapper>
@@ -255,7 +307,8 @@ function Question(props){
                 </QuestionWrapper>
                 {isListening?(
                     <TranscriptWrapper>
-                        <TranscriptBox value={transcript} readOnly placeholder="음성 인식 중..."/>
+                        <TranscriptBox>{transcript||"음성 인식 중.."}</TranscriptBox>
+                        <StopButton onClick={handleStop}>정지</StopButton>
                     </TranscriptWrapper>
                 ):(
                     <MicButton onClick={handleClick}>
@@ -267,6 +320,7 @@ function Question(props){
     </>
     );
 }
+
 
 
 export default Question;

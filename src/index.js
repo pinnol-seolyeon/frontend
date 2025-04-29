@@ -5,6 +5,7 @@ import {CookiesProvider} from "react-cookie";
 
 import './App.css';
 import App from './App.jsx';
+import '../src/index.css';
 import reportWebVitals from './reportWebVitals';
 
 
