@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
-import AppRoutes from './AppRoutes'; // 👈 AppRoutes 분리해서 import
+import AppRoutes from './AppRoutes';
 
 export default function App() {
   const [login, setLogin] = useState(false);
