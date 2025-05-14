@@ -3,6 +3,8 @@ import styles from './Dashboard.module.css';
 import QuizChart from '../../components/QuizChart';
 import AttendanceCalendar from '../../components/AttendanceCalendar';
 import TodayStudyTime from '../../components/TodayStudyTime';
+import Answers from '../../components/Answers';
+
 import { fetchQuizResults, fetchTodayStudyTime, fetchAttendance } from '../../api/analytics';
 
 export default function Dashboard() {
@@ -31,13 +33,16 @@ export default function Dashboard() {
           <QuizChart data={quizData} />
         </div>
 
-        {/* 아래 두 개 정사각형 박스 */}
+        {/* 아래 세 개 정사각형 박스 */}
         <div className={styles.bottomBoxes}>
           <div className={styles.squareBox}>
             {/* <TodayStudyTime hours={studyTime.hours} minutes={studyTime.minutes} /> */}
           </div>
           <div className={styles.squareBox}>
             {/* <AttendanceCalendar attendedDates={attendance} /> */}
+          </div>
+          <div className={styles.squareBox}>
+            <Answers hours={studyTime.hours} minutes={studyTime.minutes} />
           </div>
         </div>
       </div>
