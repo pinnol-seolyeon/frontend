@@ -11,6 +11,7 @@ import StudyLevel3_2 from './pages/study/StudyLevel3_2';
 import StudyLevel6 from './pages/study/level6/StudyLevel6'; 
 import StudyLv6_2 from './pages/study/level6/StudyLv6_2'; 
 import Question from './pages/Question';
+import Game from './pages/game/Game';
 import ChildInfo from './pages/login/ChildInfo';
 import KakaoCallback from './pages/login/KakaoCallback';
 
@@ -62,6 +63,7 @@ export default function AppRoutes({ login, setLogin }) {
         <Route path="/study/level6" element={<StudyLevel6 login={login} setLogin={setLogin}/>}></Route>
         <Route path="/study/level6/2" element={<StudyLv6_2 login={login} setLogin={setLogin}/>}></Route>
         <Route path="/question" element={<Question login={login} setLogin={setLogin}/>}></Route>
+        <Route path="/game" element={<Game />} />
       </Routes>
     </>
   );
