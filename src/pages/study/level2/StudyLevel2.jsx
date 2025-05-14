@@ -1,7 +1,7 @@
 import styled from "styled-components";
-import Header from "../../components/Header";
-import Box from "../../components/Box";
-import testImage from "../../assets/testImage.png";
+import Header from "../../../components/Header";
+import Box from "../../../components/Box";
+import testImage from "../../../assets/testImage.png";
 
 
 /*AI학습자료*/
@@ -40,7 +40,6 @@ function StudyLevel2(props){
     
     return(
     <>
-        <Header login={props.login} setLogin={props.setLogin}/>
         <Wrapper>
             <Box>
                 <Image src={testImage} alt="샘플" />

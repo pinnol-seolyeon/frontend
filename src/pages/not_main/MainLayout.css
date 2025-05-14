@@ -1,0 +1,101 @@
+.main-layout {
+  min-height: 100vh;
+  background-color: #f0f2f5;
+}
+
+.main-header {
+  background-color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.finnol-logo {
+  height: 40px;
+  transition: transform 0.3s ease;
+}
+
+.finnol-logo:hover {
+  transform: scale(1.05);
+}
+
+.main-header h1 {
+  color: #1a73e8;
+  margin: 0;
+}
+
+.progress-info {
+  display: flex;
+  gap: 2rem;
+  color: #5f6368;
+}
+
+.user-status {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.points-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #f8f9fa;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+.points-icon {
+  font-size: 1.2rem;
+}
+
+.points-value {
+  color: #1a73e8;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-email {
+  color: #666;
+}
+
+.logout-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #f44336;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.logout-button:hover {
+  background-color: #d32f2f;
+}
+
+.main-content {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.content-area {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.no-data-message {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-color);
+  font-size: 1.1rem;
+}

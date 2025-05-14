@@ -1,48 +1,63 @@
 // AppRoutes.jsx
 import React from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
+import { createGlobalStyle } from "styled-components";
+import reset from "styled-reset";
+
 import Login from './pages/login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
-import StudyPage1 from './pages/study/StudyPage1';
-import StudyPage2 from './pages/study/StudyPage2';
-import StudyLevel2 from './pages/study/StudyLevel2';
-import StudyLevel3 from './pages/study/StudyLevel3';
-import StudyLevel3_2 from './pages/study/StudyLevel3_2';
-import StudyLevel6 from './pages/study/level6/StudyLevel6'; 
-import StudyLv6_2 from './pages/study/level6/StudyLv6_2'; 
+import StudyPage1 from './pages/study/level1/StudyPage1';
+import StudyPage2 from './pages/study/level1/StudyPage2';
+import StudyLevel2 from './pages/study/level2/StudyLevel2';
+import StudyLevel3 from './pages/study/level3/StudyLevel3';
+import StudyLevel3_2 from './pages/study/level3/StudyLevel3_2';
+import StudyLevel6 from './pages/study/level6/StudyLevel6';
+import StudyLv6_2 from './pages/study/level6/StudyLv6_2';
 import Question from './pages/Question';
 import Game from './pages/game/Game';
 import ChildInfo from './pages/login/ChildInfo';
-import KakaoCallback from './pages/login/KakaoCallback';
+import Main from './pages/main/Main';
+import ReviewPage from './pages/review/ReviewPage';
 
-import {createGlobalStyle} from "styled-components";
-import reset from "styled-reset";
-
-const GlobalStyles=createGlobalStyle`
-  ${reset}; 
-  *{
-    box-sizing:border-box;
+const GlobalStyles = createGlobalStyle`
+  ${reset};
+  * {
+    box-sizing: border-box;
   }
-  
-  body{
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    width:100%;  
+  body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
   }
-  #root{
-    width:80%;
-
-    //border:1px solid gray;
+  #root {
+    width: 80%;
   }
-  
-  ::-webkit-scrollbar{
-    display:none;
+  ::-webkit-scrollbar {
+    display: none;
   }
 `;
 
-export default function AppRoutes({ login, setLogin }) {
+//  Route 정보 배열로 정리
+const routes = [
+  { path: '/', element: <Dashboard /> },
+  { path: '/login', element: <Login /> },
+  { path: '/childInfo', element: <ChildInfo /> },
+  { path: '/main',element:<Main/>},
+  { path: '/study/1', element: <StudyPage1 /> },
+  { path: '/study/2', element: <StudyPage2 /> },
+  { path: '/study/level2', element: <StudyLevel2 /> },
+  { path: '/study/level3', element: <StudyLevel3 /> },
+  { path: '/study/level3/2', element: <StudyLevel3_2 /> },
+  { path: '/study/level6', element: <StudyLevel6 /> },
+  { path: '/study/level6/2', element: <StudyLv6_2 /> },
+  { path: '/question', element: <Question /> },
+  { path: '/review', element: <ReviewPage/> },
+  { path: '/game', element: <Game/> },
+];
+
+export default function AppRoutes({ login, setLogin, user }) {
   const location = useLocation();
   const isDashboard = location.pathname === '/';
 
@@ -50,20 +65,15 @@ export default function AppRoutes({ login, setLogin }) {
     <>
       {!isDashboard && <GlobalStyles />}
       <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/login" element={<Login login={login} setLogin={setLogin} />} />
-        <Route path="/childInfo" element={<ChildInfo login={login} setLogin={setLogin} />}/>
 
+        {routes.map(({ path, element }) => (
+          <Route 
+            key={path}
+            path={path}
+            element={React.cloneElement(element, { login, setLogin, user })} //원래의 컴포넌트에 login,setLogin,user props를 주입 -> 코드 반복 제거.
+          />
+        ))}
 
-        <Route path="/study/1" element={<StudyPage1 login={login} setLogin={setLogin} />} />
-        <Route path="/study/2" element={<StudyPage2 login={login} setLogin={setLogin}/>}></Route>
-        <Route path="/study/level2" element={<StudyLevel2 login={login} setLogin={setLogin}/>}></Route>
-        <Route path="/study/level3" element={<StudyLevel3 login={login} setLogin={setLogin}/>}></Route>
-        <Route path="/study/level3/2" element={<StudyLevel3_2 login={login} setLogin={setLogin}/>}></Route>
-        <Route path="/study/level6" element={<StudyLevel6 login={login} setLogin={setLogin}/>}></Route>
-        <Route path="/study/level6/2" element={<StudyLv6_2 login={login} setLogin={setLogin}/>}></Route>
-        <Route path="/question" element={<Question login={login} setLogin={setLogin}/>}></Route>
-        <Route path="/game" element={<Game />} />
       </Routes>
     </>
   );

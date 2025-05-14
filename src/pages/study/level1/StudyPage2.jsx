@@ -1,11 +1,11 @@
 import styled from "styled-components";
-import Header from "../../components/Header";
-import Box from "../../components/Box";
-import tiger from "../../assets/tiger-pencil.png";
-import Button from "../../components/Button";
+import Header from "../../../components/Header";
+import Box from "../../../components/Box";
+import tigerPencil from "../../../assets/tiger-pencil.png";
+import Button from "../../../components/Button";
 
-/*학습하기-3단계-1*/
 
+/*학습하기-1단계-2*/
 
 const Wrapper=styled.div`
     width:100%;
@@ -18,41 +18,34 @@ const Wrapper=styled.div`
 
 `;
 
-const ImageWrapper=styled.div`
-    position:relative;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    margin:top:129ox;
-    gap:12px;
-`
-
-
-
 const Image=styled.img`
+    display:flex;
     width:100%; 
     height:auto;
     object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
     max-width:300px;
     display:block;
-    
-     /*가로 중앙 정렬, 세로 원하는 위치에 자유롭게 배치*/
-    align-self:center;/*가로 중앙 정렬*/
-    margin-top:120px;
-    margin-bottom:0px;
+    margin:0 auto; /*가로 중앙 정렬*/
+    padding:50px;
 
+    position:absolute;
+    left:20px;
+    bottom:20px;
 `;
 
 const SpeechBubble=styled.div`
     display:flex;
-    width:100%;
-    height:20%;
+    flex:1 1 400px;
+    width:80%;
+    height:70%;
     background-color:#FEF3E1;
-    
 
-    position:relative;
+    position:absolute;
+    right:100px;
+    top:120px;
 
+    border: 0.5px solid black;
+    border-radius: 24px;
 `;
 
 const TextBox=styled.div`
@@ -63,18 +56,18 @@ const TextBox=styled.div`
     width:50%;
     margin:0 auto;
     paddding:50px;
-    font-size: clamp(20px, 5vw, 25px); /* 최소폰트크기,뷰포트 너비 기반 크기, 최대 폰트 */
+    font-size: clamp(20px, 5vw, 40px); /* 최소폰트크기,뷰포트 너비 기반 크기, 최대 폰트 */
 `;
-
 
 const BubbleButton = styled.button`
   position: absolute;
   right: 20px;
   bottom: 20px;
 
-  padding: 10px 16px;
+  padding: 20px 32px;
   background-color: #2774B2;
   color: white;
+  border: none;
   border-radius: 30px;
   cursor: pointer;
   border:0.2px solid black;
@@ -91,16 +84,14 @@ function StudyPage(props){
     
     return(
     <>
-        <Header login={props.login} setLogin={props.setLogin}/>
         <Wrapper>
             <Box>
-            <ImageWrapper>
-                <Image src={tiger} alt="샘플" />
-            </ImageWrapper>
                 <SpeechBubble>
-                    <TextBox>안녕</TextBox>
-                    <BubbleButton>다음</BubbleButton>
+                    <TextBox>ㅎㅇ</TextBox>
+                    <BubbleButton>대답하기</BubbleButton>
                 </SpeechBubble>
+                <Image src={tigerPencil} alt="샘플" />
+            
             </Box>
         </Wrapper>
     </>

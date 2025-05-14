@@ -106,7 +106,7 @@ export const NoDataMessage = styled.p`
 
 function Header({ login, text, setLogin, userProgress, user }) {
     const navigate = useNavigate();
-  
+
     const logout = () => {
       setLogin(false);
       navigate('/login');
@@ -123,10 +123,10 @@ function Header({ login, text, setLogin, userProgress, user }) {
         <UserStatus>
           <PointsDisplay>
             <PointsIcon>💰</PointsIcon>
-            <PointsValue>{userProgress?.points || 0} P</PointsValue>
+            <PointsValue>{user?.coin || 0} P</PointsValue>
           </PointsDisplay>
           <UserInfo>
-            <UserEmail>{user?.email || 'ゲスト'}</UserEmail>
+            <UserEmail>{user?.childName || 'ゲスト'}</UserEmail>
             {login && (
               <LogoutButton onClick={logout}>
                 로그아웃

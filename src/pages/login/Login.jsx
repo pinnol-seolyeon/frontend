@@ -41,16 +41,8 @@ function Login(){
 
     //로그인 버튼 클릭시 호출
     const redirectToKakao=()=>{
-        // console.log(process.env.REACT_APP_KAKAO_REST_API_KEY);
-        // console.log(process.env.REACT_APP_KAKAO_REDIRECT_URI);
-
-        // const REST_API_KEY=process.env.REACT_APP_KAKAO_REST_API_KEY;
-        // const REDIRECT_URL='http://localhost:3000/callback';
+    
         const kakaoURL = `http://localhost:8080/oauth2/authorization/kakao`
-        
-        
-
-
         window.location.href=kakaoURL;
     };   
 
@@ -88,7 +80,7 @@ function Login(){
                 }}
                 />
 
-            <button onClick={getData}>로그인 테스트</button>
+            {/* <button onClick={getData}>로그인 테스트</button> */}
         </Wrapper>
     );
 }

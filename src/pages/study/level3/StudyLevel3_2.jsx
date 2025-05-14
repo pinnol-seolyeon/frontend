@@ -1,8 +1,8 @@
 import styled from "styled-components";
-import Header from "../../components/Header";
-import Box from "../../components/Box";
-import tiger from "../../assets/tiger-upperbody1.png";
-import testImage from "../../assets/testImage.png";
+import Header from "../../../components/Header";
+import Box from "../../../components/Box";
+import tiger from "../../../assets/tiger-upperbody1.png";
+import testImage from "../../../assets/testImage.png";
 
 /*학습하기-3단계-4*/
 
@@ -158,7 +158,6 @@ function StudyPage(props){
     
     return(
     <>
-        <Header login={props.login} setLogin={props.setLogin}/>
         <Wrapper>
             <Box>
             <ImageWrapper>
