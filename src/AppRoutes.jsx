@@ -1,7 +1,7 @@
 // AppRoutes.jsx
 import React from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
-import Login from '../src/pages/Login';
+import Login from './pages/login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
 import StudyPage1 from './pages/study/StudyPage1';
 import StudyPage2 from './pages/study/StudyPage2';
@@ -12,6 +12,8 @@ import StudyLevel6 from './pages/study/level6/StudyLevel6';
 import StudyLv6_2 from './pages/study/level6/StudyLv6_2'; 
 import Question from './pages/Question';
 import Game from './pages/game/Game';
+import ChildInfo from './pages/login/ChildInfo';
+import KakaoCallback from './pages/login/KakaoCallback';
 
 import {createGlobalStyle} from "styled-components";
 import reset from "styled-reset";
@@ -50,6 +52,9 @@ export default function AppRoutes({ login, setLogin }) {
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/login" element={<Login login={login} setLogin={setLogin} />} />
+        <Route path="/childInfo" element={<ChildInfo login={login} setLogin={setLogin} />}/>
+
+
         <Route path="/study/1" element={<StudyPage1 login={login} setLogin={setLogin} />} />
         <Route path="/study/2" element={<StudyPage2 login={login} setLogin={setLogin}/>}></Route>
         <Route path="/study/level2" element={<StudyLevel2 login={login} setLogin={setLogin}/>}></Route>

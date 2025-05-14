@@ -22,12 +22,12 @@ const TextArea = styled.div`
   flex: 1;
 `;
 
-function MiniHeader({ text = "1/6: 학습 목표", onPrev, onNext }) {
+function MiniHeader({ children, onPrev, onNext }) {
   return (
     <HeaderWrapper>
-      <Button onClick={onPrev}>이전</Button>
-      <TextArea>{text}</TextArea>
-      <Button onClick={onNext}>다음 단계</Button>
+      {/* <Button onClick={onPrev}>이전</Button> */}
+      <TextArea>{children}</TextArea>
+      {/* <Button onClick={onNext}>다음 단계</Button> */}
     </HeaderWrapper>
   );
 }

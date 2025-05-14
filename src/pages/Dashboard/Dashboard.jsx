@@ -11,14 +11,14 @@ export default function Dashboard() {
   const [studyTime, setStudyTime] = useState({ hours: 0, minutes: 0 });
   const [attendance, setAttendance] = useState([]);
 
-  useEffect(() => {
-    fetchQuizResults(userId).then(setQuizData);
-    fetchTodayStudyTime(userId).then(setStudyTime);
-    const now = new Date();
-    fetchAttendance(userId, now.getFullYear(), now.getMonth() + 1).then(res => {
-      setAttendance(res.attendedDates);
-    });
-  }, []);
+  // useEffect(() => {
+  //   fetchQuizResults(userId).then(setQuizData);
+  //   fetchTodayStudyTime(userId).then(setStudyTime);
+  //   const now = new Date();
+  //   fetchAttendance(userId, now.getFullYear(), now.getMonth() + 1).then(res => {
+  //     setAttendance(res.attendedDates);
+  //   });
+  // }, []);
 
   return (
     <div className={styles.wrapper}>
@@ -34,10 +34,10 @@ export default function Dashboard() {
         {/* 아래 두 개 정사각형 박스 */}
         <div className={styles.bottomBoxes}>
           <div className={styles.squareBox}>
-            <TodayStudyTime hours={studyTime.hours} minutes={studyTime.minutes} />
+            {/* <TodayStudyTime hours={studyTime.hours} minutes={studyTime.minutes} /> */}
           </div>
           <div className={styles.squareBox}>
-            <AttendanceCalendar attendedDates={attendance} />
+            {/* <AttendanceCalendar attendedDates={attendance} /> */}
           </div>
         </div>
       </div>
