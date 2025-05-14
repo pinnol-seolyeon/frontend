@@ -37,7 +37,9 @@ export default function Game() {
 
   const [penaltyVisible, setPenaltyVisible] = useState(false);
   const [correctVisible, setCorrectVisible] = useState(false);
+  const [gainVisible, setGainVisible] = useState(false);
   const [wrongVisible, setWrongVisible] = useState(false);
+  const [endVisible, setEndVisible] = useState(false);
 
   const flagImageRef = useRef(null);
 
@@ -139,8 +141,22 @@ export default function Game() {
     setTimeout(() => setPenaltyVisible(false), 800);
   }
 
+  function showGainEffect() {
+    setGainVisible(true);
+    setTimeout(() => setGainVisible(false), 800);
+  }
+
+  function showEndEffect() {
+    setEndVisible(true);
+    setTimeout(() => setEndVisible(false), 800);
+  }
+
 
   useEffect(() => {
+    
+    // if (gameOver) {
+    //   saveScoreToDB(scoreRef.current);
+    // }
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
@@ -235,7 +251,7 @@ export default function Game() {
         lastQuizFrame = frameRef.current;          
       }
 
-      if (Math.random() < 0.6) candidates.push('coin');
+      if (Math.random() < 0.4) candidates.push('coin');
       if (Math.random() < 0.8) candidates.push('hurdle');
     
 
@@ -326,12 +342,14 @@ export default function Game() {
             i--;
           } else if (ent.type === 'coin') {
             scoreRef.current += 5;
+            showGainEffect();
             entities.splice(i, 1);
             i--;
           } else if (ent.type === 'flag') {
             endingRef.current = true;
             playerImageRef.current = playerEndImage; // 캐릭터 이미지 변경
             entities.splice(i, 1); // 깃발 제거
+            showEndEffect();
           }
         }
       }
@@ -401,15 +419,28 @@ export default function Game() {
 
       {wrongVisible && (
         <div style={{ position: 'fixed', top: '10%', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(255, 0, 0, 0.8)', padding: '1rem 2rem', borderRadius: '10px', color: 'white', fontSize: '1.5rem', zIndex: 20 }}>
-          점수 0으로..
+          오답입니다! 점수 0으로
+        </div>
+      )}
+
+      {gainVisible && (
+        <div style={{ position: 'fixed', top: '10%', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(255, 200, 0, 0.8)', padding: '1rem 2rem', borderRadius: '10px', color: 'white', fontSize: '1.5rem', zIndex: 20 }}>
+          +5점!
         </div>
       )}
 
       {penaltyVisible && (
         <div style={{ position: 'fixed', top: '10%', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(255, 0, 0, 0.8)', padding: '1rem 2rem', borderRadius: '10px', color: 'white', fontSize: '1.5rem', zIndex: 20 }}>
-          -10점!
+          -5점!
         </div>
       )}
+
+      {endVisible && (
+        <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(0, 255, 102, 0.8)', padding: '1rem 2rem', borderRadius: '10px', color: 'white', fontSize: '3rem', zIndex: 20 }}>
+          완주 완료!
+        </div>
+      )}
+      
 
       {gameOver && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)', zIndex: 50, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
