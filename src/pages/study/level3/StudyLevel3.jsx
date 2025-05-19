@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchChapterContents } from "../../../api/study/level3API";
 import nextButton from "../../../assets/nextButton.png";
 import MiniHeader from "../../../components/study/MiniHeader";
+import { useChapter } from "../../../context/ChapterContext";
 
 /*학습하기-3단계-1*/
 
@@ -134,25 +135,30 @@ function StudyPage(props){
     const navigate=useNavigate();
     const [sentences,setSentences]=useState([]);
     const [currentIndex,setCurrentIndex]=useState(0);
+    const {chapterData}=useChapter();
 
    const navigateToQuestion=()=>{
         navigate("/question");
    }
 
-   const handleFetchContent=async()=>{
-    try{
-        const data=await fetchChapterContents("682829208c776a1ffa92fd4d"); //책 id 하드코딩
-        const splitSentences=data
+   useEffect(() => {
+
+        //chapterData를 사용하려면 직접 url 열면 안됨.. navigate로 url이동해야 (Context는 메모리에만 존재하기 때문에 초기화됨)
+        console.log("📦 현재 저장된 chapterData:", chapterData);
+        if (chapterData?.content) {
+            const contents = chapterData.content;
+            console.log("✅ Chapter content:", contents);
+
+            const splitSentences = contents
             .split(/(?<=[.?!])\s+/)
-            .filter((s)=>s.trim()!="");
-        setSentences(splitSentences);
-        setCurrentIndex(0);
-    }catch(error){
-        console.error(error);
-        setSentences(["❌내용을 불러오지 못했어요."]);
-        setCurrentIndex(0);
-    }
-   };
+            .filter((s) => s.trim() !== "");
+
+            setSentences(splitSentences);
+            setCurrentIndex(0);
+        } else {
+            setSentences(["❌ 내용이 없습니다. 다시 돌아가주세요."]);
+        }
+    }, [chapterData]);
 
 
    //다음 문장으로 넘어가도록 함함
@@ -161,13 +167,14 @@ function StudyPage(props){
         setCurrentIndex(currentIndex+1);
     }else{
         alert("✅다음 단계로 넘어가볼까요?")
+        navigate("/game")
     }
    };
 
-   //페이지 진입시 handleFetchContent자동 실행
-   useEffect(()=>{
-    handleFetchContent();
-   },[]);
+//    //페이지 진입시 handleFetchContent자동 실행
+//    useEffect(()=>{
+//     handleFetchContent();
+//    },[]);
     
     return(
     <>

@@ -8,7 +8,7 @@ export async function fetchChapterContents(bookId){
         throw new Error("단원 내용을 불러오는 데 실패했습니다.");
     }
 
-    const data=await response.text(); //콘텐츠가 text일 경우
+    const data=await response.json();
     return data;
 }
 

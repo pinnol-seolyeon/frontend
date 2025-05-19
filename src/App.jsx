@@ -4,6 +4,7 @@ import AppRoutes from './AppRoutes';
 
 import Header from './components/Header';
 import axios from 'axios';
+import { ChapterProvider } from './context/ChapterContext';
 
 
 
@@ -28,9 +29,11 @@ export default function App() {
 
 /// header는 항상 떠있고 Routes만 페이지마다 변하는 구조조
   return (
-    <Router basename={process.env.PUBLIC_URL}>
-      <Header login={login} setLogin={setLogin} user={user}/>  {/*모든 페이지 공통 Header*/}
-      <AppRoutes login={login} setLogin={setLogin} user={user} /> {/*페이지 전환*/}
-    </Router>
+    <ChapterProvider>
+      <Router basename={process.env.PUBLIC_URL}>
+        <Header login={login} setLogin={setLogin} user={user}/>  {/*모든 페이지 공통 Header*/}
+        <AppRoutes login={login} setLogin={setLogin} user={user} /> {/*페이지 전환*/}
+      </Router>
+    </ChapterProvider>
   );
 }

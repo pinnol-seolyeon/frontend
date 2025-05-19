@@ -48,14 +48,14 @@ function ChapterPage() {
       </div>
 
       <div className="book-modules">
-        {chapters.map((title,index) => (
+        {chapters.map((chapter,index) => (
           <div key={index} className="book-card completed">
             <div className="module-icon">📖</div>
-            <h3>{title}</h3>
+            <h3>{chapter.chapterTitle}</h3>
             <div className="review-buttons">
               <button
                 className="review-btn"
-                onClick={() => handleChapterClick('/study/level3')}
+                onClick={() => handleChapterClick('/study/1')}
               >
                 학습하기
               </button>

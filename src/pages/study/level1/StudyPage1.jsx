@@ -3,6 +3,12 @@ import Header from "../../../components/Header";
 import Box from "../../../components/Box";
 import tiger from "../../../assets/tiger-pencil.png";
 import Button from "../../../components/Button";
+import { fetchChapterContents} from "../../../api/study/level3API";
+import { useNavigate } from "react-router-dom";
+import React,{useState,useEffect} from 'react';
+import {useParams} from "react-router-dom";
+import MiniHeader from "../../../components/study/MiniHeader";
+import {useChapter} from "../../../context/ChapterContext";
 
 /*학습하기-3단계-1*/
 
@@ -87,18 +93,65 @@ const BubbleButton = styled.button`
 
 
 
-function StudyPage(props){
+function StudyPage(){
+
+    const navigate=useNavigate();
+    const {chapterId}=useParams();
+    const [title,setTitle]=useState("");
+    const [loading,setLoading]=useState(true);
+    const [step,setStep]=useState(0); //0이면 인사, 1이면 제목 출력
+    const {chapterData,setChapterData}=useChapter();
+
+    useEffect(()=>{
+        const loadChapterTitle=async()=>{
+            try{
+                const response=await fetchChapterContents("682829208c776a1ffa92fd4d"); //책 id 하드코딩
+                console.log("✅불러온 response:",response);
+                setTitle(response.chapterTitle);
+                setChapterData(response);
+                
+            }catch(err){
+                setTitle("⚠️단원명 로딩실패")
+            }finally{
+                setLoading(false);
+            }
+        };
+
+        loadChapterTitle();
+    },[chapterId]);
+
+    const handleNext=()=>{
+        if (step===0){
+            setStep(1);
+        }else{
+            alert("✅다음 단계로 넘어가볼까요? 다음 단계 버튼을 클릭해주세요!");
+        }
+    }
     
     return(
     <>
         <Wrapper>
             <Box>
+            <MiniHeader
+                    left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
+                    right={<Button onClick={()=>navigate(`/study/level3`)}>다음 단계로</Button>}
+                >
+                1/6 선생님과 학습하기
+                </MiniHeader>
             <ImageWrapper>
                 <Image src={tiger} alt="샘플" />
             </ImageWrapper>
                 <SpeechBubble>
-                    <TextBox>안녕</TextBox>
-                    <BubbleButton>다음</BubbleButton>
+                    <TextBox>
+                        {loading
+                            ? "단원을 준비 중이에요..."
+                            : step===0
+                                ? "안녕! 나는 호랑이 선생님이야🐯"
+                                : `이번 단원은 ${title} 이야. 이제 본격적으로 공부를 시작해보자 🐯`}
+                    </TextBox>
+                    <BubbleButton onClick={handleNext}>
+                            {step===0?"다음":"시작하기"}
+                    </BubbleButton>
                 </SpeechBubble>
             </Box>
         </Wrapper>
