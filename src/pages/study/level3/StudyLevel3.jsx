@@ -62,17 +62,22 @@ const SpeechBubble=styled.div`
 
 `;
 
-const TextBox=styled.div`
-    display:flex;
-    justify-content:center; /*가로 정렬*/
-    align-items:center; /*세로 정렬*/
+const TextBox = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 
-    width:80%;
-    margin:0 auto;
-    padding:50px;
-    font-size: clamp(20px, 5vw, 25px); /* 최소폰트크기,뷰포트 너비 기반 크기, 최대 폰트 */
-    cursor:pointer;
-    user-select:none;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
+
+  font-size: clamp(20px, 3vw, 32px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
+  line-height: 1.6; /* ✅ 줄 간격을 여유 있게 */
+  letter-spacing: 0.03em; /* ✅ 글자 간격 미세 조정 */
+  font-weight: 500; /* ✅ 가독성 좋은 중간 두께 */
+  font-family: "Noto Sans KR", sans-serif; /* ✅ 국문에 적합한 서체 */
+  color: #333;
 `;
 
 
@@ -130,7 +135,7 @@ position: absolute;
 
 
 
-function StudyPage(props){
+function StudyPage(){
 
     const navigate=useNavigate();
     const [sentences,setSentences]=useState([]);

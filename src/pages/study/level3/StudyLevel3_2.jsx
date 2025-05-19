@@ -67,15 +67,21 @@ const SpeechBubble=styled.div`
 `;
 
 const TextBox = styled.div`
-  width: 100%;
-  font-size: clamp(20px, 5vw, 25px);
-  line-height: 1.5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 
-  padding:20px;
+  width: 80%;
+  margin: 0 auto;
+  padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
 
-  word-break: keep-all;   /* 단어 기준 줄바꿈 (한국어에 좋음) */
-  white-space: pre-wrap;  /* 줄바꿈 문자도 반영 */
-//   overflow:auto;
+  font-size: clamp(20px, 3vw, 32px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
+  line-height: 1.6; /* ✅ 줄 간격을 여유 있게 */
+  letter-spacing: 0.03em; /* ✅ 글자 간격 미세 조정 */
+  font-weight: 500; /* ✅ 가독성 좋은 중간 두께 */
+  font-family: "Noto Sans KR", sans-serif; /* ✅ 국문에 적합한 서체 */
+  color: #333;
 `;
 
 
