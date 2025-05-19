@@ -18,6 +18,9 @@ import Game from './pages/game/Game';
 import ChildInfo from './pages/login/ChildInfo';
 import Main from './pages/main/Main';
 import ReviewPage from './pages/review/ReviewPage';
+import BookListPage from './pages/study/Book/BookListPage';
+import ChapterPage from './pages/study/Chapter/ChapterPage';
+
 
 const GlobalStyles = createGlobalStyle`
   ${reset};
@@ -55,6 +58,8 @@ const routes = [
   { path: '/question', element: <Question /> },
   { path: '/review', element: <ReviewPage/> },
   { path: '/game', element: <Game/> },
+  {path:'/book',element:<BookListPage/>},
+  {path:'/book/chapter',element:<ChapterPage/>}
 ];
 
 export default function AppRoutes({ login, setLogin, user }) {

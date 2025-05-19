@@ -3,6 +3,11 @@ import Header from "../../../components/Header";
 import Box from "../../../components/Box";
 import tiger from "../../../assets/tiger-upperbody1.png";
 import testImage from "../../../assets/testImage.png";
+import nextButton from "../../../assets/nextButton.png";
+import MiniHeader from "../../../components/study/MiniHeader";
+import Button from "../../../components/Button";
+
+import { useNavigate } from "react-router-dom";
 
 /*학습하기-3단계-4*/
 
@@ -155,11 +160,19 @@ const TestImage=styled.img`
 
 
 function StudyPage(props){
+
+    const navigate=useNavigate();
     
     return(
     <>
         <Wrapper>
             <Box>
+                <MiniHeader
+                    left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
+                    right={<Button onClick={()=>navigate(-1)}>다음 단계로</Button>}
+                >
+                3/6 선생님과 학습하기
+                </MiniHeader>
             <ImageWrapper>
                 <Image src={tiger} alt="샘플" />
                 <TestImage src={testImage} alt="샘플" />

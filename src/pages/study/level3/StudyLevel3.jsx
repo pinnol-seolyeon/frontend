@@ -1,10 +1,14 @@
 import styled from "styled-components";
+import React,{useState,useEffect} from "react";
 
 import Header from "../../../components/Header";
 import Box from "../../../components/Box";
 import tiger from "../../../assets/tiger-upperbody1.png";
 import Button from "../../../components/Button";
 import { useNavigate } from "react-router-dom";
+import { fetchChapterContents } from "../../../api/study/level3API";
+import nextButton from "../../../assets/nextButton.png";
+import MiniHeader from "../../../components/study/MiniHeader";
 
 /*학습하기-3단계-1*/
 
@@ -62,10 +66,12 @@ const TextBox=styled.div`
     justify-content:center; /*가로 정렬*/
     align-items:center; /*세로 정렬*/
 
-    width:50%;
+    width:80%;
     margin:0 auto;
-    paddding:50px;
+    padding:50px;
     font-size: clamp(20px, 5vw, 25px); /* 최소폰트크기,뷰포트 너비 기반 크기, 최대 폰트 */
+    cursor:pointer;
+    user-select:none;
 `;
 
 
@@ -105,27 +111,87 @@ const QuestionButton = styled.button`
   }
 `;
 
+const ImageButton=styled.img`
+position: absolute;
+  right: 20px;
+  bottom: 20px;
+  width:60px;
+  height:auto;
+  cursor:pointer;
+
+  padding: 10px 16px;
+  &:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+
+`
+
+
 
 function StudyPage(props){
 
     const navigate=useNavigate();
+    const [sentences,setSentences]=useState([]);
+    const [currentIndex,setCurrentIndex]=useState(0);
 
    const navigateToQuestion=()=>{
         navigate("/question");
    }
+
+   const handleFetchContent=async()=>{
+    try{
+        const data=await fetchChapterContents("682829208c776a1ffa92fd4d"); //책 id 하드코딩
+        const splitSentences=data
+            .split(/(?<=[.?!])\s+/)
+            .filter((s)=>s.trim()!="");
+        setSentences(splitSentences);
+        setCurrentIndex(0);
+    }catch(error){
+        console.error(error);
+        setSentences(["❌내용을 불러오지 못했어요."]);
+        setCurrentIndex(0);
+    }
+   };
+
+
+   //다음 문장으로 넘어가도록 함함
+   const handleNext=()=>{
+    if (currentIndex<sentences.length-1){
+        setCurrentIndex(currentIndex+1);
+    }else{
+        alert("✅다음 단계로 넘어가볼까요?")
+    }
+   };
+
+   //페이지 진입시 handleFetchContent자동 실행
+   useEffect(()=>{
+    handleFetchContent();
+   },[]);
     
     return(
     <>
         <Wrapper>
             <Box>
+                <MiniHeader
+                    left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
+                    right={<Button onClick={()=>navigate(-1)}>다음 단계로</Button>}
+                >
+                3/6 선생님과 학습하기
+                </MiniHeader>
             <ImageWrapper>
                 <Image src={tiger} alt="샘플" />
                 <QuestionButton onClick={navigateToQuestion}
                 >질문</QuestionButton>
             </ImageWrapper>
                 <SpeechBubble>
-                    <TextBox>안녕</TextBox>
-                    <BubbleButton>대답하기</BubbleButton>
+                    <TextBox>
+                        {sentences.length>0
+                            ?sentences[currentIndex]
+                            :"⚠️"}
+                    </TextBox>
+                    {/* <BubbleButton>대답하기</BubbleButton> */}
+                    <ImageButton src={nextButton} alt="버튼" onClick={handleNext}></ImageButton>
                 </SpeechBubble>
             </Box>
         </Wrapper>

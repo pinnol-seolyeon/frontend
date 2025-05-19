@@ -10,7 +10,7 @@ function Dashboard() {
     {
       title: "AI 학습하기",
       description: "AI 선생님과 함께 오늘의 학습을 시작해보세요",
-      path: "/study/1", //클릭했을 때 이동할 경로로
+      path: "/book", //클릭했을 때 이동할 경로로
       icon: "📚"
     },
     {
