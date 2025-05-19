@@ -1,14 +1,31 @@
-import React, { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
-// Context 생성
 const ChapterContext = createContext();
-
-// 커스텀 Hook: 다른 컴포넌트에서 쉽게 접근 가능
 export const useChapter = () => useContext(ChapterContext);
 
-// Provider: 전체 앱 또는 필요한 범위 감싸기
 export const ChapterProvider = ({ children }) => {
-  const [chapterData, setChapterData] = useState(null);
+  const [chapterData, setChapterDataState] = useState(null);
+
+  // ✅ localStorage에도 저장
+  const setChapterData = (data) => {
+    setChapterDataState(data);
+    localStorage.setItem("chapterData", JSON.stringify(data));
+  };
+
+  // ✅ 앱 시작 시 localStorage에서 복원
+  useEffect(() => {
+    const stored = localStorage.getItem("chapterData");
+    if (stored) {
+      setChapterDataState(JSON.parse(stored));
+    }
+  }, []);
+
+
+  //로그아웃&학습완료 시
+  const clearChapterData = () => {
+    localStorage.removeItem("chapterData");
+    setChapterDataState(null);
+  };
 
   return (
     <ChapterContext.Provider value={{ chapterData, setChapterData }}>
