@@ -26,21 +26,22 @@ const Wrapper=styled.div`
 const ImageWrapper=styled.div`
     position:relative;
     display:flex;
-    align-items:flex-end;
+    align-items:flex-start;
     // justify-content:center;
 
-    margin:top:129ox;
+    margin:top:129px;
     gap:12px;
 `
 
 
 
 const Image=styled.img`
-    width:100%; 
+    width:80%; 
     height:auto;
     object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
     max-width:300px;
     display:block;
+
     
      /*가로 중앙 정렬, 세로 원하는 위치에 자유롭게 배치*/
     // align-self:center;/*가로 중앙 정렬*/
@@ -49,11 +50,21 @@ const Image=styled.img`
 
 `;
 
+const TestImage = styled.img`
+    // flex:1;
+    max-width:20%;
+    width:100%;
+    height:auto;
+    object-fit:contain;
+    margin-top:60px;
+`;
+
 const SpeechBubble=styled.div`
     display:flex;
     width:80%;
     // height:100%;
     min-height:120px;
+    max-height:150px;
     padding:20px;
     
     background-color:#FEF3E1;
@@ -148,22 +159,6 @@ const ButtonWrapper=styled.div`
     padding: 0px 0px 0px 20px;
 
 `
-
-const TestImage=styled.img`
-    display:flex;
-    width:50%; 
-    height:auto;
-    object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    max-width:300px;
-    display:block;
-    // margin:0 auto; /*가로 중앙 정렬*/
-    padding:30px;
-
-    // position:absolute;
-    // left:20px;
-    // bottom:20px;
-`;
-
 
 function StudyPage(props){
 

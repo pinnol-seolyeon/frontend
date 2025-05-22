@@ -5,7 +5,8 @@ import Button from "../Button";
 const HeaderWrapper = styled.div`
   display: flex;
   width: 100%;
-  height: 60px;
+  // height: 60px;
+  min-height:70px;
   padding: 0 20px;
   background-color: #2774B2;
   justify-content: space-between;
@@ -39,12 +40,14 @@ const RightArea = styled.div`
 `;
 
 
-function MiniHeader({ left,right,children }) {
+function MiniHeader({ left,right,children,onClose }) {
   return (
     <HeaderWrapper>
       <SideArea>{left}</SideArea>
       <TitleArea>{children}</TitleArea>
       <SideArea>{right}</SideArea>
+
+      {onClose&&<RightArea>{onClose}</RightArea>}
     </HeaderWrapper>
   );
 }

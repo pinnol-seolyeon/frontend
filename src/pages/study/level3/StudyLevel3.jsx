@@ -131,8 +131,7 @@ position: absolute;
     opacity: 0.9;
   }
 
-`
-
+`;
 
 
 function StudyPage(){

@@ -20,6 +20,7 @@ import Main from './pages/main/Main';
 import ReviewPage from './pages/review/ReviewPage';
 import BookListPage from './pages/study/Book/BookListPage';
 import ChapterPage from './pages/study/Chapter/ChapterPage';
+import StudyLv2_withImg from './pages/study/level2/StudyLv2_withImg';
 
 
 const GlobalStyles = createGlobalStyle`
@@ -59,7 +60,8 @@ const routes = [
   { path: '/review', element: <ReviewPage/> },
   { path: '/game', element: <Game/> },
   {path:'/book',element:<BookListPage/>},
-  {path:'/book/chapter',element:<ChapterPage/>}
+  {path:'/book/chapter',element:<ChapterPage/>},
+  {path:'/study/level2-img',element:<StudyLv2_withImg/>}
 ];
 
 export default function AppRoutes({ login, setLogin, user }) {

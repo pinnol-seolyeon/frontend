@@ -2,6 +2,7 @@ import styled from "styled-components";
 import Header from "../../../components/Header";
 import Box from "../../../components/Box";
 import testImage from "../../../assets/testImage.png";
+import MiniHeader from "../../../components/study/MiniHeader";
 
 
 /*AI학습자료*/

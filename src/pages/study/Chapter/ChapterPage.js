@@ -51,7 +51,7 @@ function ChapterPage() {
         {chapters.map((chapter,index) => (
           <div key={index} className="book-card completed">
             <div className="module-icon">📖</div>
-            <h3>{chapter.chapterTitle}</h3>
+            <h3>{chapter.title}</h3>
             <div className="review-buttons">
               <button
                 className="review-btn"

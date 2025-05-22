@@ -134,7 +134,7 @@ function StudyPage(props){
             <Box>
                 <MiniHeader
                     left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
-                    right={<Button onClick={()=>navigate(`/study/level3`)}>다음 단계로</Button>}
+                    right={<Button onClick={()=>navigate(`/study/level2-img`)}>다음 단계로</Button>}
                 >
                 1/6 : 학습 목표
                 </MiniHeader>
