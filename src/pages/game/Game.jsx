@@ -7,6 +7,8 @@ import quizBoxImg from '../../assets/quizpop.png';
 import backgroundImg from '../../assets/game-background1.png';
 import flagImg from '../../assets/flag.png';         // 깃발 이미지
 import playerEndImg from '../../assets/finish_player.png'; // 종료용 캐릭터 이미지
+import { saveScoreToDB } from '../../api/saveScoreToDB';
+
 
 
 export default function Game() {
@@ -15,7 +17,7 @@ export default function Game() {
   const updateRef = useRef(null);
 
   const frameRef = useRef(0);
-  const gameSpeedRef = useRef(7);
+  const gameSpeedRef = useRef(8);
   const backgroundXRef = useRef(0);
   const entitiesRef = useRef([]);
   const playerRef = useRef({});
@@ -33,6 +35,7 @@ export default function Game() {
   const [isPaused, setIsPaused] = useState(false);
   const [score, setScore] = useState(0);
   const scoreRef = useRef(0);
+  const quizScoreRef = useRef(3);
   const groundHeightRatioRef = useRef(0.15);
 
   const [penaltyVisible, setPenaltyVisible] = useState(false);
@@ -128,6 +131,7 @@ export default function Game() {
       restoreSnapshot();
 
       scoreRef.current = 0
+      quizScoreRef.current += 1
       setIsPaused(false);
       setWrongVisible(true);
       setTimeout(() => setWrongVisible(false), 1000);
@@ -154,9 +158,9 @@ export default function Game() {
 
   useEffect(() => {
     
-    // if (gameOver) {
-    //   saveScoreToDB(scoreRef.current);
-    // }
+    if (gameOver) {
+        saveScoreToDB(1, quizScoreRef.current , scoreRef.current);
+      }
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
 
@@ -274,13 +278,16 @@ export default function Game() {
           y = yBase - height - player.height * 1.3;
         } else if (type === 'quiz') {
           img = quizBoxImageRef.current;
-          width = canvas.width * 0.08;
-          height = width;
-          y = yBase - height;
+
+          // 더 넓고 큰 박스
+          width = canvas.width * 0.25;
+          height = canvas.height * 0.4;
+
+          y = canvas.height * 0.7 - height / 2;
         }
 
         const isTooClose = entitiesRef.current.some(e => Math.abs(e.x - x) < width * 2);
-        if (!isTooClose) {
+        if (type === 'quiz' || !isTooClose) {
           entitiesRef.current.push({ type, x, y, width, height, img });
         }
       });
@@ -360,7 +367,7 @@ export default function Game() {
 
       if (!isPaused) {
         frameRef.current++;
-        gameSpeedRef.current += 0.002;
+        gameSpeedRef.current += 0.001;
       }
       animationIdRef.current = requestAnimationFrame(updateRef.current);
 
