@@ -129,3 +129,18 @@
 .review-page .error-message {
   margin-bottom: 20px;
 }
+
+.book-card.completed {
+  background-color: #e0f7fa;
+  border: 2px solid #26c6da;
+}
+
+.book-card.current {
+  border: 3px solid #4caf50;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.4);
+}
+
+.current-label {
+  color: #4caf50;
+  font-weight: bold;
+}

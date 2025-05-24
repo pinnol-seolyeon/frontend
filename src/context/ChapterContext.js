@@ -25,10 +25,11 @@ export const ChapterProvider = ({ children }) => {
   const clearChapterData = () => {
     localStorage.removeItem("chapterData");
     setChapterDataState(null);
+    console.log("🧹chapterData 초기화 완료");
   };
 
   return (
-    <ChapterContext.Provider value={{ chapterData, setChapterData }}>
+    <ChapterContext.Provider value={{ chapterData, setChapterData,clearChapterData }}>
       {children}
     </ChapterContext.Provider>
   );

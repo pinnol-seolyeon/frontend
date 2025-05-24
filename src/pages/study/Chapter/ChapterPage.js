@@ -32,8 +32,8 @@ function ChapterPage() {
   },[]);
 
 
-  const handleChapterClick = (path) => {
-    navigate(path);
+  const handleChapterClick = (chapterId) => {
+    navigate(`/study/1?chapterId=${chapterId}`);
   };
 
   if (loading) return <div className="loading">단원을 불러오는중..</div>;
@@ -48,22 +48,48 @@ function ChapterPage() {
       </div>
 
       <div className="book-modules">
-        {chapters.map((chapter,index) => (
-          <div key={index} className="book-card completed">
-            <div className="module-icon">📖</div>
-            <h3>{chapter.title}</h3>
+        {chapters.map((chapter,index) => {
+          const {id,title,isCompleted,isCurrent}=chapter;
+
+          return(
+            <div
+              key={index}
+              className={`book-card
+                  ${isCompleted?'completed':''}
+                  ${isCurrent?'current':''} `}
+              onClick={()=>{
+                if(isCompleted) handleChapterClick(id); //완료된 단원만 클릭 가능 
+              }}
+              style={{cursor:isCompleted?'pointer':'default'}}
+            >
+               <div className="module-icon">{isCompleted ? '📖' : '📘'}</div>
+
+               <h3>{title}</h3>
+        
+          
             <div className="review-buttons">
-              <button
-                className="review-btn"
-                onClick={() => handleChapterClick('/study/1')}
-              >
-                학습하기
-              </button>
+              {(isCompleted||isCurrent)&&(
+                  <button
+                    className="review-btn"
+                    onClick={(e)=>{
+                      e.stopPropagation(); //부모 div 클릭 방지
+                      handleChapterClick(id);
+                    }}
+                  >
+                    {isCompleted?'복습하기':'학습하기'}
+                  </button>
+              )}
+              {isCurrent&&(
+                <span ClassName="current-label"></span>
+              )}
+              
             </div>
           </div>
-        ))}
+      
+          );
+        })}
+        </div>
       </div>
-    </div>
   );
 }
 
