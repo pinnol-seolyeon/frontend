@@ -54,7 +54,7 @@ const routes = [
   { path: '/study/level2', element: <StudyLevel2 /> },
   { path: '/study/level3', element: <StudyLevel3 /> },
   { path: '/study/level3/2', element: <StudyLevel3_2 /> },
-  { path: '/study/level6', element: <StudyLevel6 /> },
+  { path: '/study/level6/1', element: <StudyLevel6 /> },
   { path: '/study/level6/2', element: <StudyLv6_2 /> },
   { path: '/question', element: <Question /> },
   { path: '/review', element: <ReviewPage/> },

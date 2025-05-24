@@ -171,7 +171,7 @@ function StudyPage(){
         setCurrentIndex(currentIndex+1);
     }else{
         alert("✅다음 단계로 넘어가볼까요?")
-        navigate("/game")
+        navigate("/study/level6/1") //추후 `/game`으로 변경경
     }
    };
 
