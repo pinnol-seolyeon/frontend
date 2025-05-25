@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import styles from './Dashboard.module.css';
+import StudyStatsBox from '../../components/analyze/StudyStatsBox';
 import QuizChart from '../../components/QuizChart';
 import AttendanceCalendar from '../../components/AttendanceCalendar';
 import TodayStudyTime from '../../components/TodayStudyTime';
 // import Answers from '../../components/Answers';
 
-import { fetchScoreResults, fetchTodayStudyTime, fetchAttendance } from '../../api/analytics';
+import { fetchStudyStats, fetchTodayStudyTime, fetchAttendance } from '../../api/analytics';
 
 export default function Dashboard() {
-  const [quizData, setQuizData] = useState([]);
+  const [studyStats, setStudyStats] = useState({ totalCompleted: 0, weeklyCompleted: 0 });
   const [studyTime, setStudyTime] = useState({ hours: 0, minutes: 0 });
   const [attendance, setAttendance] = useState([]);
 
   useEffect(() => {
-    fetchScoreResults().then(setQuizData);
+    fetchStudyStats().then(setStudyStats);
     fetchTodayStudyTime().then(setStudyTime);
     const now = new Date();
     fetchAttendance(now.getFullYear(), now.getMonth() + 1).then(res => {
@@ -31,16 +32,16 @@ export default function Dashboard() {
         {/* ⬆️ 위쪽 수평 두 개 */}
         <div className={styles.topBoxes}>
           <div className={styles.squareBox}>
-            <TodayStudyTime hours={studyTime.hours} minutes={studyTime.minutes} />
+            <StudyStatsBox type="total" />
           </div>
           <div className={styles.squareBox}>
-            <AttendanceCalendar attendedDates={attendance} />
+            <StudyStatsBox type="weekly" />
           </div>
         </div>
 
         {/* ⬅️ 가운데 가로 긴 박스 */}
         <div className={styles.quizChartBox}>
-          <QuizChart data={quizData} />
+          {/* <QuizChart data={quizData} /> */}
         </div>
 
         {/* ⬇️ 아래 수평 두 개 */}
