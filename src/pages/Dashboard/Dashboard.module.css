@@ -32,6 +32,12 @@
   gap: 30px;
 }
 
+.topBoxes {
+  display: flex;
+  justify-content: space-between;
+  gap: 30px;
+}
+
 /* 퀴즈 차트 영역 (가로로 긴 박스) */
 .quizChartBox {
   background-color: white;
