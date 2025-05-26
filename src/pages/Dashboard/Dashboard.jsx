@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import styles from './Dashboard.module.css';
 import StudyStatsBox from '../../components/analyze/StudyStatsBox';
+import StudyTimeStats from '../../components/analyze/StudyTimeStats';
 import QuizChart from '../../components/QuizChart';
 import AttendanceCalendar from '../../components/AttendanceCalendar';
 import TodayStudyTime from '../../components/TodayStudyTime';
 // import Answers from '../../components/Answers';
 
-import { fetchStudyStats, fetchTodayStudyTime, fetchAttendance } from '../../api/analytics';
+import { fetchStudyStats, fetchStudyTimeStats, fetchTodayStudyTime, fetchAttendance } from '../../api/analytics';
 
 export default function Dashboard() {
   const [studyStats, setStudyStats] = useState({ totalCompleted: 0, weeklyCompleted: 0 });
@@ -47,7 +48,7 @@ export default function Dashboard() {
         {/* ⬇️ 아래 수평 두 개 */}
         <div className={styles.bottomBoxes}>
           <div className={styles.squareBox}>
-            {/* 예: <Answers /> */}
+            <StudyTimeStats />
           </div>
           <div className={styles.squareBox}>
             {/* 예: 다른 콘텐츠 */}
