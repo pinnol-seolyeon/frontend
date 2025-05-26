@@ -1,20 +1,26 @@
-export async function fetchScoreResults() {
+export async function fetchStudyStats() {
   try {
-  const res = await fetch("http://localhost:8080/api/scores/results", {
-    credentials: "include"
-  });
+    const res = await fetch('http://localhost:8080/api/study/stats', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`HTTP ${res.status}: ${text}`);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`HTTP ${res.status}: ${text}`);
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error('❌ fetchStudyStats 실패:', error);
+    throw error;
   }
+}
 
-  const data = await res.json();
-  console.log("✅ Score data:", data, Array.isArray(data));
-} catch (err) {
-  console.error("❌ Fetch failed:", err);
-}
-}
 
 export async function fetchTodayStudyTime() {
   const res = await fetch(`http://localhost:8080/api/study/today`, {
