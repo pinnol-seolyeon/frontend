@@ -106,15 +106,14 @@ function StudyPage(){
     const [title,setTitle]=useState("");
     const [loading,setLoading]=useState(true);
     const [step,setStep]=useState(0); //0이면 인사, 1이면 제목 출력
-    const {chapterData,setChapterData}=useChapter();
+    const {chapterData}=useChapter();
 
     useEffect(()=>{
         const loadChapterTitle=async()=>{
             try{
-                const response=await fetchChapterContents("682829208c776a1ffa92fd4d"); //책 id 하드코딩
-                console.log("✅불러온 response:",response);
-                setTitle(response.chapterTitle);
-                setChapterData(response);
+                if(chapterData?.chapterTitle){
+                    setTitle(chapterData.chapterTitle);
+                }
                 
             }catch(err){
                 setTitle("⚠️단원명 로딩실패")

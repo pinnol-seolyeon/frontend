@@ -355,7 +355,7 @@ function StudyLv2_withImg(props){
                                 </AnswerButtonWrapper>
                             )}
                             </> 
-                        ) : ( //isAnswering이 True일때때
+                        ) : ( //isAnswering이 True일때
                             <>
                             <AnswerInputBox>
                                 <Input
