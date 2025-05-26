@@ -3,7 +3,11 @@ import Header from "../../../components/Header";
 import Box from "../../../components/Box";
 import tigerPencil from "../../../assets/tiger-pencil.png";
 import Button from "../../../components/Button";
+import MiniHeader from "../../../components/study/MiniHeader";
 
+import { useNavigate } from "react-router-dom";
+import React,{useState,useEffect} from "react";
+import { useChapter } from "../../../context/ChapterContext";
 
 /*학습하기-1단계-2*/
 
@@ -48,16 +52,24 @@ const SpeechBubble=styled.div`
     border-radius: 24px;
 `;
 
-const TextBox=styled.div`
-    display:flex;
-    justify-content:center; /*가로 정렬*/
-    align-items:center; /*세로 정렬*/
+const TextBox = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 
-    width:50%;
-    margin:0 auto;
-    paddding:50px;
-    font-size: clamp(20px, 5vw, 40px); /* 최소폰트크기,뷰포트 너비 기반 크기, 최대 폰트 */
+  width: 80%;
+  margin: 0 auto;
+  padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
+
+  font-size: clamp(20px, 3vw, 32px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
+  line-height: 1.6; /* ✅ 줄 간격을 여유 있게 */
+  letter-spacing: 0.03em; /* ✅ 글자 간격 미세 조정 */
+  font-weight: 500; /* ✅ 가독성 좋은 중간 두께 */
+  font-family: "Noto Sans KR", sans-serif; /* ✅ 국문에 적합한 서체 */
+  color: #333;
 `;
+
 
 const BubbleButton = styled.button`
   position: absolute;
@@ -81,13 +93,59 @@ const BubbleButton = styled.button`
 
 
 function StudyPage(props){
+
+    const navigate=useNavigate();
+    const[objective,setObjective]=useState("");
+    const {chapterData}=useChapter();
+    const [loading,setLoading]=useState(true);
+
+
+
+    useEffect(() => {
+
+        //chapterData를 사용하려면 직접 url 열면 안됨.. navigate로 url이동해야 (Context는 메모리에만 존재하기 때문에 초기화됨)
+        console.log("📦 현재 저장된 chapterData:", chapterData);
+        try{
+            if (chapterData?.objective) {
+                
+                setObjective(chapterData.objective);
+                console.log("✅ Chapter content:", chapterData.objective);
+
+                // const splitSentences = contents
+                // .split(/(?<=[.?!])\s+/)
+                // .filter((s) => s.trim() !== "");
+
+                // setSentences(splitSentences);
+                // setCurrentIndex(0);
+            } else {
+                setObjective(["❌ 내용이 없습니다. 다시 돌아가주세요."]);
+            }
+        }catch(err){
+            console.error("🚨",err);
+            setObjective("데이터를 불러오지 못함⚠️");
+        }finally{
+            setLoading(false);
+        }
+    }, [chapterData]);
     
     return(
     <>
         <Wrapper>
             <Box>
+                <MiniHeader
+                    left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
+                    right={<Button onClick={()=>navigate(`/study/level2-img`)}>다음 단계로</Button>}
+                >
+                1/6 : 학습 목표
+                </MiniHeader>
                 <SpeechBubble>
-                    <TextBox>ㅎㅇ</TextBox>
+                    
+                    <TextBox>
+                        {loading
+                            ? "학습 목표 준비중.."
+                            :`먼저 이번 단원의 학습목표에 대해서 알아볼까? ${objective} 그럼 이제 본격적으로 공부를 시작해보자🐯`
+                            }
+                    </TextBox>
                     <BubbleButton>대답하기</BubbleButton>
                 </SpeechBubble>
                 <Image src={tigerPencil} alt="샘플" />

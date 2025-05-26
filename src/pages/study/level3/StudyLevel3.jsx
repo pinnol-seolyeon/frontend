@@ -1,10 +1,15 @@
 import styled from "styled-components";
+import React,{useState,useEffect} from "react";
 
 import Header from "../../../components/Header";
 import Box from "../../../components/Box";
 import tiger from "../../../assets/tiger-upperbody1.png";
 import Button from "../../../components/Button";
 import { useNavigate } from "react-router-dom";
+import { fetchChapterContents } from "../../../api/study/level3API";
+import nextButton from "../../../assets/nextButton.png";
+import MiniHeader from "../../../components/study/MiniHeader";
+import { useChapter } from "../../../context/ChapterContext";
 
 /*학습하기-3단계-1*/
 
@@ -57,15 +62,22 @@ const SpeechBubble=styled.div`
 
 `;
 
-const TextBox=styled.div`
-    display:flex;
-    justify-content:center; /*가로 정렬*/
-    align-items:center; /*세로 정렬*/
+const TextBox = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 
-    width:50%;
-    margin:0 auto;
-    paddding:50px;
-    font-size: clamp(20px, 5vw, 25px); /* 최소폰트크기,뷰포트 너비 기반 크기, 최대 폰트 */
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
+
+  font-size: clamp(20px, 3vw, 32px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
+  line-height: 1.6; /* ✅ 줄 간격을 여유 있게 */
+  letter-spacing: 0.03em; /* ✅ 글자 간격 미세 조정 */
+  font-weight: 500; /* ✅ 가독성 좋은 중간 두께 */
+  font-family: "Noto Sans KR", sans-serif; /* ✅ 국문에 적합한 서체 */
+  color: #333;
 `;
 
 
@@ -105,27 +117,109 @@ const QuestionButton = styled.button`
   }
 `;
 
+const ImageButton=styled.img`
+position: absolute;
+  right: 20px;
+  bottom: 20px;
+  width:60px;
+  height:auto;
+  cursor:pointer;
 
-function StudyPage(props){
+  padding: 10px 16px;
+  &:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+
+`;
+
+
+function StudyPage(){
 
     const navigate=useNavigate();
+    const [sentences,setSentences]=useState([]);
+    const [currentIndex,setCurrentIndex]=useState(0);
+    const {chapterData}=useChapter();
 
    const navigateToQuestion=()=>{
         navigate("/question");
    }
+
+   useEffect(() => {
+
+        //chapterData를 사용하려면 직접 url 열면 안됨.. navigate로 url이동해야 (Context는 메모리에만 존재하기 때문에 초기화됨)
+        console.log("📦 현재 저장된 chapterData:", chapterData);
+        if (chapterData?.content) {
+            const contents = chapterData.content;
+            console.log("✅ Chapter content:", contents);
+
+            const splitSentences = contents
+            .split(/(?<=[.?!])\s+/)
+            .filter((s) => s.trim() !== "");
+
+            setSentences(splitSentences);
+            setCurrentIndex(0);
+        } else {
+            setSentences(["❌ 내용이 없습니다. 다시 돌아가주세요."]);
+        }
+    }, [chapterData]);
+
+
+   //다음 문장으로 넘어가도록 함함
+   const handleNext=async()=>{
+    if (currentIndex<sentences.length-1){
+        setCurrentIndex(currentIndex+1);
+    }else{
+        alert("✅다음 단계로 넘어가볼까요?")
+
+        //여태까지 질문한 내용들을 DB에 저장하는 API
+        try{
+            const response=await fetch(`http://localhost:8080/api/question/saveAll?chapterId=${chapterData?.chapterId}`,{
+                method:'POST',
+                credentials:'include',
+            });
+
+            if(!response.ok){
+                const err=await response.text();
+                throw new Error(err);
+            }
+
+            console.log("🐯 질문/답변 저장 성공");
+        }catch(e){
+            console.log("❌ 저장 중 오류 발생",e);
+        }
+        navigate("/study/level6/1") //추후 `/game`으로 변경경
+    }
+   };
+
+//    //페이지 진입시 handleFetchContent자동 실행
+//    useEffect(()=>{
+//     handleFetchContent();
+//    },[]);
     
     return(
     <>
         <Wrapper>
             <Box>
+                <MiniHeader
+                    left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
+                    right={<Button onClick={()=>navigate(-1)}>다음 단계로</Button>}
+                >
+                3/6 선생님과 학습하기
+                </MiniHeader>
             <ImageWrapper>
                 <Image src={tiger} alt="샘플" />
                 <QuestionButton onClick={navigateToQuestion}
                 >질문</QuestionButton>
             </ImageWrapper>
                 <SpeechBubble>
-                    <TextBox>안녕</TextBox>
-                    <BubbleButton>대답하기</BubbleButton>
+                    <TextBox>
+                        {sentences.length>0
+                            ?sentences[currentIndex]
+                            :"⚠️"}
+                    </TextBox>
+                    {/* <BubbleButton>대답하기</BubbleButton> */}
+                    <ImageButton src={nextButton} alt="버튼" onClick={handleNext}></ImageButton>
                 </SpeechBubble>
             </Box>
         </Wrapper>

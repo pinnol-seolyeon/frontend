@@ -1,0 +1,131 @@
+.book-page {
+    padding: 2rem;
+  }
+  
+  .page-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .book-modules {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  .book-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    text-align: center;
+  }
+  
+  .review-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    justify-content: center;
+  }
+  
+  .review-btn, .quiz-btn {
+    flex: 1;
+    max-width:500px;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  
+  .review-btn {
+    background: #f1f3f4;
+    color: #1a73e8;
+  }
+  
+  .quiz-btn {
+    background: #1a73e8;
+    color: white;
+  }
+
+  .book-card.completed {
+    border: 2px solid #1a73e8;
+  }
+  
+  .review-card.locked {
+    opacity: 0.7;
+    background: #f5f5f5;
+  }
+  
+  .review-status {
+    margin: 10px 0;
+    font-weight: bold;
+    color: #1a73e8;
+  }
+  
+  .book-card.locked .book-status {
+    color: #666;
+  }
+  
+  button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+  
+  /* 카드 호버 효과 */
+.review-card {
+    transition: transform 0.3s ease;
+  }
+  
+  .review-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  /* 모듈 아이콘 스타일 */
+  .module-icon {
+    font-size: 2em;
+    margin-bottom: 10px;
+  }
+  
+  /* 버튼 호버 효과 */
+  .review-btn:hover:not(:disabled), .quiz-btn:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-2px);
+  }
+  
+  /* 완료 상태 배지 스타일 개선 */
+  .completed .review-status {
+    background: #e8f5e9;
+    padding: 5px 10px;
+    border-radius: 15px;
+    display: inline-block;
+  }
+  
+  .locked .review-status {
+    background: #f5f5f5;
+    padding: 5px 10px;
+    border-radius: 15px;
+    display: inline-block;
+  }
+  
+  /* 반응형 그리드 조정 */
+  @media (max-width: 768px) {
+    .review-modules {
+      grid-template-columns: 1fr;
+    }
+    
+    .review-buttons {
+      flex-direction: column;
+    }
+  }
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+}
+
+.review-page .error-message {
+  margin-bottom: 20px;
+}

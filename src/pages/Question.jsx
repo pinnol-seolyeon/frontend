@@ -10,6 +10,7 @@ import Box from "../components/Box";
 import tiger from "../assets/tiger-upperbody1.png";
 import me from "../assets/me.png";
 import mic from "../assets/mic.png";
+import { askQuestion } from '../api/question/questionToAI';
 
 /*질문 버튼 눌렀을 때*/
 
@@ -84,43 +85,52 @@ const MyImg=styled.img`
 `;
 
 const ReceiveMessage = styled.div`
-    background-color: #FEF3E1;
-    border-top: 0.2px solid black;
-    border-bottom: 0.2px solid black;
-    border-right: 0.2px solid black;
-
-    border-radius: 0px 30px 30px 0px;
-    padding: 20px;
-    font-weight: bold;
-
-    margin-bottom: 10px;
-    max-width: 60%;
-    word-wrap: break-word;
-    align-self: flex-start;
-    white-space: pre-wrap;
-    animation: ${fadeIn} 0.5s ease-out;
+  background-color: #FEF3E1;
+  border-top: 0.2px solid black;
+  border-bottom: 0.2px solid black;
+  border-right: 0.2px solid black;
+  
+  border-radius: 0px 30px 30px 0px;
+  padding: 20px;
+  
+  font-weight: bold;
+  font-size: 16px;            // ✅ 글자 크기 명시
+  line-height: 1.8;           // ✅ 줄 간격 넓게
+  letter-spacing: 0.5px;      // ✅ 글자 간격 추가
+  
+  margin-bottom: 10px;
+  max-width: 60%;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  
+  align-self: flex-start;
+  animation: ${fadeIn} 0.5s ease-out;
 `;
 
-const Message=styled.div`
-    background-color:#FBC344;
-    border-top: 0.2px solid black;
-    border-bottom: 0.2px solid black;
-    border-left: 0.2px solid black;
-    
-    border-radius:30px 0px 0px 30px;
-    padding:20px;
-    font-weight: bold;
+const Message = styled.div`
+  background-color: #FBC344;
+  border-top: 0.2px solid black;
+  border-bottom: 0.2px solid black;
+  border-left: 0.2px solid black;
 
-    margin-bottom:10px;
-    margin-top:5px;
+  border-radius: 30px 0px 0px 30px;
+  padding: 20px;
+  
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 1.8;
+  letter-spacing: 0.5px;
 
-    max-width:60%;
-    word-wrap:break-word; 
-    align-self:flex-end;
-    white-space:pre-wrap;
-    animation:${fadeIn} 0.5s ease-out;
+  margin-bottom: 10px;
+  margin-top: 5px;
+  max-width: 60%;
+
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  align-self: flex-end;
+
+  animation: ${fadeIn} 0.5s ease-out;
 `;
-
 const MicButton=styled.button`
     background:none;
     border:none;
@@ -224,6 +234,7 @@ useEffect(()=>{
         recognitionRef.current.stop();
         // onRecordComplete(transcript); //인식된 transcript를 부모 컴포넌트로 넘김
         handleMessage(transcript);
+        
     };
 
     const handleClick=()=>{
@@ -250,10 +261,17 @@ useEffect(()=>{
                 setLoading(true);
                 //메시지를 서버로 POST 요청 //await: 비동기 처리로 서버 응답 기다림
                 const response=await axios.post('http://localhost:8080/api/question',{
-                    message:newMessage
-                });
+                    question:newMessage
+                },{
+                    withCredentials:true,
+                    headers:{
+                        "Content-Type":"application/json"
+                    }
+                }
+            
+                );
 
-                const serverResponse=response.data.response; //서버의 응답 메시지
+                const serverResponse=response.data.result; //서버의 응답 메시지
                 console.log('서버 응답:',serverResponse);
 
                 //서버 응답 메시지 추가
@@ -304,6 +322,7 @@ useEffect(()=>{
                 <MiniHeader onClose={
                     <CloseButton onClick={()=>navigate(-1)}>X</CloseButton>
                 }>
+                궁금한걸 물어보세요❗
                 </MiniHeader>
                 <QuestionWrapper>
                     <MessageList>

@@ -18,6 +18,10 @@ import Game from './pages/game/Game';
 import ChildInfo from './pages/login/ChildInfo';
 import Main from './pages/main/Main';
 import ReviewPage from './pages/review/ReviewPage';
+import BookListPage from './pages/study/Book/BookListPage';
+import ChapterPage from './pages/study/Chapter/ChapterPage';
+import StudyLv2_withImg from './pages/study/level2/StudyLv2_withImg';
+
 
 const GlobalStyles = createGlobalStyle`
   ${reset};
@@ -50,11 +54,14 @@ const routes = [
   { path: '/study/level2', element: <StudyLevel2 /> },
   { path: '/study/level3', element: <StudyLevel3 /> },
   { path: '/study/level3/2', element: <StudyLevel3_2 /> },
-  { path: '/study/level6', element: <StudyLevel6 /> },
+  { path: '/study/level6/1', element: <StudyLevel6 /> },
   { path: '/study/level6/2', element: <StudyLv6_2 /> },
   { path: '/question', element: <Question /> },
   { path: '/review', element: <ReviewPage/> },
   { path: '/game', element: <Game/> },
+  {path:'/book',element:<BookListPage/>},
+  {path:'/book/chapter',element:<ChapterPage/>},
+  {path:'/study/level2-img',element:<StudyLv2_withImg/>}
 ];
 
 export default function AppRoutes({ login, setLogin, user }) {

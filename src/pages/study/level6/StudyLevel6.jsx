@@ -3,6 +3,9 @@ import Header from "../../../components/Header";
 import Box from "../../../components/Box";
 import testImage from "../../../assets/testImage.png";
 import Button from "../../../components/Button";
+import MiniHeader from "../../../components/study/MiniHeader";
+
+import {useNavigate} from "react-router-dom";
 
 
 /*학습하기-6단계-1*/
@@ -69,11 +72,19 @@ const NextButton = styled(Button)`
 `;
 
 function StudyLevel6(props){
+
+    const navigate=useNavigate();
     
     return(
     <>
         <Wrapper>
             <Box>
+                <MiniHeader
+                    left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
+                    right={<Button onClick={()=>navigate(`/study/level6/2`)}>다음 단계로</Button>}
+                >
+                6/6 : 마무리
+                </MiniHeader>
                 <Title>오늘의 학습 요약</Title>
                 <Image src={testImage} alt="샘플" />
                 <NextButton>다음</NextButton>
