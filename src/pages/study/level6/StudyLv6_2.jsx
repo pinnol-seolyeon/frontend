@@ -146,6 +146,8 @@ function StudyLevel6_2(props){
     const handleComplete=async()=>{
          try {
             console.log("📦 현재 저장된 chapterData:", chapterData);
+
+
             // ✅ 여기에 실제 완료 처리 API 호출
             const response=await fetch(`http://localhost:8080/api/study/finish?chapterId=${chapterData?.chapterId}`, {
                 method: 'POST',

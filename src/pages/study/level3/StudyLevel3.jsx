@@ -166,11 +166,28 @@ function StudyPage(){
 
 
    //다음 문장으로 넘어가도록 함함
-   const handleNext=()=>{
+   const handleNext=async()=>{
     if (currentIndex<sentences.length-1){
         setCurrentIndex(currentIndex+1);
     }else{
         alert("✅다음 단계로 넘어가볼까요?")
+
+        //여태까지 질문한 내용들을 DB에 저장하는 API
+        try{
+            const response=await fetch(`http://localhost:8080/api/question/saveAll?chapterId=${chapterData?.chapterId}`,{
+                method:'POST',
+                credentials:'include',
+            });
+
+            if(!response.ok){
+                const err=await response.text();
+                throw new Error(err);
+            }
+
+            console.log("🐯 질문/답변 저장 성공");
+        }catch(e){
+            console.log("❌ 저장 중 오류 발생",e);
+        }
         navigate("/study/level6/1") //추후 `/game`으로 변경경
     }
    };
