@@ -14,7 +14,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchStudyStats().then(setStudyStats);
-    fetchTodayStudyTime().then(setStudyTime);
   }, []);
 
   return (
@@ -26,10 +25,10 @@ export default function Dashboard() {
       <div className={styles.contentBox}>
         {/* ⬆️ 위쪽 수평 두 개 */}
         <div className={styles.topBoxes}>
-          <div className={styles.squareBox}>
+          <div className={`${styles.squareBox} ${styles.topBox}`}>
             <StudyStatsBox type="total" />
           </div>
-          <div className={styles.squareBox}>
+          <div className={`${styles.squareBox} ${styles.topBox}`}>
             <StudyStatsBox type="weekly" />
           </div>
         </div>

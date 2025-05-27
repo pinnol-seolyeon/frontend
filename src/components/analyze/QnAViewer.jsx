@@ -3,17 +3,16 @@ import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import './QnAViewer.css';
 
+import { fetchQuestionDates, fetchQuestionsByDate } from '../../api/analytics';
+
 export default function QnAViewer() {
   const [markedDates, setMarkedDates] = useState([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [qnaList, setQnaList] = useState([]);
 
-  // 캘린더 표시할 날짜 목록
+  // 캘린더에 표시할 날짜 불러오기
   useEffect(() => {
-    fetch('/api/questions/dates', {
-      credentials: 'include',
-    })
-      .then((res) => res.json())
+    fetchQuestionDates()
       .then((data) => {
         const dates = data.map((dateStr) => dateStr.slice(0, 10));
         setMarkedDates(dates);
@@ -21,13 +20,10 @@ export default function QnAViewer() {
       .catch((err) => console.error('❌ 질문 날짜 불러오기 실패:', err));
   }, []);
 
-  // 선택 날짜 질문/답변 불러오기
+  // 날짜별 질문/답변 불러오기
   useEffect(() => {
-    const dateStr = selectedDate.toISOString().slice(0, 10);
-    fetch(`/api/questions/history?date=${dateStr}`, {
-      credentials: 'include',
-    })
-      .then((res) => res.json())
+    const dateStr = selectedDate.toLocaleDateString('sv-SE');
+    fetchQuestionsByDate(dateStr)
       .then((data) => {
         const formatted = data.flatMap((item) =>
           item.questions.map((q, i) => ({
@@ -44,17 +40,16 @@ export default function QnAViewer() {
     <div className="qna-container">
       <div className="calendar-panel">
         <Calendar
-          onClickDay={setSelectedDate}
-          tileClassName={({ date }) =>
-            markedDates.includes(date.toISOString().slice(0, 10))
-              ? 'highlight'
-              : null
-          }
+            onClickDay={setSelectedDate}
+            tileClassName={({ date }) => {
+                const dateStr = date.toLocaleDateString('sv-SE'); // 로컬 기준 날짜
+                return markedDates.includes(dateStr) ? 'marked' : null;
+            }}
         />
       </div>
 
       <div className="chat-panel">
-        <h2>{selectedDate.toISOString().slice(0, 10)} 질문 내역</h2>
+        <h2>{selectedDate.toLocaleDateString('sv-SE')} 질문 내역</h2>
         <div className="chat-box">
           {qnaList.length === 0 ? (
             <p>질문 기록이 없습니다.</p>

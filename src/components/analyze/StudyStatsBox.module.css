@@ -1,0 +1,12 @@
+.title {
+  font-size: 2rem;        /* 제목 크게 */
+  font-weight: 700;
+  text-align: center;     /* 글자 가운데 정렬 */
+  margin-bottom: 12px;
+}
+
+.value {
+  font-size: 2rem;        /* 숫자 크게 */
+  font-weight: bold;
+  text-align: center;     /* 글자 가운데 정렬 */
+}
