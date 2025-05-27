@@ -348,7 +348,7 @@ function StudyPage(){
                             {/* ✅ 응답이 있으면 응답만 표시 */}
                             {aiResponse ? (
                             <div>
-                                🤖 {aiResponse}
+                                 {aiResponse}
                             </div>
                             ) : (
                             <div>
