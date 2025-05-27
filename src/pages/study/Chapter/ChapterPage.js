@@ -2,12 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useOutletContext, useNavigate,useSearchParams} from 'react-router-dom';
 import axios from 'axios';
 import '../Chapter/ChapterPage.css';
-import {fetchChapters} from "../../../api/study/level3API";
+import {fetchChapters,fetchChapterContents} from "../../../api/study/level3API";
+import {useChapter} from "../../../context/ChapterContext";
 
 function ChapterPage() {
   const navigate = useNavigate();
   const [searchParams]=useSearchParams(); //URL에서 bookID 가져오기
   const bookId=searchParams.get("bookId");
+  const chapterId=searchParams.get("chapterId");
+  const {chapterData,setChapterData}=useChapter();
 
   const [chapters,setChapters]=useState([]);
   const [loading,setLoading]=useState(true);
@@ -32,9 +35,20 @@ function ChapterPage() {
   },[]);
 
 
-  const handleChapterClick = (chapterId) => {
-    navigate(`/study/1?chapterId=${chapterId}`);
-  };
+  const handleChapterClick = async (chapterId) => {
+  try {
+    const chapter = await fetchChapterContents(chapterId);
+    setChapterData(chapter);
+    console.log("✅API응답 chapter:",chapter.chapterId);
+
+    // 예: chapter.id를 사용해서 다음 페이지로 이동
+    navigate(`/study/1?chapterId=${chapter.chapterId}`);
+  } catch (err) {
+    console.error("학습 시작 API 호출 실패:", err);
+    alert("단원 정보를 불러오지 못했습니다.");
+  }
+};
+
 
   if (loading) return <div className="loading">단원을 불러오는중..</div>;
   if (error) return <div className="error-message">{error}</div>;

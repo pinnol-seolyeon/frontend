@@ -6,7 +6,7 @@ import Box from "../../../components/Box";
 import tiger from "../../../assets/tiger-upperbody1.png";
 import Button from "../../../components/Button";
 import { useNavigate } from "react-router-dom";
-import { fetchChapterContents } from "../../../api/study/level3API";
+import { fetchFeedback } from "../../../api/study/level3API";
 import nextButton from "../../../assets/nextButton.png";
 import MiniHeader from "../../../components/study/MiniHeader";
 import { useChapter } from "../../../context/ChapterContext";
@@ -17,12 +17,10 @@ import { useChapter } from "../../../context/ChapterContext";
 const Wrapper=styled.div`
     width:100%;
     height:100vh;
-
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-
 `;
 
 const ImageWrapper=styled.div`
@@ -30,25 +28,19 @@ const ImageWrapper=styled.div`
     display:flex;
     align-items:center;
     justify-content:center;
-
-    margin:top:129ox;
+    margin-top:129px;
     gap:12px;
-`
-
-
+`;
 
 const Image=styled.img`
     width:100%; 
     height:auto;
-    object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
+    object-fit:contain;
     max-width:300px;
     display:block;
-    
-     /*가로 중앙 정렬, 세로 원하는 위치에 자유롭게 배치*/
-    align-self:center;/*가로 중앙 정렬*/
+    align-self:center;
     margin-top:100px;
     margin-bottom:0px;
-
 `;
 
 const SpeechBubble=styled.div`
@@ -56,10 +48,7 @@ const SpeechBubble=styled.div`
     width:100%;
     height:25%;
     background-color:#FEF3E1;
-    
-
     position:relative;
-
 `;
 
 const TextBox = styled.div`
@@ -67,32 +56,28 @@ const TextBox = styled.div`
   justify-content: center;
   align-items: center;
   text-align: center;
-
   width: 100%;
   margin: 0 auto;
-  padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
-
-  font-size: clamp(20px, 3vw, 32px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
-  line-height: 1.6; /* ✅ 줄 간격을 여유 있게 */
-  letter-spacing: 0.03em; /* ✅ 글자 간격 미세 조정 */
-  font-weight: 500; /* ✅ 가독성 좋은 중간 두께 */
-  font-family: "Noto Sans KR", sans-serif; /* ✅ 국문에 적합한 서체 */
+  padding: 40px;
+  font-size: clamp(20px, 3vw, 32px);
+  line-height: 1.6;
+  letter-spacing: 0.03em;
+  font-weight: 500;
+  font-family: "Noto Sans KR", sans-serif;
   color: #333;
 `;
-
 
 const BubbleButton = styled.button`
   position: absolute;
   right: 20px;
   bottom: 20px;
-
-  padding: 10px 16px;
+  padding: 20px 32px;
   background-color: #2774B2;
   color: white;
+  border: none;
   border-radius: 30px;
   cursor: pointer;
-  border:0.2px solid black;
-
+  border: 0.2px solid black;
   transition: background-color 0.3s;
   &:hover {
     background-color: #1b5c91;
@@ -103,14 +88,12 @@ const QuestionButton = styled.button`
   position: absolute;
   right: 20px;
   bottom: 20px;
-
   padding: 16px 16px;
   background-color: #2774B2;
   color: white;
   border-radius: 15px;
   cursor: pointer;
-  border:0.2px solid black;
-
+  border: 0.2px solid black;
   transition: background-color 0.3s;
   &:hover {
     background-color: #1b5c91;
@@ -118,21 +101,70 @@ const QuestionButton = styled.button`
 `;
 
 const ImageButton=styled.img`
-position: absolute;
+  position: absolute;
   right: 20px;
   bottom: 20px;
   width:60px;
   height:auto;
   cursor:pointer;
-
   padding: 10px 16px;
   &:hover {
     transform: scale(1.05);
     opacity: 0.9;
   }
-
 `;
 
+const AnswerInputBox = styled.div`
+  display: flex;
+  flex-direction: row;
+  width: 80%;
+  padding: 20px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  gap: 12px;
+  margin-top: 20px;
+  justify-content: center;
+  align-items: center;
+`;
+
+const Input = styled.input`
+  width: 60%;
+  padding: 12px 16px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  font-size: 16px;
+  box-sizing: border-box;
+`;
+
+const SubmitButton = styled.button`
+  padding: 12px 24px;
+  background-color: #2774B2;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+  &:hover {
+    background-color: #1b5c91;
+  }
+`;
+
+const AiResponseBox = styled.div`
+  margin-top: 16px;
+  width: 80%;
+  max-width: 600px;
+  padding: 20px;
+  background-color: #e9f1fb;
+  border-left: 6px solid #2774B2;
+  border-radius: 12px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+  font-family: "Noto Sans KR", sans-serif;
+`;
 
 function StudyPage(){
 
@@ -140,6 +172,16 @@ function StudyPage(){
     const [sentences,setSentences]=useState([]);
     const [currentIndex,setCurrentIndex]=useState(0);
     const {chapterData}=useChapter();
+    const [questionIndexes, setQuestionIndexes] = useState([]);
+    const [isFinished,setIsFinished]=useState(false);
+
+    const [isQuestionFinished,setIsQuestionFinished]=useState(false);
+    const [userAnswer, setUserAnswer] = useState("");
+    const [aiResponse, setAiResponse] = useState("");
+    const [isAnswering,setIsAnswering]=useState(false);
+    const nextContext=sentences[currentIndex+1]||"다음 학습 내용 없음";
+
+ 
 
    const navigateToQuestion=()=>{
         navigate("/question");
@@ -155,14 +197,81 @@ function StudyPage(){
 
             const splitSentences = contents
             .split(/(?<=[.?!])\s+/)
-            .filter((s) => s.trim() !== "");
+            .filter((s) => s.trim() !== ""); //공백만 있는 문장 등을 제거
+            
+            //질문 감지 함수
+            const isQuestion = (s) =>
+                s.includes("?") || /(무엇|어떻게|누가|어디|얼마)/.test(s);
+
+            //질문이 포함된 문장의 인덱스만 추출
+            const questionIndexes=splitSentences
+                .map((s,i)=>isQuestion(s)?i:null)
+                .filter((i)=>i!=null);
+            console.log("🧠 질문 문장 인덱스:", questionIndexes);
 
             setSentences(splitSentences);
+            setQuestionIndexes(questionIndexes);
             setCurrentIndex(0);
         } else {
             setSentences(["❌ 내용이 없습니다. 다시 돌아가주세요."]);
         }
     }, [chapterData]);
+
+    //질문 문장인 경우 -> 사용자 입력 UI 노출 + 답변 수집
+    //질문이 끝나면 답변 버튼이 생성되도록 함 
+    const goToNextSentence=()=>{
+    if (currentIndex<sentences.length-1){
+        setCurrentIndex(currentIndex+1);
+    }else{
+        setIsQuestionFinished(true); //질문 끝났다는 상태
+        setIsFinished(true);
+        alert("✅학습을 모두 완료했어요! 다음 단계로 이동해볼까요? ")
+    }
+   };
+
+
+   //AI로부터 답변 받기.. 
+   const handleUserSubmit = async () => {
+        // 실제로는 여기에 AI 호출 로직이 들어감 (예: fetch("/chat", { method: POST ... }))
+        console.log("🙋 유저 입력:", userAnswer);
+
+        const feedback=await handleFeedback();
+        console.log("✅AI피드백:",feedback.result)
+        // 임시 응답 시뮬레이션 //AI 모델 추후에 연결.. 
+        setAiResponse(feedback.result);
+        setIsAnswering(false);
+    };
+
+    const handleFeedback=async()=>{
+                try{
+                    const res=await fetch("http://localhost:8080/api/study/feedback",{
+                        method:"POST",
+                        headers:{
+                            "Content-Type":"application/json",
+                        },
+                        credentials:"include",
+                        body:JSON.stringify({
+                            chapter:chapterData.content,
+                            sentenceIndex:currentIndex,
+                            question:sentences[currentIndex],
+                            userAnswer,
+                            nextContext,
+                        }),
+                    });
+
+                    if(!res.ok){
+                        throw new Error("❌피드백 불러오는 데 실패");
+                    }
+
+                    const data=await res.json();
+                    console.log("✅저장된 피드백:",data);
+                    return data;
+                }catch(e){
+                    console.log("❌피드백 요청 실패:",e);
+                    return{reaction:"😟오류 발생"};
+                }
+            };
+        
 
 
    //다음 문장으로 넘어가도록 함함
@@ -188,22 +297,41 @@ function StudyPage(){
         }catch(e){
             console.log("❌ 저장 중 오류 발생",e);
         }
-        navigate("/study/level6/1") //추후 `/game`으로 변경경
+
+        //피드백 저장
+        await saveFeedbacks(chapterData?.chapterId);
+        navigate("/study/level6/1") //추후 `/game`으로 변경
     }
    };
 
-//    //페이지 진입시 handleFetchContent자동 실행
-//    useEffect(()=>{
-//     handleFetchContent();
-//    },[]);
-    
+   async function saveFeedbacks(chapterId){
+    const response=await fetch(`http://localhost:8080/api/study/feedback/saveAll?chapterId=${chapterId}`,{
+        method:"POST",
+        credentials:"include"
+    });
+    if (!response.ok){
+        throw new Error("❌피드백들을 전부 저장하는 데 실패했어요.");
+    }
+
+    console.log(("✅",response));
+   }
+
+
     return(
     <>
         <Wrapper>
             <Box>
                 <MiniHeader
                     left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
-                    right={<Button onClick={()=>navigate(-1)}>다음 단계로</Button>}
+                    right={
+                    isFinished?(
+                        <Button
+                        onClick={handleNext}
+                        >다음 단계로</Button>
+                    ):(
+                        <Button disabled>진행 중..</Button>
+                    )
+                    }
                 >
                 3/6 선생님과 학습하기
                 </MiniHeader>
@@ -212,15 +340,61 @@ function StudyPage(){
                 <QuestionButton onClick={navigateToQuestion}
                 >질문</QuestionButton>
             </ImageWrapper>
-                <SpeechBubble>
-                    <TextBox>
-                        {sentences.length>0
-                            ?sentences[currentIndex]
-                            :"⚠️"}
-                    </TextBox>
-                    {/* <BubbleButton>대답하기</BubbleButton> */}
-                    <ImageButton src={nextButton} alt="버튼" onClick={handleNext}></ImageButton>
-                </SpeechBubble>
+                {!isAnswering?(
+                    <>
+                    <SpeechBubble>
+                        
+                         <TextBox>
+                            {/* ✅ 응답이 있으면 응답만 표시 */}
+                            {aiResponse ? (
+                            <div>
+                                 {aiResponse}
+                            </div>
+                            ) : (
+                            <div>
+                                {sentences.length > 0 ? sentences[currentIndex] : "❌"}
+                            </div>
+                            )}
+                        </TextBox>
+
+                        
+
+                            {/*일반 문장 or 질문+답변 완료 시에만 next 버튼 표시*/}
+                            {(!questionIndexes.includes(currentIndex)||aiResponse)&&(
+                                <ImageButton
+                                 src={nextButton} 
+                                 alt="버튼" 
+                                 onClick={()=>{
+                                     setAiResponse(""); //다음 문장 넘어갈 때 aiResponse초기화
+                                    goToNextSentence();
+                                 }}
+                                />
+
+                            )}
+                    
+
+                    {/* ✅ 질문이고 아직 대답 전일 경우만 버튼 표시 */}
+                    {questionIndexes.includes(currentIndex) && !aiResponse && (
+                        <BubbleButton onClick={() => setIsAnswering(true)}>
+                        🎙️ 대답하기
+                        </BubbleButton>
+                    )}
+                    </SpeechBubble>
+                    </>
+                ):(
+                    //isAnswering===true일 때 사용자 입력 UI 표시
+                    <AnswerInputBox>
+                        <Input
+                            type="text"
+                            value={userAnswer}
+                            onChange={(e)=>setUserAnswer(e.target.value)}
+                            placeholder="🎙️너의 생각을 입력해봐"
+                        />
+                        <SubmitButton onClick={handleUserSubmit}>제출</SubmitButton>
+                        {aiResponse && <AiResponseBox>{aiResponse}</AiResponseBox>}
+                    </AnswerInputBox>
+                )}
+                    
             </Box>
         </Wrapper>
     </>
