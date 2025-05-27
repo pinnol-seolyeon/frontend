@@ -173,11 +173,13 @@ function StudyPage(){
     const [currentIndex,setCurrentIndex]=useState(0);
     const {chapterData}=useChapter();
     const [questionIndexes, setQuestionIndexes] = useState([]);
+    const [isFinished,setIsFinished]=useState(false);
 
     const [isQuestionFinished,setIsQuestionFinished]=useState(false);
     const [userAnswer, setUserAnswer] = useState("");
     const [aiResponse, setAiResponse] = useState("");
     const [isAnswering,setIsAnswering]=useState(false);
+    const nextContext=sentences[currentIndex+1]||"다음 학습 내용 없음";
 
  
 
@@ -222,6 +224,8 @@ function StudyPage(){
         setCurrentIndex(currentIndex+1);
     }else{
         setIsQuestionFinished(true); //질문 끝났다는 상태
+        setIsFinished(true);
+        alert("✅학습을 모두 완료했어요! 다음 단계로 이동해볼까요? ")
     }
    };
 
@@ -232,9 +236,9 @@ function StudyPage(){
         console.log("🙋 유저 입력:", userAnswer);
 
         const feedback=await handleFeedback();
-
+        console.log("✅AI피드백:",feedback.result)
         // 임시 응답 시뮬레이션 //AI 모델 추후에 연결.. 
-        setAiResponse(feedback.reaction);
+        setAiResponse(feedback.result);
         setIsAnswering(false);
     };
 
@@ -247,10 +251,11 @@ function StudyPage(){
                         },
                         credentials:"include",
                         body:JSON.stringify({
-                            chapterId:chapterData.chapterId,
+                            chapter:chapterData.content,
                             sentenceIndex:currentIndex,
                             question:sentences[currentIndex],
                             userAnswer,
+                            nextContext,
                         }),
                     });
 
@@ -292,9 +297,24 @@ function StudyPage(){
         }catch(e){
             console.log("❌ 저장 중 오류 발생",e);
         }
-        navigate("/study/level6/1") //추후 `/game`으로 변경경
+
+        //피드백 저장
+        await saveFeedbacks(chapterData?.chapterId);
+        navigate("/study/level6/1") //추후 `/game`으로 변경
     }
    };
+
+   async function saveFeedbacks(chapterId){
+    const response=await fetch(`http://localhost:8080/api/study/feedback/saveAll?chapterId=${chapterId}`,{
+        method:"POST",
+        credentials:"include"
+    });
+    if (!response.ok){
+        throw new Error("❌피드백들을 전부 저장하는 데 실패했어요.");
+    }
+
+    console.log(("✅",response));
+   }
 
 
     return(
@@ -303,10 +323,14 @@ function StudyPage(){
             <Box>
                 <MiniHeader
                     left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
-                    right={<Button
-                        disabled={currentIndex<sentences.length-1}
+                    right={
+                    isFinished?(
+                        <Button
                         onClick={handleNext}
                         >다음 단계로</Button>
+                    ):(
+                        <Button disabled>진행 중..</Button>
+                    )
                     }
                 >
                 3/6 선생님과 학습하기
@@ -320,24 +344,28 @@ function StudyPage(){
                     <>
                     <SpeechBubble>
                         
-                        <TextBox>
-                            {/* {sentences.length>0
-                                ?sentences[currentIndex]
-                                :"⚠️"} */}
-                            {aiResponse
-                                ?aiResponse
-                                :sentences.length>0
-                                ?sentences[currentIndex]
-                                :"❌" //아무것도 없으면 출력
-                            }
+                         <TextBox>
+                            {/* ✅ 응답이 있으면 응답만 표시 */}
+                            {aiResponse ? (
+                            <div>
+                                🤖 {aiResponse}
+                            </div>
+                            ) : (
+                            <div>
+                                {sentences.length > 0 ? sentences[currentIndex] : "❌"}
+                            </div>
+                            )}
                         </TextBox>
+
+                        
+
                             {/*일반 문장 or 질문+답변 완료 시에만 next 버튼 표시*/}
                             {(!questionIndexes.includes(currentIndex)||aiResponse)&&(
                                 <ImageButton
                                  src={nextButton} 
                                  alt="버튼" 
                                  onClick={()=>{
-                                    setAiResponse(""); //aiResponse초기화
+                                     setAiResponse(""); //다음 문장 넘어갈 때 aiResponse초기화
                                     goToNextSentence();
                                  }}
                                 />
