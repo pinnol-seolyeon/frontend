@@ -1,5 +1,5 @@
 import React,{useState,useEffect,useRef} from 'react';
-import {useNavigate} from 'react-router-dom';
+import {useNavigate,useLocation} from 'react-router-dom';
 
 import styled,{keyframes} from "styled-components";
 import axios from 'axios';
@@ -203,29 +203,34 @@ function Question({}){
     const[transcript,setTranscript]=useState(''); //음성 인식 결과
     const recognitionRef=useRef(null); //recognition 매번 호출 비효율 문제 해결
     const navigate=useNavigate();
+    const location=useLocation(); //closeButton 클릭 시 currentIndex 문장으로 되돌아가도록
+    const [returnToIndex,setReturnToIndex]=useState(0);
+
 
     //컴포넌트가 처음 마운트될 때 한 번만 실행됨 
-useEffect(()=>{
-    //Web Speech API 설정
-    const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-    const recognition=new SpeechRecognition();
-    recognition.lang='ko-KR';
-    recognition.continuous=true;
-    recognition.interimResults=true;
+    //mount 시에 location.state에서 returnToIndex 꺼내서 따로 저장장
+    useEffect(()=>{
+        //Web Speech API 설정
+        const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+        const recognition=new SpeechRecognition();
+        recognition.lang='ko-KR';
+        recognition.continuous=true;
+        recognition.interimResults=true;
 
-    
+        if(location.state?.returnToIndex!==undefined){
+            setReturnToIndex(location.state.returnToIndex);
+        }
 
-
-    //사용자가 말하는 내용을 실시간으로 transcript에 저장 
-    recognition.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map(result => result[0])
-          .map(result => result.transcript)
-          .join('');
-        setTranscript(transcript);
-      };
-    recognitionRef.current=recognition;
-},[]);
+        //사용자가 말하는 내용을 실시간으로 transcript에 저장 
+        recognition.onresult = (event) => {
+            const transcript = Array.from(event.results)
+            .map(result => result[0])
+            .map(result => result.transcript)
+            .join('');
+            setTranscript(transcript);
+        };
+        recognitionRef.current=recognition;
+    },[location.state]);
       
 
     const handleStop=()=>{
@@ -243,7 +248,6 @@ useEffect(()=>{
         setIsListening(true); //MicButton 사라지고 TranscriptBox 보이게 
         recognitionRef.current.start();
     };
-
 
 
 
@@ -298,14 +302,14 @@ useEffect(()=>{
         const fetchDummyData = () => {
             setTimeout(() => {
                 const dummyMessages = [
-                    "테스트 ✏️"
+                    "궁금한게 있으면 물어봐🐯"
                 ];
 
                 dummyMessages.forEach(message => {
                     setMessages(prevMessages => [
                         ...prevMessages,
                         { text: message, type: 'received' },
-                        { text: message, type: 'sent' }
+                        
                     ]);
                 });
             }, 1000);
@@ -313,6 +317,17 @@ useEffect(()=>{
 
         fetchDummyData();
     },[]);
+    
+    //질문 닫기 -> currentIndex로 이동 
+    const handleClose=()=>{
+        console.log("✅returnToIndex:",returnToIndex);
+        navigate("/study/level3",{
+            state:{
+                returnToIndex
+            },
+        });
+    };
+
 
     return(
         
@@ -320,7 +335,7 @@ useEffect(()=>{
         <Wrapper>
             <Box>
                 <MiniHeader onClose={
-                    <CloseButton onClick={()=>navigate(-1)}>X</CloseButton>
+                    <CloseButton onClick={handleClose}>X</CloseButton>
                 }>
                 궁금한걸 물어보세요❗
                 </MiniHeader>

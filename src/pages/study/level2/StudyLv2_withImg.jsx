@@ -55,9 +55,7 @@ const TestImage = styled.img`
   height: auto;
   object-fit: contain;
   margin:20px;       // px로 명확한 spacing (또는 rem 사용 가능)
-//   margin-bottom:0rem;
-//   margin-right:
-녣
+
   @media (max-width: 768px) {
     width: 40%;             // 💡 모바일 대응
     margin-top: 16px;
@@ -265,7 +263,7 @@ function StudyLv2_withImg(props){
     const [isQuestionFinished,setIsQuestionFinished]=useState(false);
     const [userAnswer, setUserAnswer] = useState("");
     const [aiResponse, setAiResponse] = useState("");
-    const [, setNextResponse] = useState("");
+ 
     const [isAnswering,setIsAnswering]=useState(false);
     const [isAnsweringPhase,setIsAnsweringPhase]=useState(false); //현재가 질문을 보여주는 단계인지, AI의 답변을 보여주는 단계인지 //False=질문, ai=true
 
@@ -274,7 +272,7 @@ function StudyLv2_withImg(props){
         console.log("📦 현재 저장된 chapterData:", chapterData);
         if(chapterData){
             // const question=chapterData.question; //질문 필드 추가해야함
-            const question=chapterData?.objectiveQuestion
+            const question=chapterData?.objectiveQuestion;
             const img=chapterData.imgUrl; //이미지 불러올 수 있는지 확인해보기
             console.log("📷chapterData.imgUrl",img);
             console.log("✅chapterData.objectiveQuestion")
@@ -292,7 +290,9 @@ function StudyLv2_withImg(props){
         }
     },[chapterData]);
 
-    //질문이 끝나면 답변  버튼이 생성되도록 함.. 
+
+
+
    const handleAnswer=()=>{
     if(!aiResponse){
       if(currentIndex<sentences.length-1){
