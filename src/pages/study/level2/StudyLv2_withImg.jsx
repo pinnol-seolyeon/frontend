@@ -36,7 +36,7 @@ const ImageWrapper=styled.div`
 
 
 const Image=styled.img`
-    width:80%; 
+    // width:80%; 
     height:auto;
     object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
     max-width:300px;
@@ -51,19 +51,29 @@ const Image=styled.img`
 `;
 
 const TestImage = styled.img`
-  width: 20%;               // 💡 명확히 비율 고정하고 싶을 때
+  width: 50%;               // 💡 명확히 비율 고정하고 싶을 때
   height: auto;
   object-fit: contain;
   margin:20px;       // px로 명확한 spacing (또는 rem 사용 가능)
 //   margin-bottom:0rem;
 //   margin-right:
-
+녣
   @media (max-width: 768px) {
     width: 40%;             // 💡 모바일 대응
     margin-top: 16px;
     margin-right: 10px;
   }
 `;
+
+const ImageWithSpeechWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  
+  width: 100%;
+  margin-top: 3rem;
+`;
+
 
 const SpeechBubble=styled.div`
     display:flex;
@@ -248,22 +258,26 @@ function StudyLv2_withImg(props){
     const navigate=useNavigate();
     const {chapterData}=useChapter();
     const [sentences,setSentences]=useState([]);
+    const [answers,setAnswers]=useState([]);
     const [currentIndex,setCurrentIndex]=useState(0);
     const [image,setImage]=useState();
 
     const [isQuestionFinished,setIsQuestionFinished]=useState(false);
     const [userAnswer, setUserAnswer] = useState("");
     const [aiResponse, setAiResponse] = useState("");
+    const [, setNextResponse] = useState("");
     const [isAnswering,setIsAnswering]=useState(false);
+    const [isAnsweringPhase,setIsAnsweringPhase]=useState(false); //현재가 질문을 보여주는 단계인지, AI의 답변을 보여주는 단계인지 //False=질문, ai=true
 
 
     useEffect(()=>{
         console.log("📦 현재 저장된 chapterData:", chapterData);
         if(chapterData){
             // const question=chapterData.question; //질문 필드 추가해야함
-            const question=`하이.하잉!`
+            const question=chapterData?.objectiveQuestion
             const img=chapterData.imgUrl; //이미지 불러올 수 있는지 확인해보기
             console.log("📷chapterData.imgUrl",img);
+            console.log("✅chapterData.objectiveQuestion")
             setImage(img);
 
            const splitSentences = question
@@ -280,10 +294,18 @@ function StudyLv2_withImg(props){
 
     //질문이 끝나면 답변  버튼이 생성되도록 함.. 
    const handleAnswer=()=>{
-    if (currentIndex<sentences.length-1){
+    if(!aiResponse){
+      if(currentIndex<sentences.length-1){
         setCurrentIndex(currentIndex+1);
+      }else{
+        setIsQuestionFinished(true);
+      }
     }else{
-        setIsQuestionFinished(true); //질문 끝났다는 상태
+      if(currentIndex<answers.length-1){
+        setCurrentIndex(currentIndex+1);
+      }else{
+        alert("✅다음 단계로 넘어가볼까요?");
+      }
     }
    };
 
@@ -296,8 +318,20 @@ function StudyLv2_withImg(props){
         console.log("🙋 유저 입력:", userAnswer);
 
         // 임시 응답 시뮬레이션 //AI 모델 추후에 연결.. 
-        setAiResponse("🐯: 오 좋은 생각이야. 그러면 이제 본격적으로 수업을 시작해보자. ");
+        const response=chapterData?.objectiveAnswer;
+        const fullResponse=`🐯: ${response}. 그럼 이제 본격적으로 수업을 들어가볼까?`;
+        // setNextResponse(`그럼 이제 본격적으로 수업을 들어가볼까?`);
+        setAiResponse(fullResponse);
+
+        const splitAnswers = fullResponse
+            .split(/(?<=[.?!])\s+/)
+            .filter((s) => s.trim() !== "");
+
+        setAnswers(splitAnswers);
+        setIsAnsweringPhase(true);
+        setCurrentIndex(0);
         setIsAnswering(false);
+      
     };
     
     return(
@@ -319,7 +353,8 @@ function StudyLv2_withImg(props){
                 >
                 2/6 : 학습 자료
                 </MiniHeader>
-            <ImageWrapper>
+            <ImageWithSpeechWrapper>
+              <ImageWrapper>
                 <Image src={tiger} alt="샘플" />
                 <TestImage 
                     src={image} 
@@ -327,21 +362,29 @@ function StudyLv2_withImg(props){
                     onError={(e)=>e.target.src=testImage} //기본 이미지로 fallback
                 />
                 {/* <QuestionButton>질문</QuestionButton> */}
-            </ImageWrapper>
-            <SpeechWrapper>
+              </ImageWrapper>
+              <SpeechWrapper>
                 {!isAnswering?(//isAnswering이 false일 때 
                     <>
                     <SpeechBubble>
                         <TextBox>
-                            {aiResponse 
-                                ?aiResponse //aiResponse 존재 -> aiResponse 출력
-                                :sentences.length>0 //sentence.length>0이면
-                                ?sentences[currentIndex] //현재 sentence[index] 출력 
-                                :"⚠️"//아무것도 없으면 출력
-                            }
+                          {isAnsweringPhase?(
+                            answers.length>0?answers[currentIndex]:"답변이 없습니다."
+                          ):(
+                            sentences.length>0?sentences[currentIndex]:"질문이 없습니다."
+                          )}
                         </TextBox>
                             {!aiResponse&&( //aiResponse가 아닐 때
                                 <ImageButton
+                                    src={nextButton}
+                                    alt="버튼"
+                                    onClick={handleAnswer}
+                                />
+                            )}
+
+
+                            {aiResponse&&isAnsweringPhase&&(
+                                 <ImageButton
                                     src={nextButton}
                                     alt="버튼"
                                     onClick={handleAnswer}
@@ -354,6 +397,8 @@ function StudyLv2_withImg(props){
                                     <AnswerButton onClick={() => setIsAnswering(true)}>대답하기 🎙️</AnswerButton>
                                 </AnswerButtonWrapper>
                             )}
+
+                            
                             </> 
                         ) : ( //isAnswering이 True일때
                             <>
@@ -366,10 +411,12 @@ function StudyLv2_withImg(props){
                                 />
                                 <SubmitButton onClick={handleUserSubmit}>제출</SubmitButton>
                                 {aiResponse && <AiResponseBox>{aiResponse}</AiResponseBox>}
+                                {/* {nextResponse && <AiResponseBox>{nextResponse}</AiResponseBox>} */}
                             </AnswerInputBox>
                             </>
                         )}
-                </SpeechWrapper>
+                  </SpeechWrapper>
+               </ImageWithSpeechWrapper>
             </Box>
         </Wrapper>
     </>

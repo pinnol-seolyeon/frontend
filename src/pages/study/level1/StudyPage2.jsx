@@ -143,10 +143,16 @@ function StudyPage(props){
                     <TextBox>
                         {loading
                             ? "학습 목표 준비중.."
-                            :`먼저 이번 단원의 학습목표에 대해서 알아볼까? ${objective} 그럼 이제 본격적으로 공부를 시작해보자🐯`
+                            :<p>
+                                먼저 이번 단원의 학습목표에 대해서 알아볼까? 이번 단원의 학습목표는{" "}
+                                <span style={{ fontWeight: "bold", color: "#2774B2" }}>
+                                {objective}
+                                </span>
+                                야. 그럼 이제 본격적으로 공부를 시작해보자 🐯
+                            </p>
                             }
                     </TextBox>
-                    <BubbleButton>대답하기</BubbleButton>
+                    <BubbleButton onClick={()=>navigate(`/study/level2-img`)}>좋아✅</BubbleButton>
                 </SpeechBubble>
                 <Image src={tigerPencil} alt="샘플" />
             
