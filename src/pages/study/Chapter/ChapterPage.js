@@ -10,7 +10,8 @@ function ChapterPage() {
   const [searchParams]=useSearchParams(); //URL에서 bookID 가져오기
   const bookId=searchParams.get("bookId");
   const chapterId=searchParams.get("chapterId");
-  const {chapterData,setChapterData}=useChapter();
+  const {chapterData,setChapterData,clearChapterData}=useChapter();
+
 
   const [chapters,setChapters]=useState([]);
   const [loading,setLoading]=useState(true);
@@ -38,6 +39,9 @@ function ChapterPage() {
   const handleChapterClick = async (chapterId) => {
   try {
     const chapter = await fetchChapterContents(chapterId);
+    if(chapterData?.chapterId){
+      clearChapterData();
+    }
     setChapterData(chapter);
     console.log("✅API응답 chapter:",chapter.chapterId);
 

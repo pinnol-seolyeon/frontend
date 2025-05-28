@@ -1,14 +1,13 @@
 import styled,{keyframes} from "styled-components";
 import Header from "../../../components/Header";
 import Box from "../../../components/Box";
-import testImage from "../../../assets/testImage.png";
+import tigerPencil from "../../../assets/tiger-pencil.png";
 import Button from "../../../components/Button";
 import MiniHeader from "../../../components/study/MiniHeader";
 
-import {useNavigate} from "react-router-dom";
-import React,{useState} from 'react';
-import {useChapter} from "../../../context/ChapterContext";
-
+import { useNavigate } from "react-router-dom";
+import React,{useState,useEffect} from "react";
+import { useChapter } from "../../../context/ChapterContext";
 
 /*학습하기-6단계-2*/
 
@@ -25,17 +24,78 @@ const Wrapper=styled.div`
 
 const Image=styled.img`
     display:flex;
-    width:80%; 
+    width:100%; 
     height:auto;
     object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    max-width:380px;
+    max-width:300px;
     display:block;
     margin:0 auto; /*가로 중앙 정렬*/
     padding:50px;
 
-    // position:absolute;
-    // left:20px;
-    // bottom:20px;
+    position:absolute;
+    left:20px;
+    bottom:20px;
+`;
+
+const SpeechBubble = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 80%;
+  height: auto;
+  min-height: 300px;
+
+  background-color: #FEF3E1;
+  position: absolute;
+  right: 100px;
+  top: 150px;
+
+  border: 0.5px solid black;
+  border-radius: 24px;
+  padding: 20px;
+`;
+
+
+const TextBox = styled.div`
+  flex: 1; /* 남는 공간 꽉 채움 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+
+  padding: 30px;
+  margin: 0 auto;
+
+  font-size: clamp(18px, 2.5vw, 28px);
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  font-weight: 500;
+  font-family: "Noto Sans KR", sans-serif;
+  color: #333;
+
+  word-break: keep-all;  /* 단어 기준 줄바꿈 */
+  white-space: pre-wrap; /* 줄바꿈 및 공백 유지 */
+  overflow-wrap: break-word;
+`;
+
+
+
+const BubbleButton = styled.button`
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+
+  padding: 20px 32px;
+  background-color: #2774B2;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  border:0.2px solid black;
+
+  transition: background-color 0.3s;
+  &:hover {
+    background-color: #1b5c91;
+  }
 `;
 
 const Title=styled.div`
@@ -142,6 +202,23 @@ function StudyLevel6_2(props){
     const navigate=useNavigate();
     const [showPopup,setShowPopup]=useState(false);
     const {chapterData,clearChapterData}=useChapter();
+    const [topic,setTopic]=useState();
+    const [currentIndex,setCurrentIndex]=useState(0);
+    const [loading,setLoading]=useState(true);
+    const [sentences,setSentences]=useState([]);
+    const [fullTopic,setFullTopic]=useState();
+
+      // ✅ useEffect 단순화
+      useEffect(() => {
+        if (chapterData?.topic) {
+          setTopic(chapterData.topic);
+          setLoading(false);
+        } else {
+          setTopic("❌ 전달받은 내용이 없어요");
+          setLoading(false);
+        }
+      }, [chapterData]);
+
 
     const handleComplete=async()=>{
          try {
@@ -175,7 +252,16 @@ function StudyLevel6_2(props){
             console.error('학습 완료 처리 중 오류',e);
         }
       };
-  
+    
+
+    const handleNextSentence = () => {
+      if (currentIndex < sentences.length - 1) {
+        setCurrentIndex((prev) => prev + 1);
+      } else {
+        alert("🎉 모든 문장을 다 봤어요!");
+      }
+    };
+
     
 
     
@@ -190,7 +276,22 @@ function StudyLevel6_2(props){
                 6/6 : 마무리
                 </MiniHeader>
                 <Title>토론해보자!</Title>
-                <Image src={testImage} alt="샘플" />
+                <SpeechBubble>
+                    
+                    {/* ✅ topic 전체를 출력 */}
+                    <TextBox>
+                    {loading ? (
+                      "토론 주제 생성 중.."
+                    ) : (
+                      <span style={{ fontWeight: "bold", color: "#2774B2" }}>
+                        {topic}
+                      </span>
+                    )}
+                  </TextBox>
+
+                    <BubbleButton onClick={handleNextSentence}>꼭 해볼게✅</BubbleButton>
+                </SpeechBubble>
+                <Image src={tigerPencil} alt="샘플" />
 
               
                 <NextButton onClick={handleComplete}>학습결과와 토론 주제 전송하기</NextButton>

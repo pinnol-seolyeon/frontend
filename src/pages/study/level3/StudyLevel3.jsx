@@ -5,7 +5,7 @@ import Header from "../../../components/Header";
 import Box from "../../../components/Box";
 import tiger from "../../../assets/tiger-upperbody1.png";
 import Button from "../../../components/Button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate,useLocation } from "react-router-dom";
 import { fetchFeedback } from "../../../api/study/level3API";
 import nextButton from "../../../assets/nextButton.png";
 import MiniHeader from "../../../components/study/MiniHeader";
@@ -169,8 +169,11 @@ const AiResponseBox = styled.div`
 function StudyPage(){
 
     const navigate=useNavigate();
+    const location=useLocation();
     const [sentences,setSentences]=useState([]);
     const [currentIndex,setCurrentIndex]=useState(0);
+
+    
     const {chapterData}=useChapter();
     const [questionIndexes, setQuestionIndexes] = useState([]);
     const [isFinished,setIsFinished]=useState(false);
@@ -180,11 +183,13 @@ function StudyPage(){
     const [aiResponse, setAiResponse] = useState("");
     const [isAnswering,setIsAnswering]=useState(false);
     const nextContext=sentences[currentIndex+1]||"다음 학습 내용 없음";
+    const returnToIndex=location.state?.returnToIndex??0;
 
  
-
+    //질문하기로 이동
    const navigateToQuestion=()=>{
-        navigate("/question");
+        console.log("🐛question에게 보내는 returnToIndex:",currentIndex)
+        navigate("/question",{state:{returnToIndex:currentIndex}});
    }
 
    useEffect(() => {
@@ -211,17 +216,29 @@ function StudyPage(){
 
             setSentences(splitSentences);
             setQuestionIndexes(questionIndexes);
-            setCurrentIndex(0);
+            
+
         } else {
             setSentences(["❌ 내용이 없습니다. 다시 돌아가주세요."]);
         }
     }, [chapterData]);
 
+
+    //질문 버튼 누른 후 다시 학습하기 3단계로 돌아온 경우 포함
+    useEffect(()=>{
+        console.log("🐛returnToIndex",returnToIndex);
+        setCurrentIndex(returnToIndex);
+    },[]); //의존성 배열이 비어 있어야 컴포넌트 최초 마운트 시 한 번만 실행
+
+
+
     //질문 문장인 경우 -> 사용자 입력 UI 노출 + 답변 수집
     //질문이 끝나면 답변 버튼이 생성되도록 함 
     const goToNextSentence=()=>{
     if (currentIndex<sentences.length-1){
+        console.log("✅currentIndex:",currentIndex);
         setCurrentIndex(currentIndex+1);
+        
     }else{
         setIsQuestionFinished(true); //질문 끝났다는 상태
         setIsFinished(true);
@@ -300,7 +317,7 @@ function StudyPage(){
 
         //피드백 저장
         await saveFeedbacks(chapterData?.chapterId);
-        navigate("/study/level6/1") //추후 `/game`으로 변경
+        navigate("/study/level3/2") //추후 `/game`으로 변경
     }
    };
 

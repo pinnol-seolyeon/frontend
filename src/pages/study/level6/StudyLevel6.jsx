@@ -6,6 +6,8 @@ import Button from "../../../components/Button";
 import MiniHeader from "../../../components/study/MiniHeader";
 
 import {useNavigate} from "react-router-dom";
+import React,{useState,useEffect} from "react";
+import { useChapter } from "../../../context/ChapterContext";
 
 
 /*학습하기-6단계-1*/
@@ -74,6 +76,18 @@ const NextButton = styled(Button)`
 function StudyLevel6(props){
 
     const navigate=useNavigate();
+
+    const[image,setImage]=useState();
+    const{chapterData}=useChapter();
+
+    useEffect(()=>{
+        console.log("📦 현재 저장된 chapterData:", chapterData);
+        if(chapterData){
+            const img=chapterData?.summaryImgUrl;
+            console.log("📷chapterData.summaryImgUrl",img);
+            setImage(img);
+        }
+    })
     
     return(
     <>
@@ -86,7 +100,7 @@ function StudyLevel6(props){
                 6/6 : 마무리
                 </MiniHeader>
                 <Title>오늘의 학습 요약</Title>
-                <Image src={testImage} alt="샘플" />
+                <Image src={image} alt="샘플" />
                 <NextButton>다음</NextButton>
             </Box>
         </Wrapper>

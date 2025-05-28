@@ -7,7 +7,10 @@ import nextButton from "../../../assets/nextButton.png";
 import MiniHeader from "../../../components/study/MiniHeader";
 import Button from "../../../components/Button";
 
+
 import { useNavigate } from "react-router-dom";
+import React,{useState,useEffect} from "react";
+import { useChapter } from "../../../context/ChapterContext";
 
 /*학습하기-3단계-4*/
 
@@ -29,7 +32,7 @@ const ImageWrapper=styled.div`
     align-items:flex-start;
     // justify-content:center;
 
-    margin:top:129px;
+    margin-top:39px;
     gap:12px;
 `
 
@@ -50,13 +53,37 @@ const Image=styled.img`
 
 `;
 
+
+const ImageButton=styled.img`
+position: absolute;
+  right: 20px;
+  bottom: 20px;
+  width:60px;
+  height:auto;
+  cursor:pointer;
+
+  padding: 10px 16px;
+  &:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+
+`;
+
+
+
+
 const TestImage = styled.img`
-    // flex:1;
-    max-width:20%;
-    width:100%;
-    height:auto;
-    object-fit:contain;
-    margin-top:60px;
+  width: 30%;               // 💡 명확히 비율 고정하고 싶을 때
+  height: auto;
+  object-fit: contain;
+  margin-right:20px;       // px로 명확한 spacing (또는 rem 사용 가능)
+
+  @media (max-width: 768px) {
+    width: 40%;             // 💡 모바일 대응
+    margin-top: 16px;
+    margin-right: 10px;
+  }
 `;
 
 const SpeechBubble=styled.div`
@@ -109,29 +136,12 @@ const BubbleButton = styled.button`
   border: 0.2px solid black;
 
   transition: background-color 0.3s;
-  &:hover {
+  &:hover {x
     background-color: #1b5c91;
   }
 `;
 
 
-const QuestionButton = styled.button`
-  position: absolute;
-  right: 20px;
-  bottom: 20px;
-
-  padding: 16px 16px;
-  background-color: #2774B2;
-  color: white;
-  border-radius: 15px;
-  cursor: pointer;
-  border:0.2px solid black;
-
-  transition: background-color 0.3s;
-  &:hover {
-    background-color: #1b5c91;
-  }
-`;
 
 const SpeechWrapper=styled.div`
     position:relative;
@@ -158,36 +168,100 @@ const ButtonWrapper=styled.div`
     gap:12px;
     padding: 0px 0px 0px 20px;
 
-`
+`;
+
+const ImageWithSpeechWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  
+  width: 100%;
+  margin-top: 3rem;
+`;
+
 
 function StudyPage(props){
 
     const navigate=useNavigate();
     
+    const[image,setImage]=useState();
+    const{chapterData}=useChapter();
+    const[summary,setSummary]=useState();
+    const [currentIndex,setCurrentIndex]=useState(0);
+    const [sentences,setSentences]=useState([]);
+    const [isSummaryFinished,setIsSummaryFinished]=useState(false);
+
+
+    useEffect(()=>{
+            console.log("📦 현재 저장된 chapterData:", chapterData);
+            if(chapterData){
+
+                //요약 네컷 만화 제공
+                const img=chapterData?.summaryImgUrl;
+                console.log("📷chapterData.summaryImgUrl",img);
+                setImage(img);
+
+                //요약 네컷 만화에 대한 설명(질답형식 X)
+                const summary=chapterData?.summary;
+                console.log("🎙️summary:",summary);
+                setSummary(summary);
+
+                const splitSentences = summary
+                    .split(/(?<=[.?!])\s+/)
+                    .filter((s) => s.trim() !== "");
+
+                setSentences(splitSentences);
+                setCurrentIndex(0);
+                
+            }else{
+                setSentences(["❌전달받은 내용이 없어요"]);
+            }
+        },[chapterData]);
+
+
+    //다음 버튼
+    const handleAnswer=()=>{
+      if(currentIndex<sentences.length-1){
+        setCurrentIndex(currentIndex+1);
+      }else{
+        setIsSummaryFinished(true);
+      }
+    }
+   
+        
+
     return(
     <>
         <Wrapper>
             <Box>
                 <MiniHeader
                     left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
-                    right={<Button onClick={()=>navigate(-1)}>다음 단계로</Button>}
+                    right={<Button onClick={()=>navigate(`/study/level6/2`)}>다음 단계로</Button>}
                 >
-                3/6 선생님과 학습하기
+                6/6 : 마무리
                 </MiniHeader>
+        <ImageWithSpeechWrapper>
             <ImageWrapper>
                 <Image src={tiger} alt="샘플" />
-                <TestImage src={testImage} alt="샘플" />
-                <QuestionButton>질문</QuestionButton>
+                <TestImage src={image} alt="샘플" />
             </ImageWrapper>
             <SpeechWrapper>
                 <SpeechBubble>
-                    <TextBox>돈 많은 백수가 되고 싶다 .. </TextBox>
+                    <TextBox>
+                        {sentences.length>0?sentences[currentIndex]:"설명이 없습니다."}
+                        <ImageButton
+                            src={nextButton}
+                            alt="버튼"
+                            onClick={handleAnswer}
+                        ></ImageButton>
+                    </TextBox>
                 </SpeechBubble>
                 <ButtonWrapper>
                     <BubbleButton>잘 모르겠어..</BubbleButton>
                     <BubbleButton>이해했어!</BubbleButton>
                 </ButtonWrapper>
             </SpeechWrapper>
+        </ImageWithSpeechWrapper>
             </Box>
         </Wrapper>
     </>
