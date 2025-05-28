@@ -3,11 +3,9 @@ import styles from './Dashboard.module.css';
 import StudyStatsBox from '../../components/analyze/StudyStatsBox';
 import StudyTimeStats from '../../components/analyze/StudyTimeStats';
 import QuizChart from '../../components/QuizChart';
-import AttendanceCalendar from '../../components/AttendanceCalendar';
-import TodayStudyTime from '../../components/TodayStudyTime';
-// import Answers from '../../components/Answers';
+import QnAViewer from '../../components/analyze/QnAViewer';
 
-import { fetchStudyStats, fetchStudyTimeStats, fetchTodayStudyTime, fetchAttendance } from '../../api/analytics';
+import { fetchStudyStats } from '../../api/analytics';
 
 export default function Dashboard() {
   const [studyStats, setStudyStats] = useState({ totalCompleted: 0, weeklyCompleted: 0 });
@@ -16,11 +14,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchStudyStats().then(setStudyStats);
-    fetchTodayStudyTime().then(setStudyTime);
-    const now = new Date();
-    fetchAttendance(now.getFullYear(), now.getMonth() + 1).then(res => {
-      setAttendance(res.attendedDates);
-    });
   }, []);
 
   return (
@@ -32,10 +25,10 @@ export default function Dashboard() {
       <div className={styles.contentBox}>
         {/* ⬆️ 위쪽 수평 두 개 */}
         <div className={styles.topBoxes}>
-          <div className={styles.squareBox}>
+          <div className={`${styles.squareBox} ${styles.topBox}`}>
             <StudyStatsBox type="total" />
           </div>
-          <div className={styles.squareBox}>
+          <div className={`${styles.squareBox} ${styles.topBox}`}>
             <StudyStatsBox type="weekly" />
           </div>
         </div>
@@ -50,8 +43,8 @@ export default function Dashboard() {
           <div className={styles.squareBox}>
             <StudyTimeStats />
           </div>
-          <div className={styles.squareBox}>
-            {/* 예: 다른 콘텐츠 */}
+          <div className={`${styles.squareBox} ${styles.qnaBox}`}>
+            <QnAViewer />
           </div>
         </div>
       </div>

@@ -47,16 +47,28 @@ export async function fetchStudyTimeStats() {
 }
 
 
-export async function fetchTodayStudyTime() {
-  const res = await fetch(`http://localhost:8080/api/study/today`, {
-    credentials: 'include'
+export async function fetchQuestionDates() {
+  const res = await fetch('http://localhost:8080/api/study/questions/dates', {
+    credentials: 'include',
   });
-  return res.json();
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`❌ 날짜 조회 실패: ${res.status} ${text}`);
+  }
+
+  return await res.json();
 }
 
-export async function fetchAttendance(year, month) {
-  const res = await fetch(`http://localhost:8080/api/study/calendar?year=${year}&month=${month}`, {
-    credentials: 'include'
+export async function fetchQuestionsByDate(dateStr) {
+  const res = await fetch(`http://localhost:8080/api/study/questions/history?date=${dateStr}`, {
+    credentials: 'include',
   });
-  return res.json();
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`❌ 질문 내역 조회 실패: ${res.status} ${text}`);
+  }
+
+  return await res.json();
 }
