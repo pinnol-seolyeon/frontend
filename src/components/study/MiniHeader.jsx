@@ -6,7 +6,7 @@ const HeaderWrapper = styled.div`
   display: flex;
   width: 100%;
   // height: 60px;
-  min-height:70px;
+  min-height:90px;
   padding: 0 20px;
   background-color: #2774B2;
   justify-content: space-between;
@@ -30,6 +30,10 @@ const TitleArea = styled.div`
   flex: 1;
   display:flex;
   justify-content:center;
+
+
+  font-size:1.3rem;
+  font-weight:bold;
 `;
 
 const RightArea = styled.div`
@@ -38,6 +42,8 @@ const RightArea = styled.div`
   display: flex;
   align-items: center;
 `;
+
+
 
 
 function MiniHeader({ left,right,children,onClose }) {

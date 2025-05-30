@@ -7,17 +7,17 @@ const StyledButton = styled.div`
     justify-content:center;
 
 
-    width:90px;
-    height:40px;
-    // padding: 10px
+    // width:90px;
+    // height:40px;
+    padding:0.9em 1.2em;
     // gap:8px;
 
 
     background-color : #FEF3E1;
-    border-radius : 30px;
+    border-radius : 20px;
     border:0.5px solid black;
 
-    font-size:10px;
+    font-size:18px;
     color:black;
 
     cursor: pointer;

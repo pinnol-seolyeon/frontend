@@ -28,8 +28,9 @@ function BookListPage() {
             key={index}
             className="book-card completed">
  
-            <div className="module-icon">{book.icon}</div>
-            <h3>{book.title}</h3>
+            <div className="module-icon">{book.icon}</div><br/>
+            <h3 className="book-title">{book.title}</h3>
+          
             <div className="review-buttons">
               <button
                 className="review-btn"

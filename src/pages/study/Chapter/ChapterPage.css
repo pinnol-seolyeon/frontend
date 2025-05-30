@@ -100,6 +100,8 @@
     border-radius: 15px;
     display: inline-block;
   }
+
+ 
   
   .locked .review-status {
     background: #f5f5f5;
@@ -125,6 +127,8 @@
   align-items: center;
   height: 200px;
 }
+
+
 
 .review-page .error-message {
   margin-bottom: 20px;

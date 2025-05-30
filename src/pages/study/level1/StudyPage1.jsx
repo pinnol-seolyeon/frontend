@@ -91,6 +91,8 @@ const BubbleButton = styled.button`
   cursor: pointer;
   border:0.2px solid black;
 
+  font-size:18px;
+
   transition: background-color 0.3s;
   &:hover {
     background-color: #1b5c91;
