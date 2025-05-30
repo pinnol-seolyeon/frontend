@@ -3,18 +3,28 @@
   }
   
   .welcome-section {
+
+    display:grid;
+    place-items:center;
+
     text-align: center;
     margin-bottom: 3rem;
     padding: 2rem;
     background: white;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+    min-height:300px;
+    
   }
   
   .welcome-section h2 {
+    
     color: #1a73e8;
     margin-bottom: 1.5rem;
     font-size: 1.8rem;
+    line-height:1.5;
+    font-weight:bold;
   }
   
   .user-progress {
@@ -43,7 +53,7 @@
   
   .learning-modules {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(800px, 1fr));
     gap: 1.5rem;
   }
   

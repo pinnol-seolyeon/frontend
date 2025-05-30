@@ -2,9 +2,10 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOutletContext } from 'react-router-dom';
 import '../main/Main.css';
-function Dashboard() {
+function Dashboard({user}) {
   const navigate = useNavigate();
   // const { userProgress } = useOutletContext();
+  
 
   const learningModules = [
     {
@@ -36,23 +37,26 @@ function Dashboard() {
   return (
     <div className="dashboard">
       <div className="welcome-section">
-        <h2>안녕하세요! 오늘도 즐거운 금융 공부해볼까요?</h2>
-        <div className="user-progress">
-          <div className="progress-item">
-            <span>진행률</span>
+        <h2>
+          안녕 {user?.childName}~<br/>
+          오늘도 즐거운 금융 공부해볼까?
+        </h2>
+        {/* <div className="user-progress"> */}
+          {/* <div className="progress-item"> */}
+            {/* <span>진행률</span> */}
             {/* <strong>{userProgress?.progressRate || 0}%</strong> */}
-          </div>
-          <div className="progress-item">
-            <span>포인트</span>
+          {/* </div> */}
+          {/* <div className="progress-item"> */}
+            {/* <span>포인트</span> */}
             {/* <strong>{userProgress?.points || 0}</strong> */}
-          </div>
+          {/* </div> */}
           {/* {userProgress?.lastCompleted && (
             <div className="progress-item">
               <span>마지막 학습</span>
               <strong>{new Date(userProgress.lastCompleted).toLocaleDateString()}</strong>
             </div>
           )} */}
-        </div>
+        {/* </div> */}
       </div>
 
       <div className="learning-modules">
