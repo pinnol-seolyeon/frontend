@@ -3,7 +3,7 @@ import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import './QnAViewer.css';
 
-import { fetchQuestionDates, fetchQuestionsByDate } from '../../api/analytics';
+import { fetchQuestionDates, fetchQuestionsByDate } from '../../api/analyze/analytics';
 
 export default function QnAViewer() {
   const [markedDates, setMarkedDates] = useState([]);
