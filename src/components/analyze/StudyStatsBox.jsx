@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchStudyStats } from '../../api/analytics';
+import { fetchStudyStats } from '../../api/analyze/analytics';
 import styles from './StudyStatsBox.module.css';
 
 

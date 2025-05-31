@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchStudyTimeStats } from '../../api/analytics';
+import { fetchStudyTimeStats } from '../../api/analyze/analytics';
 import {
   BarChart,
   Bar,
