@@ -264,7 +264,7 @@ function Question({}){
             try{
                 setLoading(true);
                 //메시지를 서버로 POST 요청 //await: 비동기 처리로 서버 응답 기다림
-                const response=await axios.post('http://localhost:8080/api/question',{
+                const response=await axios.post('http://3.34.150.31:8080/api/question',{
                     question:newMessage
                 },{
                     withCredentials:true,

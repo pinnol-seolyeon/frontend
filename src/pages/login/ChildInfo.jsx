@@ -115,7 +115,7 @@ function ChildInfo(){
 
 
     const writeChildInfo=()=>{
-        fetch("http://localhost:8080/api/user/child",{
+        fetch("http://3.34.150.31:8080/api/user/child",{
             method:"PATCH",
             headers: {
                 "Content-Type": "application/json"

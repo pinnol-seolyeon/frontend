@@ -1,6 +1,6 @@
 export async function sendQuizResults(results) {
   try {
-    const res = await fetch('http://localhost:8080/api/quiz-result', {
+    const res = await fetch('http://3.34.150.31:8080/api/quiz-result', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
