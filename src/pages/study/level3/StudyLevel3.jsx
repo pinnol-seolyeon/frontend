@@ -79,6 +79,7 @@ const BubbleButton = styled.button`
   cursor: pointer;
   border: 0.2px solid black;
   transition: background-color 0.3s;
+  font-size:20px;
   &:hover {
     background-color: #1b5c91;
   }
@@ -94,6 +95,9 @@ const QuestionButton = styled.button`
   border-radius: 15px;
   cursor: pointer;
   border: 0.2px solid black;
+
+  font-size:18px;
+
   transition: background-color 0.3s;
   &:hover {
     background-color: #1b5c91;

@@ -124,8 +124,8 @@ const TextBox = styled.div`
 
 
 const BubbleButton = styled.button`
-  width: 50%;               /* 고정된 버튼 너비 */
-  padding: 12px 0;            /* 텍스트 세로 여백만 유지 */
+  width: 60%;               /* 고정된 버튼 너비 */
+  padding: 0.6em 1.2em;            /* 텍스트 세로 여백만 유지 */
   text-align: center;         /* 텍스트 가운데 정렬 */
   
 
@@ -134,6 +134,8 @@ const BubbleButton = styled.button`
   border-radius: 30px;
   cursor: pointer;
   border: 0.2px solid black;
+
+  font-size: 20px;
 
   transition: background-color 0.3s;
   &:hover {x

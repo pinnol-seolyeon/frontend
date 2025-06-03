@@ -22,22 +22,46 @@ const Wrapper=styled.div`
 
 `;
 
-const Image=styled.img`
-    display:flex;
-    width:100%; 
-    height:auto;
-    object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    max-width:300px;
-    display:block;
-    margin:0 auto; /*가로 중앙 정렬*/
-    padding:50px;
 
-    position:absolute;
-    left:20px;
-    bottom:20px;
+const SpeechWrapper=styled.div`
+  position:relative;
+  display:flex;
+  flex-direction:column;
+
+  width:100%;
+  height:60%;
+  align-itmes:flex-start;
+  justify-content:flex-start;
+
+  margin:2% 0;
 `;
 
+const Image = styled.img`
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+
+  // width: 20%;
+  min-width: 120px;
+  max-width: 300px;
+  height: auto;
+  object-fit: contain;
+
+  @media (max-width: 768px) {
+    width: 25%;
+    left: 5px;
+    bottom: 5px;
+  }
+
+  @media (max-width: 480px) {
+    width: 30%;
+  }
+`;
+
+
+
 const SpeechBubble = styled.div`
+  position:relative;
   display: flex;
   flex-direction: column;
   width: 80%;
@@ -45,13 +69,17 @@ const SpeechBubble = styled.div`
   min-height: 300px;
 
   background-color: #FEF3E1;
-  position: absolute;
-  right: 100px;
-  top: 150px;
+  // position: absolute;
+  // right: 100px;
+  // top: 150px;
 
   border: 0.5px solid black;
   border-radius: 24px;
   padding: 20px;
+
+  margin-top:5%;
+  margin-left:6%;
+  // margin-bottom:10%;
 `;
 
 
@@ -92,6 +120,8 @@ const BubbleButton = styled.button`
   cursor: pointer;
   border:0.2px solid black;
 
+  font-size:20px;
+
   transition: background-color 0.3s;
   &:hover {
     background-color: #1b5c91;
@@ -117,8 +147,8 @@ const Title=styled.div`
 
 const NextButton = styled(Button)`
 
-  width:220px;
-  height:50px;
+  // width:220px;
+  // height:50px;
   margin:3px;
 
   background-color: #2774B2;
@@ -126,7 +156,7 @@ const NextButton = styled(Button)`
   border-radius: 30px;
   cursor: pointer;
   border: 0.2px solid black;
-  font-size: clamp(10px, 1.5vw, 15px);
+  font-size: 20px;
 
 
   transition: background-color 0.3s;
@@ -201,6 +231,7 @@ function StudyLevel6_2(props){
 
     const navigate=useNavigate();
     const [showPopup,setShowPopup]=useState(false);
+    const [showFamilyButton,setShowFamilyButton]=useState(false);
     const {chapterData,clearChapterData}=useChapter();
     const [topic,setTopic]=useState();
     const [currentIndex,setCurrentIndex]=useState(0);
@@ -265,6 +296,8 @@ function StudyLevel6_2(props){
     
 
     
+
+    
     return(
     <>
         <Wrapper>
@@ -276,25 +309,29 @@ function StudyLevel6_2(props){
                 6/6 : 마무리
                 </MiniHeader>
                 <Title>토론해보자!</Title>
-                <SpeechBubble>
-                    
-                    {/* ✅ topic 전체를 출력 */}
-                    <TextBox>
-                    {loading ? (
-                      "토론 주제 생성 중.."
-                    ) : (
-                      <span style={{ fontWeight: "bold", color: "#2774B2" }}>
-                        {topic}
-                      </span>
-                    )}
-                  </TextBox>
+                <SpeechWrapper>
+                  <SpeechBubble>
+                      
+                      {/* ✅ topic 전체를 출력 */}
+                      <TextBox>
+                      {loading ? (
+                        "토론 주제 생성 중.."
+                      ) : (
+                        <span style={{ fontWeight: "500", color: "#000000" }}>
+                          {topic}
+                        </span>
+                      )}
+                    </TextBox>
 
-                    <BubbleButton onClick={handleNextSentence}>꼭 해볼게✅</BubbleButton>
-                </SpeechBubble>
-                <Image src={tigerPencil} alt="샘플" />
-
+                      <BubbleButton onClick={()=>setShowFamilyButton(true)}>꼭 해볼게✅</BubbleButton>
+                  
+                  </SpeechBubble>
+                  <Image src={tigerPencil} alt="샘플" />
+              </SpeechWrapper>
               
+              {showFamilyButton&&
                 <NextButton onClick={handleComplete}>학습결과와 토론 주제 전송하기</NextButton>
+              }
                 {showPopup &&(
                     <Popup>🐯 학습을 완료했어요! 🐯</Popup>
                 )}

@@ -58,7 +58,7 @@ const Title=styled.div`
 const NextButton = styled(Button)`
 
   background-color: #2774B2;
-  color: white;
+  color: white;font-size:18px;
   border-radius: 30px;
   cursor: pointer;
   border: 0.2px solid black;
