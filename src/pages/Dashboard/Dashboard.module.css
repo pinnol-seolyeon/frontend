@@ -44,7 +44,7 @@
 }
 
 /* 퀴즈 차트 영역 (가로로 긴 박스) */
-.quizChartBox {
+.radarChartBox {
   background-color: white;
   padding: 20px;
   border-radius: 16px;

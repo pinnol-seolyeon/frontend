@@ -2,18 +2,23 @@ import React, { useEffect, useState } from 'react';
 import styles from './Dashboard.module.css';
 import StudyStatsBox from '../../components/analyze/StudyStatsBox';
 import StudyTimeStats from '../../components/analyze/StudyTimeStats';
-import QuizChart from '../../components/QuizChart';
+import RadarGraph from '../../components/analyze/RadarChart';
 import QnAViewer from '../../components/analyze/QnAViewer';
 
-import { fetchStudyStats } from '../../api/analytics';
+import { fetchStudyStats } from '../../api/analyze/analytics';
+import { fetchRadarScore } from '../../api/analyze/analytics';
 
 export default function Dashboard() {
   const [studyStats, setStudyStats] = useState({ totalCompleted: 0, weeklyCompleted: 0 });
-  const [studyTime, setStudyTime] = useState({ hours: 0, minutes: 0 });
-  const [attendance, setAttendance] = useState([]);
+  const [thisWeek, setThisWeek] = useState({});
+  const [lastWeek, setLastWeek] = useState({});
 
   useEffect(() => {
     fetchStudyStats().then(setStudyStats);
+    fetchRadarScore().then(score => {
+      setThisWeek(score.thisWeek);
+      setLastWeek(score.lastWeek);
+    });
   }, []);
 
   return (
@@ -34,8 +39,8 @@ export default function Dashboard() {
         </div>
 
         {/* ⬅️ 가운데 가로 긴 박스 */}
-        <div className={styles.quizChartBox}>
-          {/* <QuizChart data={quizData} /> */}
+        <div className={styles.radarChartBox}>
+          <RadarGraph thisWeek={thisWeek} lastWeek={lastWeek} />
         </div>
 
         {/* ⬇️ 아래 수평 두 개 */}

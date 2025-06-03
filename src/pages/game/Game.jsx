@@ -5,13 +5,17 @@ import hurdle2Img from '../../assets/hurdle2.png';
 import coinImg from '../../assets/coin.png';
 import quizBoxImg from '../../assets/quizpop.png';
 import backgroundImg from '../../assets/game-background1.png';
-import flagImg from '../../assets/flag.png';         // 깃발 이미지
-import playerEndImg from '../../assets/finish_player.png'; // 종료용 캐릭터 이미지
-import { saveScoreToDB } from '../../api/saveScoreToDB';
-
-
+import flagImg from '../../assets/flag.png';
+import playerEndImg from '../../assets/finish_player.png';
+import { saveScoreToDB } from '../../api/analyze/saveScoreToDB';
+import { fetchQuizByChapterId } from '../../api/study/fetchQuiz';
+import { useLocation } from 'react-router-dom';
+import bgmSrc from '../../assets/Tiki_Bar_Mixer.mp3';
+import { sendQuizResults } from '../../api/analyze/sendQuizResults';
 
 export default function Game() {
+  const location = useLocation();
+  const chapterId = "682829708c776a1ffa92fd50";
   const canvasRef = useRef(null);
   const animationIdRef = useRef(null);
   const updateRef = useRef(null);
@@ -28,14 +32,19 @@ export default function Game() {
   const quizBoxImageRef = useRef(null);
   const hurdleImagesRef = useRef([]);
 
+  const [quizList, setQuizList] = useState([]);
+  const currentQuizIndexRef = useRef(0);
+
+  const [quizLoaded, setQuizLoaded] = useState(false); // 퀴즈 로딩 상태 추가
   const quizCountRef = useRef(0);
+  const quizResultsRef = useRef([]);  // 전체 퀴즈 결과 저장
 
   const [gameOver, setGameOver] = useState(false);
   const [quiz, setQuiz] = useState(null);
   const [isPaused, setIsPaused] = useState(false);
   const [score, setScore] = useState(0);
   const scoreRef = useRef(0);
-  const quizScoreRef = useRef(3);
+  const quizScoreRef = useRef(0);
   const groundHeightRatioRef = useRef(0.15);
 
   const [penaltyVisible, setPenaltyVisible] = useState(false);
@@ -53,7 +62,14 @@ export default function Game() {
 
   const flagPushedRef = useRef(false);
 
+  const [isGameStarted, setIsGameStarted] = useState(false);
+  const bgmRef = useRef(null);
 
+  // 퀴즈 푸는 시간
+  const quizStartTimeRef = useRef(null);
+
+
+  // 퀴즈 만났을 때 화면 정지 위함
   function snapshotState() {
     const quizFilteredEntities = entitiesRef.current.filter(e => e.type !== 'quiz');
     pausedSnapshotRef.current = {
@@ -65,6 +81,7 @@ export default function Game() {
     };
   }
 
+  // 퀴즈 후 화면 복구 위함
   function restoreSnapshot() {
     const snap = pausedSnapshotRef.current;
     if (!snap) return;
@@ -76,7 +93,6 @@ export default function Game() {
 
     const restoredEntities = snap.entities.map(e => {
       const newEntity = { ...e };
-      // 이미지 객체 복원
       if (e.type === 'coin') newEntity.img = coinImageRef.current;
       else if (e.type === 'quiz') newEntity.img = quizBoxImageRef.current;
       else if (e.type === 'hurdle') {
@@ -90,10 +106,24 @@ export default function Game() {
     pausedSnapshotRef.current = null;
   }
 
+  // 퀴즈 정답 처리
   function handleQuizAnswer(answer) {
     if (!quiz) return;
+
+    // 정답 누른 시간
+    const responseTime = Date.now() - quizStartTimeRef.current;
+
+    // 퀴즈 결과 기록
+    quizResultsRef.current.push({
+      question: quiz.question,
+      options: quiz.options,
+      correctAnswer: quiz.answer,
+      userAnswer: answer,
+      isCorrect: answer === quiz.answer,
+      responseTime,
+    });
   
-    if (quizCountRef.current === 3 && !flagScheduled) {
+    if (quizCountRef.current === 5 && !flagScheduled) {
         setFlagScheduled(true);
         setTimeout(() => {
           setFlagShown(true);
@@ -116,50 +146,70 @@ export default function Game() {
 
     if (answer === quiz.answer) {
       setQuiz(null);
-      
       restoreSnapshot();
-      
-      scoreRef.current += 50
+      scoreRef.current += 50;
+      quizScoreRef.current += 1;
       setIsPaused(false);
+      bgmRef.current?.play();
       setCorrectVisible(true);
       setTimeout(() => setCorrectVisible(false), 1000);
-
       requestAnimationFrame(updateRef.current);
     } else {
       setQuiz(null);
-      
       restoreSnapshot();
-
-      scoreRef.current = 0
-      quizScoreRef.current += 1
+      scoreRef.current = 0;
       setIsPaused(false);
+      bgmRef.current?.play();
       setWrongVisible(true);
       setTimeout(() => setWrongVisible(false), 1000);
-      
       requestAnimationFrame(updateRef.current);
     }
   }
 
+  // 퀴즈 틀렸을 때 화면 효과
   function showPenaltyEffect() {
     setPenaltyVisible(true);
     setTimeout(() => setPenaltyVisible(false), 800);
   }
 
+  // 코인 먹었을 때 화면 효과
   function showGainEffect() {
     setGainVisible(true);
     setTimeout(() => setGainVisible(false), 800);
   }
 
+  // 게임 끝날 때 화면 효과
   function showEndEffect() {
     setEndVisible(true);
     setTimeout(() => setEndVisible(false), 800);
   }
 
+  // 챕터 별 퀴즈 불러오기
+  useEffect(() => {
+    if (!chapterId) return;
+
+    async function loadQuiz() {
+      try {
+        const data = await fetchQuizByChapterId(chapterId);
+        console.log("✅ 퀴즈 응답:", data);
+        setQuizList(data);
+        setQuizLoaded(true); // 퀴즈 로딩 완료 상태 설정
+      } catch (err) {
+        console.error("❌ 퀴즈 불러오기 실패:", err);
+        setQuizLoaded(true); // 실패해도 게임은 진행되도록
+      }
+    }
+
+    loadQuiz();
+  }, [chapterId]);
 
   useEffect(() => {
+    // 퀴즈가 로드되지 않았으면 게임 시작하지 않음
+    if (!quizLoaded || !isGameStarted) return;
     
     if (gameOver) {
         saveScoreToDB(1, quizScoreRef.current , scoreRef.current);
+        sendQuizResults(quizResultsRef.current);
       }
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -197,7 +247,6 @@ export default function Game() {
     }
 
     function detectCollision(player, obs) {
-      // 충돌 감지를 위한 여백 적용 (히트박스 최적화)
       const px = player.x + player.width * 0.25;
       const pw = player.width * 0.5;
       const py = player.y + player.height * 0.25;
@@ -209,30 +258,30 @@ export default function Game() {
       return px < ox + ow && px + pw > ox && py < oy + oh && py + ph > oy;
     }
 
-    function fetchMockQuiz() {
-      const quizzes = [
-        {
-          question: "React는 어떤 라이브러리인가요?",
-          options: ["UI 라이브러리", "데이터베이스", "서버 프레임워크", "운영체제"],
-          answer: "UI 라이브러리",
-        },
-        {
-          question: "JavaScript에서 비동기 작업을 처리하는 객체는?",
-          options: ["Promise", "Array", "Object", "String"],
-          answer: "Promise",
-        },
-        {
-          question: "CSS에서 box-sizing: border-box의 의미는?",
-          options: ["padding과 border를 width에 포함", "margin을 width에 포함", "content 영역만 계산", "모든 여백 무시"],
-          answer: "padding과 border를 width에 포함",
-        }
-      ];
-      return quizzes[Math.floor(Math.random() * quizzes.length)];
-    }
-
     function showQuiz() {
-      const q = fetchMockQuiz();
-      setQuiz(q);
+      console.log("퀴즈 표시 시도, quizList 길이:", quizList.length); // 디버그 로그 추가
+      
+      if (quizList.length === 0) {
+        console.warn("⚠️ 퀴즈 없음 - 게임 계속 진행");
+        restoreSnapshot();
+        setIsPaused(false);
+        requestAnimationFrame(updateRef.current);
+        return;
+      }
+
+      const nextQuiz = quizList[currentQuizIndexRef.current];
+      currentQuizIndexRef.current += 1;
+
+      console.log("표시할 퀴즈:", nextQuiz);
+
+      quizStartTimeRef.current = Date.now();
+
+      setQuiz({
+        question: nextQuiz.quiz,
+        options: nextQuiz.options,
+        answer: nextQuiz.answer,
+      });
+      bgmRef.current?.pause();
     }
 
     let lastQuizFrame = -1000;
@@ -243,13 +292,15 @@ export default function Game() {
       if (flagPushedRef.current) return;
 
       const canvas = canvasRef.current;
-
       const x = canvas.width;
       const yBase = canvas.height - groundHeightRatioRef.current * canvas.height;
       const candidates = [];
 
-
-      if (frameRef.current - lastQuizFrame > quizSpawnInterval && Math.random() < 0.2 && quizCountRef.current < 3) {
+      // 퀴즈가 로드된 경우에만 퀴즈 박스 생성
+      if (frameRef.current - lastQuizFrame > quizSpawnInterval && 
+          Math.random() < 0.2 && 
+          quizCountRef.current < 5 && 
+          quizList.length > 0) { // 퀴즈 리스트가 있을 때만
         candidates.push('quiz');
         quizCountRef.current++;
         lastQuizFrame = frameRef.current;          
@@ -257,10 +308,7 @@ export default function Game() {
 
       if (Math.random() < 0.4) candidates.push('coin');
       if (Math.random() < 0.8) candidates.push('hurdle');
-    
 
-
-      // entity 생성은 그대로 유지
       candidates.forEach(type => {
         let width, height, y, img;
         const player = playerRef.current;
@@ -278,11 +326,8 @@ export default function Game() {
           y = yBase - height - player.height * 1.3;
         } else if (type === 'quiz') {
           img = quizBoxImageRef.current;
-
-          // 더 넓고 큰 박스
           width = canvas.width * 0.25;
           height = canvas.height * 0.4;
-
           y = canvas.height * 0.7 - height / 2;
         }
 
@@ -295,7 +340,6 @@ export default function Game() {
 
     function update() {
       if (gameOver) return;
-
 
       const player = playerRef.current;
       const entities = entitiesRef.current;
@@ -336,6 +380,7 @@ export default function Game() {
 
         if (!isPaused && !endingRef.current && detectCollision(player, ent)) {
           if (ent.type === 'quiz' && !quiz) {
+            console.log("퀴즈 박스와 충돌 감지!"); // 디버그 로그 추가
             cancelAnimationFrame(animationIdRef.current);
             snapshotState();
             entities.splice(i, 1);
@@ -350,12 +395,20 @@ export default function Game() {
           } else if (ent.type === 'coin') {
             scoreRef.current += 5;
             showGainEffect();
+            const coinSound = new Audio(require('../../assets/coin-recieved-230517.mp3'));
+            coinSound.volume = 0.7;
+            coinSound.play().catch(err => console.warn("코인 효과음 재생 실패:", err));
             entities.splice(i, 1);
             i--;
           } else if (ent.type === 'flag') {
             endingRef.current = true;
-            playerImageRef.current = playerEndImage; // 캐릭터 이미지 변경
-            entities.splice(i, 1); // 깃발 제거
+            playerImageRef.current = playerEndImage;
+            entities.splice(i, 1);
+            bgmRef.current?.pause();
+            bgmRef.current.currentTime = 0; // 🎵 완전 정지
+            const finishSound = new Audio(require('../../assets/cute-level-up-3-189853.mp3'));
+            finishSound.volume = 0.7;
+            finishSound.play().catch(err => console.warn("끝 효과음 재생 실패:", err));
             showEndEffect();
           }
         }
@@ -372,9 +425,9 @@ export default function Game() {
       animationIdRef.current = requestAnimationFrame(updateRef.current);
 
       if (endingRef.current) {
-        player.x += 8; // 오른쪽으로 달림
+        player.x += 8;
         if (player.x > canvas.width) {
-          setGameOver(true); // 결과창 트리거
+          setGameOver(true);
           cancelAnimationFrame(animationIdRef.current);
         }
       }
@@ -394,14 +447,55 @@ export default function Game() {
       }
     });
 
-    // bgImg.onload = () => update();
     return () => window.removeEventListener('resize', resizeCanvas);
+    
+  }, [gameOver, quizLoaded, quizList, isGameStarted]); // quizLoaded와 quizList를 의존성에 추가
 
-  }, [gameOver]);
+  useEffect(() => {
+  const bgm = bgmRef.current;
+
+  const tryPlayBGM = () => {
+    if (bgm) {
+      bgm.volume = 0.5; // 적당한 볼륨
+      bgm.play().catch(err => console.warn("🎵 BGM 자동재생 실패:", err));
+    }
+  };
+
+  // 사용자 상호작용 후 재생 보장 (브라우저 정책 회피)
+  window.addEventListener('click', tryPlayBGM, { once: true });
+
+  return () => {
+    window.removeEventListener('click', tryPlayBGM);
+    bgm?.pause();
+    bgm.currentTime = 0;
+  };
+}, []);
+
+  // 로딩 화면 표시
+  if (!quizLoaded) {
+    return (
+      <div style={{ 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        width: '100vw', 
+        height: '100vh',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: 'white',
+        fontSize: '2rem'
+      }}>
+        퀴즈 로딩 중...
+      </div>
+    );
+  }
 
   return (
     <>
       <canvas ref={canvasRef} style={{ display: 'block', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }} />
+      <audio ref={bgmRef} src={bgmSrc} loop />
 
       {quiz && (
         <div style={{ 
@@ -447,19 +541,112 @@ export default function Game() {
           완주 완료!
         </div>
       )}
-      
 
       {gameOver && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)', zIndex: 50, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '10px', textAlign: 'center' }}>
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(0,0,0,0.6)',
+          backdropFilter: 'blur(5px)',
+          zIndex: 50,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          overflowY: 'auto',
+          padding: '2rem'
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            padding: '2rem',
+            borderRadius: '10px',
+            textAlign: 'center',
+            maxWidth: '600px',
+            width: '100%'
+          }}>
             <h2>🎉 게임 종료!</h2>
-            <p>최종 점수: {scoreRef.current}</p>
-            <button onClick={() => window.location.reload()} style={{ marginTop: '1rem', padding: '0.5rem 1.5rem' }}>
+            <p>최종 코인: {scoreRef.current}</p>
+
+            {/* 퀴즈 결과 요약 */}
+            <h3 style={{ marginTop: '1rem' }}>📊 퀴즈 결과</h3>
+            <p>
+              맞춘 개수: {
+                quizResultsRef.current.filter(r => r.isCorrect).length
+              } / {quizResultsRef.current.length}
+            </p>
+
+            {/* 퀴즈 상세 결과 */}
+            <div style={{ textAlign: 'left', marginTop: '1rem', maxHeight: '300px', overflowY: 'auto' }}>
+              {quizResultsRef.current.map((result, index) => (
+                <div key={index} style={{
+                  marginBottom: '1rem',
+                  padding: '0.75rem',
+                  border: '1px solid #ccc',
+                  borderRadius: '8px',
+                  backgroundColor: result.isCorrect ? '#e6ffe6' : '#ffe6e6'
+                }}>
+                  <strong>Q{index + 1}. {result.question}</strong>
+                  <br />
+                  <span>📝 선택한 답: <strong>{result.userAnswer}</strong></span>
+                  <br />
+                  <span>✅ 정답: <strong>{result.correctAnswer}</strong></span>
+                  <br />
+                  <span>{result.isCorrect ? "🎯 정답입니다!" : "❌ 오답입니다."}</span>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={() => window.location.reload()} style={{
+              marginTop: '1.5rem',
+              padding: '0.5rem 1.5rem'
+            }}>
               다시 시작
             </button>
           </div>
         </div>
       )}
+
+      {!isGameStarted && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          backgroundColor: 'rgba(0, 0, 0, 0.8)', display: 'flex',
+          justifyContent: 'center', alignItems: 'center', color: 'white',
+          zIndex: 100, flexDirection: 'column', textAlign: 'center', padding: '2rem'
+        }}>
+          <h1 style={{ marginBottom: '1.5rem', fontSize: '2.5rem'}}>게임을 시작하려면 클릭하세요!</h1>
+
+          {/* 게임 설명 / 튜토리얼 */}
+          <div style={{ marginBottom: '2rem', fontSize: '1.1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <img src={coinImg} alt="코인" style={{ width: '40px', height: '40px' }} />
+              <span>코인을 먹으면 +5점</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <img src={hurdle1Img} alt="장애물" style={{ width: '40px', height: '40px' }} />
+              <span>장애물을 피하지 못하면 -5점</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <img src={quizBoxImg} alt="퀴즈박스" style={{ width: '40px', height: '40px' }} />
+              <span>퀴즈 박스를 만나면 퀴즈가 출제돼요!</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem', marginTop: '3rem' }}>
+              <span style={{ fontSize: '1.5rem' }}></span>
+              <span>스페이스 바로 점프!</span>
+            </div>
+          </div>
+
+          {/* 시작 버튼 */}
+          <button onClick={() => {
+            bgmRef.current?.play();
+            setIsGameStarted(true);
+          }} style={{ fontSize: '1.5rem', padding: '1rem 2.5rem', cursor: 'pointer' }}>
+            ▶ 시작하기 ✨
+          </button>
+        </div>
+      )}
+
     </>
   );
 }
