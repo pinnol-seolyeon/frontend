@@ -46,10 +46,13 @@ const Image=styled.img`
 const SpeechBubble=styled.div`
     display:flex;
     width:100%;
-    height:25%;
+    height:250px; /* ✅ 고정 높이로 조정 */
     background-color:#FEF3E1;
     position:relative;
+    align-items: center;
+    justify-content: center;
 `;
+
 
 const TextBox = styled.div`
   display: flex;
@@ -57,6 +60,7 @@ const TextBox = styled.div`
   align-items: center;
   text-align: center;
   width: 100%;
+  height: 180px; /* ✅ 고정 높이 */
   margin: 0 auto;
   padding: 40px;
   font-size: clamp(20px, 3vw, 32px);
@@ -65,7 +69,10 @@ const TextBox = styled.div`
   font-weight: 500;
   font-family: "Noto Sans KR", sans-serif;
   color: #333;
+  white-space: normal;      /* ✅ 줄바꿈 허용 */
+  word-break: keep-all;     /* ✅ 단어 잘림 방지 */
 `;
+
 
 const BubbleButton = styled.button`
   position: absolute;
@@ -203,14 +210,33 @@ function StudyPage(){
         if (chapterData?.content) {
             const contents = chapterData.content;
             console.log("✅ Chapter content:", contents);
-
-            const splitSentences = contents
+            
+            //문장 분리
+            const baseSentences = contents
             .split(/(?<=[.?!])\s+/)
             .filter((s) => s.trim() !== ""); //공백만 있는 문장 등을 제거
             
             //질문 감지 함수
             const isQuestion = (s) =>
                 s.includes("?") || /(무엇|어떻게|누가|어디|얼마)/.test(s);
+
+            //긴 문장 분할 함수(질문 제외)
+            const breakLongSentence = (sentence, max = 50) => {
+                if (isQuestion(sentence)) return [sentence]; // ✅ 질문이면 그대로
+                if (sentence.length <= max) return [sentence];
+
+                const mid = Math.floor(sentence.length / 2);
+                let splitIndex = sentence.lastIndexOf(" ", mid);
+                if (splitIndex === -1) splitIndex = mid;
+                const first = sentence.slice(0, splitIndex).trim();
+                const second = sentence.slice(splitIndex).trim();
+                return [first, second];
+            };
+
+            //문장분해
+            const splitSentences=baseSentences
+                .map((s)=>breakLongSentence(s))
+                .flat();
 
             //질문이 포함된 문장의 인덱스만 추출
             const questionIndexes=splitSentences
@@ -249,6 +275,7 @@ function StudyPage(){
         alert("✅학습을 모두 완료했어요! 다음 단계로 이동해볼까요? ")
     }
    };
+
 
 
    //AI로부터 답변 받기.. 
