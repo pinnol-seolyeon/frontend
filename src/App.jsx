@@ -15,14 +15,15 @@ function AppContent() {
     axios.get('https://finnol.site/api/user', { withCredentials: true })
       .then(response => {
         const isFirstLogin = response.data.firstLogin;
+        console.log("✅로그인 확인",response.data);
         setLogin(true);
         setUser(response.data);
 
-        if (isFirstLogin) {
-          navigate("/childInfo");
-        } else {
-          navigate("/main");
-        }
+        // if (isFirstLogin) {
+        //   navigate("/childInfo");
+        // } else {
+        //   navigate("/main");
+        // }
       })
       .catch(() => {
         console.log('✖️로그인되어 있지 않습니다.');
