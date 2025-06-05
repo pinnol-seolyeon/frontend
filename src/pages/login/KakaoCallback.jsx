@@ -4,7 +4,7 @@ import {useEffect} from "react";
 const KakaoCallback=()=>{
     // useEffect(()=>{
         const code=new URL(window.location.href).searchParams.get("code");
-        fetch("http://3.34.150.31:8080/api/oauth/kakao",{
+        fetch("https://finnol.site:8080/api/oauth/kakao",{
             method:"POST",
             headers:{"Content-Type":"application/json"},
             body: JSON.stringify({ code })
