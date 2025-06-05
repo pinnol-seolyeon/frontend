@@ -42,12 +42,12 @@ function Login(){
     //로그인 버튼 클릭시 호출
     const redirectToKakao=()=>{
     
-        const kakaoURL = `https://finnol.site:8080/oauth2/authorization/kakao`
+        const kakaoURL = `https://finnol.site/oauth2/authorization/kakao`
         window.location.href=kakaoURL;
     };   
 
     const getData = () => {
-        fetch("https://finnol.site:8080/api/my", {
+        fetch("https://finnol.site/api/my", {
           method: "GET",
           credentials: "include" // 쿠키 기반 로그인 세션 유지
         })

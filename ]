@@ -1,0 +1,22 @@
+fix: url에서 8080포트 제외
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch main
+# Your branch is up to date with 'origin/main'.
+#
+# Changes to be committed:
+#	modified:   src/api/analyze/analytics.js
+#	modified:   src/api/analyze/saveScoreToDB.js
+#	modified:   src/api/analyze/sendQuizResults.js
+#	modified:   src/api/login/axiosInstance.js
+#	modified:   src/api/study/fetchQuiz.js
+#	modified:   src/api/study/level1API.js
+#	modified:   src/api/study/level3API.js
+#	modified:   src/pages/Question.jsx
+#	modified:   src/pages/login/ChildInfo.jsx
+#	modified:   src/pages/login/KakaoCallback.jsx
+#	modified:   src/pages/login/Login.jsx
+#	modified:   src/pages/study/level3/StudyLevel3.jsx
+#	modified:   src/pages/study/level6/StudyLv6_2.jsx
+#
