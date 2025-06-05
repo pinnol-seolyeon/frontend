@@ -10,7 +10,7 @@ import StudyPage1 from './pages/study/level1/StudyPage1';
 import StudyPage2 from './pages/study/level1/StudyPage2';
 import StudyLevel2 from './pages/study/level2/StudyLevel2';
 import StudyLevel3 from './pages/study/level3/StudyLevel3';
-import StudyLevel3_2 from './pages/study/level3/StudyLevel3_2';
+import StudyLevel6_summary from './pages/study/level6/StudyLevel6_summary';
 import StudyLevel6 from './pages/study/level6/StudyLevel6';
 import StudyLv6_2 from './pages/study/level6/StudyLv6_2';
 import Question from './pages/Question';
@@ -53,7 +53,7 @@ const routes = [
   { path: '/study/2', element: <StudyPage2 /> },
   { path: '/study/level2', element: <StudyLevel2 /> },
   { path: '/study/level3', element: <StudyLevel3 /> },
-  { path: '/study/level3/2', element: <StudyLevel3_2 /> },
+    { path: '/study/level6/summary', element: <StudyLevel6_summary /> },
   { path: '/study/level6/1', element: <StudyLevel6 /> },
   { path: '/study/level6/2', element: <StudyLv6_2 /> },
   { path: '/question', element: <Question /> },

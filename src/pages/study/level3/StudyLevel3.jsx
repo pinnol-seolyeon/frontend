@@ -217,8 +217,8 @@ function StudyPage(){
             .filter((s) => s.trim() !== ""); //공백만 있는 문장 등을 제거
             
             //질문 감지 함수
-            const isQuestion = (s) =>
-                s.includes("?") || /(무엇|어떻게|누가|어디|얼마)/.test(s);
+            const isQuestion = (s) => s.includes("?");
+
 
             //긴 문장 분할 함수(질문 제외)
             const breakLongSentence = (sentence, max = 50) => {
@@ -237,6 +237,7 @@ function StudyPage(){
             const splitSentences=baseSentences
                 .map((s)=>breakLongSentence(s))
                 .flat();
+            console.log("🐋분할된 최종 문장 배열:",splitSentences);
 
             //질문이 포함된 문장의 인덱스만 추출
             const questionIndexes=splitSentences
@@ -282,6 +283,10 @@ function StudyPage(){
    const handleUserSubmit = async () => {
         // 실제로는 여기에 AI 호출 로직이 들어감 (예: fetch("/chat", { method: POST ... }))
         console.log("🙋 유저 입력:", userAnswer);
+        if(!userAnswer||userAnswer.trim()===""){
+            alert("🚨답변을 입력해주세요!")
+            return; //함수 실행 중단 
+        }
 
         const feedback=await handleFeedback();
         console.log("✅AI피드백:",feedback.result)
@@ -320,7 +325,9 @@ function StudyPage(){
                 }
             };
         
-
+    const handleNavigate=async()=>{
+        navigate('/game');
+    }
 
    //다음 문장으로 넘어가도록 함함
    const handleNext=async()=>{
@@ -377,7 +384,10 @@ function StudyPage(){
                         onClick={handleNext}
                         >다음 단계로</Button>
                     ):(
-                        <Button disabled>진행 중..</Button>
+                        <Button
+                        onClick={handleNavigate}
+                        >다음 단계로</Button>
+                        // <Button disabled>진행 중..</Button> //배포 시 disabled 로 변경 ⭐⭐
                     )
                     }
                 >
