@@ -11,6 +11,7 @@ import { ChapterProvider } from './context/ChapterContext';
 export default function App() {
   const [login, setLogin] = useState(false);
   const [user,setUser]=useState(null); //유저 정보 상태 추가
+  const navigate=useNavigate();
 
   useEffect(()=>{
     console.log("")
@@ -24,9 +25,9 @@ export default function App() {
 
 
       if(isFirstLogin){
-        Navigate("/childInfo");
+        navigate("/childInfo");
       }else{
-        Navigate("/main");
+        navigate("/main");
       }
     })
     .catch(()=>{
