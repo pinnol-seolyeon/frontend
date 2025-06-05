@@ -17,15 +17,23 @@ export default function App() {
     //앱이 시작할 때 자동으로 로그인 상태 체크
     axios.get('https://finnol.site/api/user',{withCredentials:true})
     .then(response=>{
-      console.log('✅로그인 상태입니다:',response.data);
+
+      const isFirstLogin=response.data.firstLogin;
       setLogin(true);
       setUser(response.data);
-    }) 
-    .catch(error=>{
-      
+
+
+      if(isFirstLogin){
+        Navigate("/childInfo");
+      }else{
+        Navigate("/main");
+      }
+    })
+    .catch(()=>{
       console.log('✖️로그인되어 있지 않습니다.');
       setLogin(false);
       setUser(null);
+      navigate("/login");
     });
 },[]);
 
