@@ -13,6 +13,7 @@ export default function App() {
   const [user,setUser]=useState(null); //유저 정보 상태 추가
 
   useEffect(()=>{
+    console.log("")
     //앱이 시작할 때 자동으로 로그인 상태 체크
     axios.get('https://finnol.site/api/user',{withCredentials:true})
     .then(response=>{
@@ -21,6 +22,7 @@ export default function App() {
       setUser(response.data);
     }) 
     .catch(error=>{
+      
       console.log('✖️로그인되어 있지 않습니다.');
       setLogin(false);
       setUser(null);
