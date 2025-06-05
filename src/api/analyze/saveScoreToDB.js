@@ -1,6 +1,6 @@
 export async function saveScoreToDB(unit, score, coin) {
   try {
-    const res = await fetch("http://3.34.150.31:8080/api/scores", {
+    const res = await fetch("https://finnol.site/api/scores", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

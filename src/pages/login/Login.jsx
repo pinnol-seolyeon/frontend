@@ -47,7 +47,7 @@ function Login(){
     };   
 
     const getData = () => {
-        fetch("https://finnol.site::8080/api/my", {
+        fetch("https://finnol.site:8080/api/my", {
           method: "GET",
           credentials: "include" // 쿠키 기반 로그인 세션 유지
         })

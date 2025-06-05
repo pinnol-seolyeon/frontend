@@ -115,7 +115,7 @@ function ChildInfo(){
 
 
     const writeChildInfo=()=>{
-        fetch("https://finnol.site:8080/api/user/child",{
+        fetch("https://finnol.site/api/user/child",{
             method:"PATCH",
             headers: {
                 "Content-Type": "application/json"
