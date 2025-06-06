@@ -59,7 +59,7 @@ function Login(){
           })
           .then((data) => {
             // 로그인 성공 시 유저 정보 표시
-            alert(`✅ 로그인 성공! 닉네임: ${data.properties?.nickname ?? "Unknown"}`);
+            alert(`✅ 로그인 성공! 닉네임: ${data ?? "Unknown"}`);
           })
           .catch((error) => {
             alert("❌ 로그인 상태가 아닙니다. 다시 로그인해주세요.");

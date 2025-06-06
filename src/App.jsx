@@ -43,9 +43,11 @@ function AppContent() {
 
 export default function App() {
   return (
-    <ChapterProvider>
-      <Router basename={process.env.PUBLIC_URL}>
-        <AppContent />
+    // 전역 상태 관리 context API 제공 
+    <ChapterProvider> 
+      <Router>
+        {/*실제 렌더링 및 로그인 검사 로직*/}
+        <AppContent /> 
       </Router>
     </ChapterProvider>
   );
