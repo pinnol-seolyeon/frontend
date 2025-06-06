@@ -6,8 +6,9 @@ import Button from "../../../components/Button";
 import MiniHeader from "../../../components/study/MiniHeader";
 
 import { useNavigate } from "react-router-dom";
-import React,{useState,useEffect} from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useChapter } from "../../../context/ChapterContext";
+import TtsPlayer from "../../../components/TtsPlayer";
 
 /*학습하기-1단계-2*/
 
@@ -100,6 +101,7 @@ function StudyPage(props){
     const[objective,setObjective]=useState("");
     const {chapterData}=useChapter();
     const [loading,setLoading]=useState(true);
+    const [preloadDone, setPreloadDone] = useState(false)
 
 
 
@@ -130,6 +132,17 @@ function StudyPage(props){
         }
     }, [chapterData]);
     
+
+    const textToRead = useMemo(() => {
+        if (loading) {
+        return ["학습 목표 준비중.."];
+        }
+        return [
+        `먼저 이번 단원의 학습목표에 대해서 알아볼까? 이번 단원의 학습목표는 ${objective} 야. 그럼 이제 본격적으로 공부를 시작해보자`,
+        ];
+    }, [loading, objective]);
+
+
     return(
     <>
         <Wrapper>
@@ -140,6 +153,16 @@ function StudyPage(props){
                 >
                 1/6 : 학습 목표
                 </MiniHeader>
+
+                <TtsPlayer
+                    sentences={textToRead}
+                    answers={[]}
+                    isAnsweringPhase={false}
+                    currentIndex={0}
+                    autoPlay={true}
+                    style={{ display: "none" }}
+                    onPreloadDone={() => setPreloadDone(true)}
+                />
                 <SpeechBubble>
                     
                     <TextBox>

@@ -5,8 +5,7 @@ import StudyTimeStats from '../../components/analyze/StudyTimeStats';
 import RadarGraph from '../../components/analyze/RadarChart';
 import QnAViewer from '../../components/analyze/QnAViewer';
 
-import { fetchStudyStats } from '../../api/analyze/analytics';
-import { fetchRadarScore } from '../../api/analyze/analytics';
+import { fetchStudyStats, fetchRadarScore } from '../../api/analyze/analytics';
 
 export default function Dashboard() {
   const [studyStats, setStudyStats] = useState({ totalCompleted: 0, weeklyCompleted: 0 });
@@ -14,7 +13,12 @@ export default function Dashboard() {
   const [lastWeek, setLastWeek] = useState({});
 
   useEffect(() => {
-    fetchStudyStats().then(setStudyStats);
+    fetchStudyStats()
+    .then(setStudyStats)
+    .catch(err => {
+      console.error("❌ 통계 불러오기 실패:", err);
+      setStudyStats(null); // 또는 빈 값으로 처리
+    });
     fetchRadarScore().then(score => {
       setThisWeek(score.thisWeek);
       setLastWeek(score.lastWeek);
@@ -38,9 +42,15 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ⬅️ 가운데 가로 긴 박스 */}
+        {/* ⬅️ 가운데 박스: 방사형 그래프 + 설명 */}
         <div className={styles.radarChartBox}>
-          <RadarGraph thisWeek={thisWeek} lastWeek={lastWeek} />
+          {thisWeek && lastWeek && Object.keys(thisWeek).length > 0 ? (
+            <RadarGraph thisWeek={thisWeek} lastWeek={lastWeek} />
+          ) : (
+            <p style={{ textAlign: 'center', padding: '60px 0' }}>
+              이해도 분석 데이터를 불러오는 중입니다...
+            </p>
+          )}
         </div>
 
         {/* ⬇️ 아래 수평 두 개 */}

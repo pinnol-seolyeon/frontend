@@ -2,37 +2,41 @@ import { useEffect, useState } from 'react';
 import { fetchStudyStats } from '../../api/analyze/analytics';
 import styles from './StudyStatsBox.module.css';
 
-
 function StudyStatsBox({ type }) {
-  const [stats, setStats] = useState({ totalCompleted: 0, weeklyCompleted: 0 });
+  const [stats, setStats] = useState(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     fetchStudyStats()
       .then(setStats)
-      .catch(err => console.error("❌ 통계 불러오기 실패:", err));
+      .catch(err => {
+        console.error("❌ 통계 불러오기 실패:", err);
+        setError(true);
+      });
   }, []);
 
-
-  if (type === 'total') {
+  if (error) {
     return (
-      <div>
-        <h4 className={styles.title}>📚 총 완료 단원 수</h4>
-        <p className={styles.value}>{stats.totalCompleted}개</p>
+      <div className={styles.errorBox}>
+        데이터를 불러올 수 없습니다.
       </div>
     );
   }
 
-  if (type === 'weekly') {
-    return (
-      <div>
-        <h4 className={styles.title}>📅 이번 주 완료 단원 수</h4>
-        <p className={styles.value}>{stats.weeklyCompleted}개</p>
-      </div>
-    );
-  }
+  const value = type === 'total'
+    ? stats?.totalCompleted ?? 0
+    : stats?.weeklyCompleted ?? 0;
 
+  const title = type === 'total'
+    ? '📚 총 완료 단원 수'
+    : '📅 이번 주 완료 단원 수';
 
-  return null;
+  return (
+    <div>
+      <h4 className={styles.title}>{title}</h4>
+      <p className={styles.value}>{value}개</p>
+    </div>
+  );
 }
 
 export default StudyStatsBox;

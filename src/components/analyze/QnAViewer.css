@@ -35,14 +35,21 @@
   margin-bottom: 15px;
 }
 
+.react-calendar__tile--now {
+  background: #036EB8;  /* 오늘 날짜 배경색 */
+  color: #FFFFFF;       /* 오늘 날짜 텍스트 색 */
+  border-radius: 50%;   /* 원형으로 표시 */
+}
+
+
 .react-calendar__tile.highlight {
-  background: #90caf9;
+  background: #f8b62d;
   color: white;
   border-radius: 50%;
 }
 
 .react-calendar__tile.marked {
-  background: #90caf9; /* 하늘색 배경 */
+  background: #f8b62d; /* 하늘색 배경 */
   color: white;
   border-radius: 50%;
   font-weight: bold;

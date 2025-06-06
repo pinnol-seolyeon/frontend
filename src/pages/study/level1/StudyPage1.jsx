@@ -5,10 +5,11 @@ import tiger from "../../../assets/tiger-pencil.png";
 import Button from "../../../components/Button";
 import { fetchChapterContents} from "../../../api/study/level3API";
 import { useNavigate } from "react-router-dom";
-import React,{useState,useEffect} from 'react';
+import React, { useState, useEffect, useMemo } from "react";
 import {useParams} from "react-router-dom";
 import MiniHeader from "../../../components/study/MiniHeader";
 import {useChapter} from "../../../context/ChapterContext";
+import TtsPlayer from "../../../components/TtsPlayer";
 
 /*학습하기-3단계-1*/
 
@@ -110,6 +111,8 @@ function StudyPage(){
     const [step,setStep]=useState(0); //0이면 인사, 1이면 제목 출력
     const {chapterData}=useChapter();
 
+    const [preloadDone, setPreloadDone] = useState(false)
+
     useEffect(()=>{
         const loadChapterTitle=async()=>{
             try{
@@ -121,6 +124,7 @@ function StudyPage(){
                 setTitle("⚠️단원명 로딩실패")
             }finally{
                 setLoading(false);
+                setPreloadDone(false);
             }
         };
 
@@ -130,10 +134,28 @@ function StudyPage(){
     const handleNext=()=>{
         if (step===0){
             setStep(1);
+            setPreloadDone(false);
         }else{
             alert("✅다음 단계로 넘어가볼까요? 다음 단계 버튼을 클릭해주세요!");
         }
     }
+
+    // tts 처리 위해서
+    // const textToRead =
+    // step === 0
+    //   ? ["안녕! 나는 호랑이 선생님이야"]
+    //   : [`이번 단원은 ${title} 이야. 이제 본격적으로 공부를 시작해보자`];
+
+    const textToRead = useMemo(() => {
+        if (loading) {
+        return ["단원을 준비 중이에요..."];
+        }
+        return step === 0
+        ? ["안녕! 나는 호랑이 선생님이야"]
+        : [`이번 단원은 ${title} 이야. 이제 본격적으로 공부를 시작해보자`];
+    }, [loading, step, title]);
+
+      
     
     return(
     <>
@@ -148,13 +170,22 @@ function StudyPage(){
             <ImageWrapper>
                 <Image src={tiger} alt="샘플" />
             </ImageWrapper>
+            <TtsPlayer
+                sentences={textToRead}
+                answers={[]}
+                isAnsweringPhase={false}
+                currentIndex={0}
+                autoPlay={true}
+                style={{ display: "none" }}
+                onPreloadDone={() => setPreloadDone(true)}
+            />
                 <SpeechBubble>
                     <TextBox>
                         {loading
                             ? "단원을 준비 중이에요..."
                             : step===0
-                                ? "안녕! 나는 호랑이 선생님이야🐯"
-                                : `이번 단원은 ${title} 이야. 이제 본격적으로 공부를 시작해보자 🐯`}
+                                ? "안녕! 나는 호랑이 선생님이야"
+                                : `이번 단원은 ${title} 이야. 이제 본격적으로 공부를 시작해보자`}
                     </TextBox>
                     <BubbleButton onClick={handleNext}>
                             {step===0?"다음":"시작하기"}

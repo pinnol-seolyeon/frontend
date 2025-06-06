@@ -189,8 +189,6 @@ function StudyPage(){
     const nextContext=sentences[currentIndex+1]||"다음 학습 내용 없음";
     const returnToIndex=location.state?.returnToIndex??0;
 
- 
-    //질문하기로 이동
    const navigateToQuestion=()=>{
         console.log("🐛question에게 보내는 returnToIndex:",currentIndex)
         navigate("/question",{state:{returnToIndex:currentIndex}});
