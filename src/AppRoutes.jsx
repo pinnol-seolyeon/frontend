@@ -21,6 +21,7 @@ import ReviewPage from './pages/review/ReviewPage';
 import BookListPage from './pages/study/Book/BookListPage';
 import ChapterPage from './pages/study/Chapter/ChapterPage';
 import StudyLv2_withImg from './pages/study/level2/StudyLv2_withImg';
+import Callback from './pages/login/Callback';
 
 
 const GlobalStyles = createGlobalStyle`
@@ -47,6 +48,7 @@ const GlobalStyles = createGlobalStyle`
 const routes = [
   { path: '/', element: <Dashboard /> },
   { path: '/login', element: <Login /> },
+  {path:'/callback',element:<Callback/>},
   { path: '/childInfo', element: <ChildInfo /> },
   { path: '/main',element:<Main/>},
   { path: '/study/1', element: <StudyPage1 /> },
