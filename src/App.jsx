@@ -12,7 +12,7 @@ function AppContent() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('https://finnol.site/api/user', { withCredentials: true })
+    axios.get('http://3.34.150.31/api/user', { withCredentials: true })
       .then(response => {
         const isFirstLogin = response.data.firstLogin;
         console.log("✅로그인 확인",response.data);

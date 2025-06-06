@@ -42,7 +42,7 @@ function Login(){
     //로그인 버튼 클릭시 호출
     const redirectToKakao=()=>{
     
-        const kakaoURL = `https://finnol.site/oauth2/authorization/kakao`
+        const kakaoURL = `http://3.34.150.31/oauth2/authorization/kakao`
         window.location.href=kakaoURL;
     };   
 
