@@ -12,26 +12,33 @@ function AppContent() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('https://finnol.site/api/user', { withCredentials: true })
-      .then(response => {
-        const isFirstLogin = response.data.firstLogin;
-        console.log("✅로그인 확인",response.data);
-        setLogin(true);
-        setUser(response.data);
+  fetch('https://finnol.site/api/user', {
+    method: 'GET',
+    credentials: 'include', // ✅ 쿠키 포함 (SameSite=None + Secure 쿠키 전달)
+  })
+    .then(response => {
+      if (!response.ok) throw new Error('인증 실패');
+      return response.json();
+    })
+    .then(data => {
+      const isFirstLogin = data.firstLogin;
+      console.log("✅로그인 확인", data);
+      setLogin(true);
+      setUser(data);
 
-        // if (isFirstLogin) {
-        //   navigate("/childInfo");
-        // } else {
-        //   navigate("/main");
-        // }
-      })
-      .catch(() => {
-        console.log('✖️로그인되어 있지 않습니다.');
-        setLogin(false);
-        setUser(null);
-        navigate("/login");
-      });
-  }, [navigate]);
+      // if (isFirstLogin) {
+      //   navigate("/childInfo");
+      // } else {
+      //   navigate("/main");
+      // }
+    })
+    .catch(() => {
+      console.log('✖️로그인되어 있지 않습니다.');
+      setLogin(false);
+      setUser(null);
+      navigate("/login");
+    });
+}, [navigate]);
 
   return (
     <>
