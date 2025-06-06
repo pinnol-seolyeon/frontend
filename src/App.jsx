@@ -37,7 +37,7 @@ function AppContent() {
       setLogin(false);
       setUser(null);
       navigate("/login");
-    });
+    },500);//0.5초만 기다려도 쿠키 만영 확률 높아짐
 }, [navigate]);
 
   return (

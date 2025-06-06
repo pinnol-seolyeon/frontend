@@ -1,0 +1,27 @@
+// Callback.jsx
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+export default function Callback() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // ✅ 쿠키가 정상적으로 저장된 이후에 요청
+    axios.get('https://finnol.site/api/user', { withCredentials: true })
+      .then(res => {
+        const isFirstLogin = res.data.firstLogin;
+        if (isFirstLogin) {
+          navigate('/childInfo');
+        } else {
+          navigate('/main');
+        }
+      })
+      .catch(() => {
+        console.log('❌ 사용자 인증 실패');
+        navigate('/login');
+      });
+  }, [navigate]);
+
+  return <div>로그인 확인 중입니다...</div>;
+}
