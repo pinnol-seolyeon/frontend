@@ -12,33 +12,26 @@ function AppContent() {
   const navigate = useNavigate();
 
   useEffect(() => {
-  fetch('https://finnol.site/api/user', {
-    method: 'GET',
-    credentials: 'include', // ✅ 쿠키 포함 (SameSite=None + Secure 쿠키 전달)
-  })
-    .then(response => {
-      if (!response.ok) throw new Error('인증 실패');
-      return response.json();
-    })
-    .then(data => {
-      const isFirstLogin = data.firstLogin;
-      console.log("✅로그인 확인", data);
-      setLogin(true);
-      setUser(data);
+    axios.get('https://finnol.site/api/user', { withCredentials: true })
+      .then(response => {
+        const isFirstLogin = response.data.firstLogin;
+        console.log("✅로그인 확인",response.data);
+        setLogin(true);
+        setUser(response.data);
 
-      // if (isFirstLogin) {
-      //   navigate("/childInfo");
-      // } else {
-      //   navigate("/main");
-      // }
-    })
-    .catch(() => {
-      console.log('✖️로그인되어 있지 않습니다.');
-      setLogin(false);
-      setUser(null);
-      navigate("/login");
-    },500);//0.5초만 기다려도 쿠키 만영 확률 높아짐
-}, [navigate]);
+        // if (isFirstLogin) {
+        //   navigate("/childInfo");
+        // } else {
+        //   navigate("/main");
+        // }
+      })
+      .catch(() => {
+        console.log('✖️로그인되어 있지 않습니다.');
+        setLogin(false);
+        setUser(null);
+        navigate("/login");
+      });
+  }, [navigate]);
 
   return (
     <>
@@ -53,7 +46,6 @@ export default function App() {
     // 전역 상태 관리 context API 제공 
     <ChapterProvider> 
       <Router>
-        {/*실제 렌더링 및 로그인 검사 로직*/}
         <AppContent /> 
       </Router>
     </ChapterProvider>
