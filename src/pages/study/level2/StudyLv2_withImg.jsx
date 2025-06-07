@@ -9,7 +9,8 @@ import nextButton from "../../../assets/nextButton.png";
 import { useChapter } from "../../../context/ChapterContext";
 
 import { useNavigate } from "react-router-dom";
-import React,{useState,useEffect} from "react";
+import React, { useState, useEffect, useRef } from "react";
+import TtsPlayer from "../../../components/TtsPlayer";
 
 /*학습하기2단계 - 학습목표+이미지 제시하며 질문..*/
 
@@ -267,6 +268,10 @@ function StudyLv2_withImg(props){
     const [isAnswering,setIsAnswering]=useState(false);
     const [isAnsweringPhase,setIsAnsweringPhase]=useState(false); //현재가 질문을 보여주는 단계인지, AI의 답변을 보여주는 단계인지 //False=질문, ai=true
 
+    // 다음 문장(문맥)
+    const nextContext = sentences[currentIndex + 1] || "다음 학습 내용 없음";
+    
+    const [preloadDone, setPreloadDone] = useState(false)
 
     useEffect(()=>{
         console.log("📦 현재 저장된 chapterData:", chapterData);
@@ -284,6 +289,7 @@ function StudyLv2_withImg(props){
 
             setSentences(splitSentences);
             setCurrentIndex(0);
+            setPreloadDone(false);
             
         }else{
             setSentences(["❌ 내용이 없습니다. 다시 돌아가주세요."])
@@ -319,7 +325,7 @@ function StudyLv2_withImg(props){
 
         // 임시 응답 시뮬레이션 //AI 모델 추후에 연결.. 
         const response=chapterData?.objectiveAnswer;
-        const fullResponse=`🐯: ${response}. 그럼 이제 본격적으로 수업을 들어가볼까?`;
+        const fullResponse=`${response}. 그럼 이제 본격적으로 수업을 들어가볼까?`;
         // setNextResponse(`그럼 이제 본격적으로 수업을 들어가볼까?`);
         setAiResponse(fullResponse);
 
@@ -331,6 +337,7 @@ function StudyLv2_withImg(props){
         setIsAnsweringPhase(true);
         setCurrentIndex(0);
         setIsAnswering(false);
+        setPreloadDone(false);
       
     };
     
@@ -363,6 +370,19 @@ function StudyLv2_withImg(props){
                 />
                 {/* <QuestionButton>질문</QuestionButton> */}
               </ImageWrapper>
+
+              <TtsPlayer
+                sentences={sentences}
+                answers={answers}
+                isAnsweringPhase={isAnsweringPhase}
+                currentIndex={currentIndex}
+                autoPlay={true}
+                style={{ display: "none" }}
+                onPreloadDone={() => setPreloadDone(true)}
+              />
+              { !preloadDone ? (
+                <TextBox>화면을 준비 중입니다...</TextBox>
+                ) : (
               <SpeechWrapper>
                 {!isAnswering?(//isAnswering이 false일 때 
                     <>
@@ -416,6 +436,7 @@ function StudyLv2_withImg(props){
                             </>
                         )}
                   </SpeechWrapper>
+                )}
                </ImageWithSpeechWrapper>
             </Box>
         </Wrapper>

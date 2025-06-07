@@ -11,6 +11,7 @@ import Button from "../../../components/Button";
 import { useNavigate } from "react-router-dom";
 import React,{useState,useEffect} from "react";
 import { useChapter } from "../../../context/ChapterContext";
+import TtsPlayer from "../../../components/TtsPlayer";
 
 /*학습하기-3단계-4*/
 
@@ -192,7 +193,7 @@ function StudyPage(props){
     const [currentIndex,setCurrentIndex]=useState(0);
     const [sentences,setSentences]=useState([]);
     const [isSummaryFinished,setIsSummaryFinished]=useState(false);
-
+    const [preloadDone, setPreloadDone] = useState(false)
 
     useEffect(()=>{
             console.log("📦 현재 저장된 chapterData:", chapterData);
@@ -214,9 +215,10 @@ function StudyPage(props){
 
                 setSentences(splitSentences);
                 setCurrentIndex(0);
-                
+                setPreloadDone(false);
             }else{
                 setSentences(["❌전달받은 내용이 없어요"]);
+                setPreloadDone(false);
             }
         },[chapterData]);
 
@@ -247,6 +249,15 @@ function StudyPage(props){
                 <Image src={tiger} alt="샘플" />
                 <TestImage src={image} alt="샘플" />
             </ImageWrapper>
+            <TtsPlayer
+              sentences={sentences}
+              answers={[]}
+              isAnsweringPhase={false}
+              currentIndex={currentIndex}
+              autoPlay={true}
+              style={{ display: "none" }}
+              onPreloadDone={() => setPreloadDone(true)}
+            />
             <SpeechWrapper>
                 <SpeechBubble>
                     <TextBox>

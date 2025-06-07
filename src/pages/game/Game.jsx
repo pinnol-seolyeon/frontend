@@ -8,14 +8,16 @@ import backgroundImg from '../../assets/game-background1.png';
 import flagImg from '../../assets/flag.png';
 import playerEndImg from '../../assets/finish_player.png';
 import { saveScoreToDB } from '../../api/analyze/saveScoreToDB';
+import { useChapter } from "../../context/ChapterContext";
 import { fetchQuizByChapterId } from '../../api/study/fetchQuiz';
-import { useLocation } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import bgmSrc from '../../assets/Tiki_Bar_Mixer.mp3';
 import { sendQuizResults } from '../../api/analyze/sendQuizResults';
 
 export default function Game() {
-  const location = useLocation();
-  const chapterId = "682829708c776a1ffa92fd50";
+  const { chapterData } = useChapter();
+  const chapterId = chapterData?.chapterId;
+  const navigate = useNavigate();
   const canvasRef = useRef(null);
   const animationIdRef = useRef(null);
   const updateRef = useRef(null);
@@ -234,7 +236,7 @@ export default function Game() {
     const groundHeightRatio = 0.15;
     playerRef.current = {
       x: 100, y: 0, width: 0, height: 0,
-      vy: 0, gravity: 2, jumpForce: -28, isJumping: false,
+      vy: 0, gravity: 2, jumpForce: -25, isJumping: false,
     };
 
     function resizeCanvas() {
@@ -598,11 +600,13 @@ export default function Game() {
               ))}
             </div>
 
-            <button onClick={() => window.location.reload()} style={{
-              marginTop: '1.5rem',
-              padding: '0.5rem 1.5rem'
-            }}>
-              다시 시작
+            <button onClick={() => { navigate("/study/level6/1"); }}
+              style={{
+                marginTop: '1.5rem',
+                padding: '0.5rem 1.5rem'
+              }}
+            >
+              다음으로
             </button>
           </div>
         </div>

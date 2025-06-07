@@ -99,6 +99,7 @@ function StudyPage(props){
     const {chapterData}=useChapter();
     const [loading,setLoading]=useState(true);
 
+    const [preloadDone, setPreloadDone] = useState(false);
 
 
     useEffect(() => {
@@ -125,9 +126,14 @@ function StudyPage(props){
             setObjective("데이터를 불러오지 못함⚠️");
         }finally{
             setLoading(false);
+            setPreloadDone(false)
         }
     }, [chapterData]);
     
+    const ttsText = loading
+    ? "학습 목표 준비중.."
+    : `먼저 이번 단원의 학습목표에 대해서 알아볼까? 이번 단원의 학습목표는 ${objective} 야. 그럼 이제 본격적으로 공부를 시작해보자.`;
+
     return(
     <>
         <Wrapper>
@@ -138,6 +144,15 @@ function StudyPage(props){
                 >
                 1/6 : 학습 목표
                 </MiniHeader>
+                <TtsPlayer
+                    sentences={ttsText}
+                    answers={[]}
+                    isAnsweringPhase={false}
+                    currentIndex={0}
+                    autoPlay={true}
+                    style={{ display: "none" }}
+                    onPreloadDone={() => setPreloadDone(true)}
+                />
                 <SpeechBubble>
                     
                     <TextBox>
@@ -148,7 +163,7 @@ function StudyPage(props){
                                 <span style={{ fontWeight: "bold", color: "#2774B2" }}>
                                 {objective}
                                 </span>
-                                야. 그럼 이제 본격적으로 공부를 시작해보자 🐯
+                                야. 그럼 이제 본격적으로 공부를 시작해보자
                             </p>
                             }
                     </TextBox>
