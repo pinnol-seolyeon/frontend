@@ -236,7 +236,7 @@ export default function Game() {
     const groundHeightRatio = 0.15;
     playerRef.current = {
       x: 100, y: 0, width: 0, height: 0,
-      vy: 0, gravity: 2, jumpForce: -28, isJumping: false,
+      vy: 0, gravity: 2, jumpForce: -25, isJumping: false,
     };
 
     function resizeCanvas() {

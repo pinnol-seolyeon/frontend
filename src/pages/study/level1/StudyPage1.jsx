@@ -148,11 +148,11 @@ function StudyPage(){
 
     const textToRead = useMemo(() => {
         if (loading) {
-        return ["단원을 준비 중이에요..."];
+        return;
         }
         return step === 0
         ? ["안녕! 나는 호랑이 선생님이야"]
-        : [`이번 단원은 ${title} 이야. 이제 본격적으로 공부를 시작해보자`];
+        : [`이번 단원은 ${title} 이제 본격적으로 공부를 시작해보자`];
     }, [loading, step, title]);
 
       
@@ -179,18 +179,22 @@ function StudyPage(){
                 style={{ display: "none" }}
                 onPreloadDone={() => setPreloadDone(true)}
             />
+            { !preloadDone ? (
+                <TextBox>화면을 준비 중입니다...</TextBox>
+            ) : (
                 <SpeechBubble>
                     <TextBox>
                         {loading
                             ? "단원을 준비 중이에요..."
                             : step===0
                                 ? "안녕! 나는 호랑이 선생님이야"
-                                : `이번 단원은 ${title} 이야. 이제 본격적으로 공부를 시작해보자`}
+                                : `이번 단원은 ${title} 이제 본격적으로 공부를 시작해보자`}
                     </TextBox>
                     <BubbleButton onClick={handleNext}>
                             {step===0?"다음":"시작하기"}
                     </BubbleButton>
                 </SpeechBubble>
+            )}
             </Box>
         </Wrapper>
     </>

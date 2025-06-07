@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import React,{useState,useEffect} from "react";
+import React, { useState, useEffect, useMemo } from "react";
 
 import Header from "../../../components/Header";
 import Box from "../../../components/Box";
@@ -10,6 +10,9 @@ import { fetchFeedback } from "../../../api/study/level3API";
 import nextButton from "../../../assets/nextButton.png";
 import MiniHeader from "../../../components/study/MiniHeader";
 import { useChapter } from "../../../context/ChapterContext";
+
+import TtsPlayer from "../../../components/TtsPlayer";
+
 
 /*학습하기-3단계-1*/
 
@@ -193,6 +196,8 @@ function StudyPage(){
     const [userAnswer, setUserAnswer] = useState("");
     const [aiResponse, setAiResponse] = useState("");
     const [isAnswering,setIsAnswering]=useState(false);
+    const [preloadDone, setPreloadDone] = useState(false);
+    const ttsSentences = useMemo(() => sentences, [sentences]);
     const nextContext=sentences[currentIndex+1]||"다음 학습 내용 없음";
     const returnToIndex=location.state?.returnToIndex??0;
 
@@ -264,6 +269,7 @@ function StudyPage(){
     //질문 문장인 경우 -> 사용자 입력 UI 노출 + 답변 수집
     //질문이 끝나면 답변 버튼이 생성되도록 함 
     const goToNextSentence=()=>{
+    if (!preloadDone) return;
     if (currentIndex<sentences.length-1){
         console.log("✅currentIndex:",currentIndex);
         setCurrentIndex(currentIndex+1);
@@ -396,7 +402,21 @@ function StudyPage(){
                 <QuestionButton onClick={navigateToQuestion}
                 >질문</QuestionButton>
             </ImageWrapper>
-                {!isAnswering?(
+            <TtsPlayer
+                sentences={ttsSentences}     // useMemo로 감싼 배열
+                answers={[]}                 // 답변 단계는 없으니 빈 배열
+                isAnsweringPhase={false}     // 항상 질문 단계
+                currentIndex={currentIndex}  // 현재 읽을 인덱스
+                autoPlay={true}
+                style={{ display: "none" }}
+                onPreloadDone={() => setPreloadDone(true)}  // 캐싱 끝나면 true
+            />
+            
+            {!preloadDone ? (
+                <SpeechBubble>
+                    <TextBox>화면을 준비 중입니다...</TextBox>
+                </SpeechBubble>
+                ) : !isAnswering ? (
                     <>
                     <SpeechBubble>
                         

@@ -138,7 +138,6 @@ export default function TtsPlayer({
       <audio ref={audioRef} style={style} controls={!style?.display} />
       {isPreloading && (
         <p style={{ textAlign: "center", color: "#555" }}>
-          목소리 전달 중…
         </p>
       )}
       {preloadError && (

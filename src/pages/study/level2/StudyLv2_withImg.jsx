@@ -380,7 +380,9 @@ function StudyLv2_withImg(props){
                 style={{ display: "none" }}
                 onPreloadDone={() => setPreloadDone(true)}
               />
-
+              { !preloadDone ? (
+                <TextBox>화면을 준비 중입니다...</TextBox>
+                ) : (
               <SpeechWrapper>
                 {!isAnswering?(//isAnswering이 false일 때 
                     <>
@@ -434,6 +436,7 @@ function StudyLv2_withImg(props){
                             </>
                         )}
                   </SpeechWrapper>
+                )}
                </ImageWithSpeechWrapper>
             </Box>
         </Wrapper>
