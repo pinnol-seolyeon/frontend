@@ -257,7 +257,7 @@ function StudyLevel6_2(props){
 
 
             // ✅ 여기에 실제 완료 처리 API 호출
-            const response=await fetch(`https://finnol.site:/api/study/finish?chapterId=${chapterData?.chapterId}`, {
+            const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/finish?chapterId=${chapterData?.chapterId}`, {
                 method: 'POST',
                 credentials:'include', //쿠키 인증 시 필요
          });

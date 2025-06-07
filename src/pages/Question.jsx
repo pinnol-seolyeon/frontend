@@ -264,7 +264,7 @@ function Question({}){
             try{
                 setLoading(true);
                 //메시지를 서버로 POST 요청 //await: 비동기 처리로 서버 응답 기다림
-                const response=await axios.post('https://finnol.site/api/question',{
+                const response=await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/question`,{
                     question:newMessage
                 },{
                     withCredentials:true,

@@ -1,5 +1,5 @@
 export async function fetchChapterContents(chapterId){
-    const response=await fetch(`https://finnol.site/api/study/start?chapterId=${chapterId}`,{
+    const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/start?chapterId=${chapterId}`,{
         method:"GET",
         credentials:"include"
     });
@@ -13,7 +13,7 @@ export async function fetchChapterContents(chapterId){
 }
 
 export async function fetchChapters(bookId){
-    const response=await fetch(`https://finnol.site/api/study?bookId=${bookId}`,{
+    const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study?bookId=${bookId}`,{
         method:"GET",
         credentials:"include"
     });
@@ -30,7 +30,7 @@ export async function fetchChapters(bookId){
 
 // 수업 중 AI와 상호작용(피드백)
 export async function fetchFeedback(){
-    const response=await fetch(`https://finnol.site/api/study/feedback`,{
+    const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/feedback`,{
         method:"POST",
         credentials:"include"
     });

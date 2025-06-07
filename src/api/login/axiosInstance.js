@@ -3,7 +3,7 @@
 import axios from 'axios';
 
 const api=axios.create({
-    baseURL:"https://finnol.site",
+    baseURL:`${process.env.REACT_APP_API_BASE_URL}`,
     withCredentials:true, //쿠키를 자동으로 포함시키기
 });
 

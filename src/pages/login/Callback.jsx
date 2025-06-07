@@ -8,7 +8,7 @@ export default function Callback() {
 
   useEffect(() => {
     // ✅ 쿠키가 정상적으로 저장된 이후에 요청
-    axios.get('https://finnol.site/api/user', { withCredentials: true })
+    axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/user`, { withCredentials: true })
       .then(res => {
         const isFirstLogin = res.data.firstLogin;
         if (isFirstLogin) {
