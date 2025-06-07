@@ -14,7 +14,7 @@ export default function App() {
 
   useEffect(()=>{
     //앱이 시작할 때 자동으로 로그인 상태 체크
-    axios.get('http://localhost:8080/api/user',{withCredentials:true})
+    axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/user`,{withCredentials:true})
     .then(response=>{
       console.log('✅로그인 상태입니다:',response.data);
       setLogin(true);

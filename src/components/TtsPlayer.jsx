@@ -34,7 +34,7 @@ export default function TtsPlayer({
 
     Promise.all(
       sentences.map(async (text) => {
-        const res = await fetch("http://localhost:8080/api/tts/text", {
+        const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/tts/text`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -69,7 +69,7 @@ export default function TtsPlayer({
 
     Promise.all(
       answers.map(async (text) => {
-        const res = await fetch("http://localhost:8080/api/tts/text", {
+        const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/tts/text`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",

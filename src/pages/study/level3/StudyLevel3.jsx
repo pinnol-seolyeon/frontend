@@ -301,7 +301,7 @@ function StudyPage(){
 
     const handleFeedback=async()=>{
                 try{
-                    const res=await fetch("http://localhost:8080/api/study/feedback",{
+                    const res=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/feedback`,{
                         method:"POST",
                         headers:{
                             "Content-Type":"application/json",
@@ -342,7 +342,7 @@ function StudyPage(){
 
         //여태까지 질문한 내용들을 DB에 저장하는 API
         try{
-            const response=await fetch(`http://localhost:8080/api/question/saveAll?chapterId=${chapterData?.chapterId}`,{
+            const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/question/saveAll?chapterId=${chapterData?.chapterId}`,{
                 method:'POST',
                 credentials:'include',
             });
@@ -364,7 +364,7 @@ function StudyPage(){
    };
 
    async function saveFeedbacks(chapterId){
-    const response=await fetch(`http://localhost:8080/api/study/feedback/saveAll?chapterId=${chapterId}`,{
+    const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/feedback/saveAll?chapterId=${chapterId}`,{
         method:"POST",
         credentials:"include"
     });

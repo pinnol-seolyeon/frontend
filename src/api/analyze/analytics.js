@@ -1,7 +1,7 @@
 // 학습 참여도
 export async function fetchStudyStats() {
   try {
-    const res = await fetch('http://localhost:8080/api/study/stats', {
+    const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/stats`, {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -25,7 +25,7 @@ export async function fetchStudyStats() {
 // 학습 선호 시간대 분석
 export async function fetchStudyTimeStats() {
   try {
-    const res = await fetch('http://localhost:8080/api/study/preferred-time', {
+    const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/preferred-time`, {
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -48,7 +48,7 @@ export async function fetchStudyTimeStats() {
 
 // 방사형 그래프 데이터
 export async function fetchRadarScore() {
-  const res = await fetch("http://localhost:8080/api/analysis/radar-score/compare", {
+  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/analysis/radar-score/compare`, {
     credentials: "include"
   });
   if (!res.ok) throw new Error("Radar score fetch failed");
@@ -58,7 +58,7 @@ export async function fetchRadarScore() {
 
 // 질문 보여주기
 export async function fetchQuestionDates() {
-  const res = await fetch('http://localhost:8080/api/study/questions/dates', {
+  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/questions/dates`, {
     credentials: 'include',
   });
 
@@ -71,7 +71,7 @@ export async function fetchQuestionDates() {
 }
 
 export async function fetchQuestionsByDate(dateStr) {
-  const res = await fetch(`http://localhost:8080/api/study/questions/history?date=${dateStr}`, {
+  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/questions/history?date=${dateStr}`, {
     credentials: 'include',
   });
 
