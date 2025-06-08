@@ -73,7 +73,7 @@ export default function AppRoutes({ login, setLogin, user }) {
   return (
     <>
       {!isDashboard && <GlobalStyles />}
-      <Routes>
+      <Routes location={location} key={location.pathname}> {/*key로 강제 재마운트*/}
         {/* / 경로 접근 시 로그인 상태에 따라 리디렉션*/}
         <Route
           path="/"
