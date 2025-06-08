@@ -91,7 +91,7 @@ const SpeechBubble = styled.div`
   white-space: pre-wrap;          /* 기존 줄바꿈 유지, 넘치면 줄바꿈 */
 
   padding: 12px 16px;
-  background-color: #e9f1fb;
+  background-color: #FEF3E1;
   border: 0.2px solid black;
   border-radius: 0px 50px 50px 0px;
   box-sizing: border-box;
@@ -104,7 +104,7 @@ const SpeechBubble = styled.div`
     left: 16px;
     border-width: 8px 8px 0 8px;
     border-style: solid;
-    border-color: #2774B2 transparent transparent transparent;
+    border-color: #FEF3E1 transparent transparent transparent;
   }
 `;
 
@@ -116,7 +116,6 @@ const TextBox = styled.div`
   margin: 0;
   padding: 0;
 `;
-
 
 const AnswerInputBox = styled.div`
   display: flex;
