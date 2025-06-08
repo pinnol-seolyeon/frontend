@@ -49,7 +49,8 @@ const Image=styled.img`
 const SpeechBubble=styled.div`
     display:flex;
     width:100%;
-    height:250px; /* ✅ 고정 높이로 조정 */
+    max-height:100px;
+    // height:250px; /* ✅ 고정 높이로 조정 */
     background-color:#FEF3E1;
     position:relative;
     align-items: center;
@@ -62,8 +63,8 @@ const TextBox = styled.div`
   justify-content: center;
   align-items: center;
   text-align: center;
-  width: 100%;
-  height: 180px; /* ✅ 고정 높이 */
+  width: 80%;
+//   height: 180px; /* ✅ 고정 높이 */
   margin: 0 auto;
   padding: 40px;
   font-size: clamp(20px, 3vw, 32px);
