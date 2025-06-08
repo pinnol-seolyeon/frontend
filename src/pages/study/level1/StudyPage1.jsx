@@ -14,18 +14,13 @@ import TtsPlayer from "../../../components/TtsPlayer";
 /*학습하기-3단계-1*/
 
 const Container = styled.div`
-  width: 90vw;          /* 화면 너비의 90% */
-  max-width: 400px;     /* 최대 너비 (원하는 고정값) */
-  height: 90vh;         /* 화면 높이의 90% */
-  max-height: 700px;    /* 최대 높이 */
-  
+  width: 100%;           /* 전체 화면 너비 */
+  min-height: 100vh;     /* 전체 화면 높이 */
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* 위-중-아래 영역 분배 */
+  justify-content: space-between; /* 헤더-메인-풋터 분배 */
   align-items: center;
-  
-  margin: auto;         /* 화면 중앙에 고정 */
-  padding: 1rem;
+  padding: 2rem;         /* 웹 여백 충분히 */
   box-sizing: border-box;
 `;
 
@@ -175,7 +170,7 @@ function StudyPage(){
     return(
     <>
     <Container>
-        <Wrapper>
+        {/* <Wrapper> */}
             <Box>
             <MiniHeader
                     left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
@@ -212,7 +207,7 @@ function StudyPage(){
                 </SpeechBubble>
             )}
             </Box>
-        </Wrapper>
+        {/* </Wrapper> */}
     </Container>
     </>
     );
