@@ -38,42 +38,40 @@ const Image=styled.img`
     bottom:20px;
 `;
 
+const AutoBox = styled(BaseBox)`
+  height: auto !important;
+  overflow: visible !important;
+`;
+
 const SpeechBubble=styled.div`
+    display:flex;
+    flex:1 1 400px;
+    width:80%;
+    height:70%;
+    background-color:#FEF3E1;
 
-   display: inline-block;
-   max-width: 80%;
-   padding: 12px 92px 12px 16px;
-   background-color: #FEF3E1;
+    position:absolute;
+    right:100px;
+    top:120px;
 
-    border-radius:0px 50px 50px 0px;
-    border:0.2px solid black;
-    // margin-bottom:20px;
-
-    position:relative;
-    box-sizing:border-box; /*패딩 포함*/
-    word-break: break-word;
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-
+    border: 0.5px solid black;
+    border-radius: 24px;
 `;
 
 const TextBox = styled.div`
-  // display: block;
-  // justify-content: center;
-  // align-items: center;
-  // text-align: center;
-  display: block;             
-  padding: 12px 16px;         /* 말풍선 패딩과 동일하게 */
-  text-align: left;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
 
-  // width: 80%;
-  // margin: 0 auto;
-  // padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
+  width: 80%;
+  margin: 0 auto;
+  padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
 
-  font-size: clamp(20px, 2vw, 30px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
+  font-size: clamp(20px, 3vw, 32px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
   line-height: 1.6; /* ✅ 줄 간격을 여유 있게 */
-  letter-spacing: 0.02em; /* ✅ 글자 간격 미세 조정 */
-  font-weight: 400; /* ✅ 가독성 좋은 중간 두께 */
+  letter-spacing: 0.03em; /* ✅ 글자 간격 미세 조정 */
+  font-weight: 500; /* ✅ 가독성 좋은 중간 두께 */
   font-family: "Noto Sans KR", sans-serif; /* ✅ 국문에 적합한 서체 */
   color: #333;
 `;
@@ -153,7 +151,7 @@ function StudyPage(props){
     return(
     <>
         <Wrapper>
-            <Box>
+            <AutoBox>
                 <MiniHeader
                     left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
                     right={<Button onClick={()=>navigate(`/study/level2-img`)}>다음 단계로</Button>}
@@ -190,7 +188,7 @@ function StudyPage(props){
                 </SpeechBubble>
                 )}
                 <Image src={tigerPencil} alt="샘플" />           
-            </Box>
+            </AutoBox>
         </Wrapper>
     </>
     );
