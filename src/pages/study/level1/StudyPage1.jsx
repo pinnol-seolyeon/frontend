@@ -2,15 +2,14 @@ import styled, { createGlobalStyle } from "styled-components";
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
-import Header from "../../../components/Header";
 import Box from "../../../components/Box";
-import tiger from "../../../assets/tiger-pencil.png";
-import Button from "../../../components/Button";
 import MiniHeader from "../../../components/study/MiniHeader";
+import Button from "../../../components/Button";
 import TtsPlayer from "../../../components/TtsPlayer";
+import tiger from "../../../assets/tiger-pencil.png";
 import { useChapter } from "../../../context/ChapterContext";
 
-/* 전역 스타일: 스크롤 없애고 box-sizing 통일 */
+/* 1) 전역 스타일 */
 const GlobalStyle = createGlobalStyle`
   *, *::before, *::after { box-sizing: border-box; }
   html, body {
@@ -19,17 +18,17 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-/* 1280×720 고정 크기 컨테이너 */
+/* 2) 1280×720px 고정 컨테이너 */
 const Container = styled.div`
   width: 1280px;
   height: 720px;
-  margin: 0 auto;      /* 브라우저 가운데 정렬 */
-  position: relative;  
-  background: white;
+  margin: 0 auto;
+  position: relative;
+  background: #fff;
   overflow: hidden;
 `;
 
-/* 헤더 영역: 절대 배치 */
+/* 3) 헤더: 상단 20px */
 const HeaderArea = styled(Box)`
   position: absolute;
   top: 20px;
@@ -38,31 +37,33 @@ const HeaderArea = styled(Box)`
   height: 60px;
 `;
 
-/* 이미지 영역: 절대 배치, 중앙 */
+/* 4) 이미지: 컨테이너 상단에서 140px 아래, 중앙 정렬 */
 const ImageWrapper = styled.div`
   position: absolute;
-  top: 120px;
-  left: calc(50% - 150px); /* 300px 너비의 절반 */
+  top: 140px;
+  left: calc(50% - 150px); /* 이미지 폭(300px)/2 */
   width: 300px;
+  height: auto;
 `;
 
 const Image = styled.img`
   width: 300px;
   height: auto;
+  object-fit: contain;
 `;
 
-/* 말풍선 영역: 절대 배치, 중앙 하단 */
+/* 5) 말풍선: 컨테이너 하단에서 100px 위, 폭 80% (최대 900px) */
 const SpeechBubble = styled.div`
   position: absolute;
-  bottom: 50px;
-  left: calc(50% - 400px); /* 800px 너비의 절반 */
-  width: 800px;
-  padding: 20px;
+  bottom: 100px;
+  left: calc(50% - 450px); /* 900px/2 */
+  width: 900px;
+  padding: 24px;
   background-color: #FEF3E1;
   border-radius: 8px;
 `;
 
-/* 텍스트 박스 */
+/* 6) 텍스트 박스 */
 const TextBox = styled.div`
   font-size: 20px;
   line-height: 1.6;
@@ -70,14 +71,14 @@ const TextBox = styled.div`
   margin-bottom: 20px;
 `;
 
-/* 말풍선 버튼: 절대 배치 제거, 내부 상대 배치 */
+/* 7) 말풍선 버튼: 내부 오른쪽 하단 */
 const BubbleButton = styled(Button)`
   position: absolute;
-  bottom: 20px;
-  right: 20px;
-  width: 100px;
-  height: 40px;
-  font-size: 16px;
+  bottom: 24px;
+  right: 24px;
+  width: 120px;
+  height: 44px;
+  font-size: 18px;
 `;
 
 export default function StudyPage() {
@@ -93,11 +94,9 @@ export default function StudyPage() {
   useEffect(() => {
     (async () => {
       try {
-        if (chapterData?.chapterTitle) {
-          setTitle(chapterData.chapterTitle);
-        }
+        if (chapterData?.chapterTitle) setTitle(chapterData.chapterTitle);
       } catch {
-        setTitle("⚠️ 단원명 로딩실패");
+        setTitle("⚠️단원명 로딩실패");
       } finally {
         setLoading(false);
         setPreloadDone(false);
@@ -110,7 +109,7 @@ export default function StudyPage() {
       setStep(1);
       setPreloadDone(false);
     } else {
-      alert("✅ 화면 상단 ‘다음 단계로’ 버튼을 클릭해주세요!");
+      alert("✅화면 상단 '다음 단계로' 버튼을 클릭해주세요!");
     }
   };
 
@@ -125,7 +124,7 @@ export default function StudyPage() {
     <>
       <GlobalStyle />
       <Container>
-        {/* 헤더 */}
+        {/* 1) 헤더 */}
         <HeaderArea>
           <MiniHeader
             left={<Button onClick={() => navigate(-1)}>뒤로</Button>}
@@ -135,12 +134,12 @@ export default function StudyPage() {
           </MiniHeader>
         </HeaderArea>
 
-        {/* 이미지 */}
+        {/* 2) 이미지 */}
         <ImageWrapper>
-          <Image src={tiger} alt="샘플" />
+          <Image src={tiger} alt="호랑이 샘플" />
         </ImageWrapper>
 
-        {/* 말풍선 */}
+        {/* 3) 말풍선 */}
         <SpeechBubble>
           <TtsPlayer
             sentences={textToRead}
@@ -151,6 +150,7 @@ export default function StudyPage() {
             style={{ display: "none" }}
             onPreloadDone={() => setPreloadDone(true)}
           />
+
           {!preloadDone ? (
             <TextBox>화면을 준비 중입니다...</TextBox>
           ) : (
