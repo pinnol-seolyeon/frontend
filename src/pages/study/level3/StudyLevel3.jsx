@@ -56,7 +56,6 @@ const SpeechBubble=styled.div`
     position:relative;
     align-items: center;
     justify-content: center;
-    padding: 20px;
 `;
 
 
