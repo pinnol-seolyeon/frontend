@@ -45,10 +45,10 @@ const GlobalStyles = createGlobalStyle`
 
 //  Route 정보 배열로 정리
 const routes = [
-  { path: '/', element: <Dashboard /> },
+  { path: '/',element:<Main/>},
+  { path: '/dashbord', element: <Dashboard /> },
   { path: '/login', element: <Login /> },
   { path: '/childInfo', element: <ChildInfo /> },
-  { path: '/main',element:<Main/>},
   { path: '/study/1', element: <StudyPage1 /> },
   { path: '/study/2', element: <StudyPage2 /> },
   { path: '/study/level2', element: <StudyLevel2 /> },
@@ -66,7 +66,7 @@ const routes = [
 
 export default function AppRoutes({ login, setLogin, user }) {
   const location = useLocation();
-  const isDashboard = location.pathname === '/';
+  const isDashboard = location.pathname === '/dashboard';
 
   return (
     <>

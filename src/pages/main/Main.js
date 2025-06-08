@@ -12,25 +12,29 @@ function Dashboard({user}) {
       title: "AI 학습하기",
       description: "AI 선생님과 함께 오늘의 학습을 시작해보세요",
       path: "/book", //클릭했을 때 이동할 경로로
-      icon: "📚"
+      icon: "📚",
+      disabled: false,
     },
     {
       title: "학습 분석",
       description: "나의 학습 상태를 분석하고 피드백을 받아보세요",
       path: "/",
-      icon: "📊"
+      icon: "📊",
+      disabled: false,
     },
     {
       title: "복습하기",
       description: "이전 학습 내용을 복습하고 퀴즈를 풀어보세요",
       path: "/review",
-      icon: "🔄"
+      icon: "🔄",
+      disabled:true,
     },
     {
       title: "학습 현황",
       description: "전체 학습 진도와 획득 포인트를 확인하세요",
       path: "/main/progress",
-      icon: "🎯"
+      icon: "🎯",
+      disabled: true,
     }
   ];
 
@@ -64,8 +68,15 @@ function Dashboard({user}) {
         {learningModules.map((module, index) => (
           <div 
             key={index} 
-            className="module-card"
-            onClick={() => navigate(module.path)}
+            className={`module-card ${module.disabled ? 'disabled':''}`}
+            onClick={() => {
+              if(module.disabled){
+                alert("🪧해당 기능은 곧 업데이트 될 예정입니다!");
+                return;
+              }
+              
+              navigate(module.path);
+            }}
           >
             <div className="module-icon">{module.icon}</div>
             <h3>{module.title}</h3>
