@@ -46,7 +46,6 @@ const GlobalStyles = createGlobalStyle`
 
 //  Route 정보 배열로 정리
 const routes = [
-  { path:'/', element: <Navigate to="/main" replace/>}, //첫 화면 //루트 접속 시 -> main으로 자동 리디렉션
   { path: '/main',element:<Main/>},
   { path: '/dashboard', element: <Dashboard /> },
   { path: '/login', element: <Login /> },
@@ -75,6 +74,14 @@ export default function AppRoutes({ login, setLogin, user }) {
     <>
       {!isDashboard && <GlobalStyles />}
       <Routes>
+        {/* / 경로 접근 시 로그인 상태에 따라 리디렉션*/}
+        <Route
+          path="/"
+          element={
+            user===null
+            ? null 
+            :<Navigate to={user?"/main":"/login"} replace/>}
+        />
 
         {routes.map(({ path, element }) => (
           <Route 
