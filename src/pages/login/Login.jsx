@@ -80,7 +80,7 @@ function Login(){
                 }}
                 />
 
-            <button onClick={getData}>로그인 테스트</button>
+            {/* <button onClick={getData}>로그인 테스트</button> */}
         </Wrapper>
     );
 }
