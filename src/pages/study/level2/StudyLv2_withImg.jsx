@@ -75,9 +75,9 @@ const ImageWithSpeechWrapper = styled.div`
 
 const SpeechBubble=styled.div`
 
-    display: inline-block;
+   display: inline-block;
    max-width: 80%;
-   padding: 0;                   /* 텍스트 박스에서만 padding */
+   padding: 12px 92px 12px 16px;
    background-color: #FEF3E1;
 
     border-radius:0px 50px 50px 0px;
@@ -183,9 +183,9 @@ const AiResponseBox = styled.div`
 `;
 
 const ImageButton=styled.img`
-position: absolute;
-  right: 20px;
-  bottom: 20px;
+  position: absolute;
+  right: 16px;
+  top: 12px;
   width:60px;
   height:auto;
   cursor:pointer;
