@@ -67,10 +67,10 @@ const TextBox = styled.div`
 //   height: 180px; /* ✅ 고정 높이 */
   margin: 0 auto;
   padding: 40px;
-  font-size: clamp(20px, 3vw, 32px);
+  font-size: clamp(16px, 2vw, 24px);  
   line-height: 1.6;
   letter-spacing: 0.03em;
-  font-weight: 500;
+  font-weight: 400;
   font-family: "Noto Sans KR", sans-serif;
   color: #333;
   white-space: normal;      /* ✅ 줄바꿈 허용 */
@@ -82,6 +82,8 @@ const BubbleButton = styled.button`
   position: absolute;
   right: 20px;
   bottom: 20px;
+  width:60px;
+  height:auto;
   padding: 20px 32px;
   background-color: #2774B2;
   color: white;
