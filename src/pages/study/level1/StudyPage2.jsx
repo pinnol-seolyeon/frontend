@@ -38,7 +38,7 @@ const Image=styled.img`
     bottom:20px;
 `;
 
-const AutoBox = styled(BaseBox)`
+const AutoBox = styled(Box)`
   height: auto !important;
   overflow: visible !important;
 `;
