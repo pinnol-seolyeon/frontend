@@ -31,7 +31,7 @@ const ImageWrapper=styled.div`
     display:flex;
     align-items:center;
     justify-content:center;
-    margin-top:129px;
+    margin-top: 3rem;
     gap:12px;
 `;
 
@@ -49,11 +49,15 @@ const Image=styled.img`
 const SpeechBubble=styled.div`
     display:flex;
     width:100%;
-    height:250px; /* ✅ 고정 높이로 조정 */
+    // max-height:100px;
+    flex-direction: column;
+    // height:250px; /* ✅ 고정 높이로 조정 */
     background-color:#FEF3E1;
     position:relative;
+    padding: 20px;                  /* 위아래 여유 주기 */
+    box-sizing: border-box;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start
 `;
 
 
@@ -62,14 +66,14 @@ const TextBox = styled.div`
   justify-content: center;
   align-items: center;
   text-align: center;
-  width: 100%;
-  height: 180px; /* ✅ 고정 높이 */
+  width: 80%;
+//   height: 180px; /* ✅ 고정 높이 */
   margin: 0 auto;
   padding: 40px;
-  font-size: clamp(20px, 3vw, 32px);
+  font-size: clamp(16px, 2vw, 24px);  
   line-height: 1.6;
   letter-spacing: 0.03em;
-  font-weight: 500;
+  font-weight: 400;
   font-family: "Noto Sans KR", sans-serif;
   color: #333;
   white-space: normal;      /* ✅ 줄바꿈 허용 */
@@ -78,10 +82,11 @@ const TextBox = styled.div`
 
 
 const BubbleButton = styled.button`
-  position: absolute;
   right: 20px;
   bottom: 20px;
-  padding: 20px 32px;
+  margin-top: 12px;
+  height:auto;
+  padding: 8px 16px;
   background-color: #2774B2;
   color: white;
   border: none;

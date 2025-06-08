@@ -12,16 +12,16 @@ import TtsPlayer from "../../../components/TtsPlayer";
 
 /*학습하기-1단계-2*/
 
-const Wrapper=styled.div`
-    width:100%;
-    height:100vh;
-
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-
-`;
+const Wrapper = styled.div`
+   width: 100%;
+  //  min-height: 100vh;           /* 최소 높이만 100vh */
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: flex-start; /* 위쪽부터 쌓이게 */
+   padding: 2rem 1rem;          /* 상하 여유 추가 */
+  //  overflow-y: auto;            /* 내용이 길면 스크롤 */
+ `;
 
 const Image=styled.img`
     display:flex;
@@ -36,6 +36,11 @@ const Image=styled.img`
     position:absolute;
     left:20px;
     bottom:20px;
+`;
+
+const AutoBox = styled(Box)`
+  height: auto !important;
+  overflow: visible !important;
 `;
 
 const SpeechBubble=styled.div`
@@ -146,7 +151,7 @@ function StudyPage(props){
     return(
     <>
         <Wrapper>
-            <Box>
+            <AutoBox>
                 <MiniHeader
                     left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
                     right={<Button onClick={()=>navigate(`/study/level2-img`)}>다음 단계로</Button>}
@@ -183,7 +188,7 @@ function StudyPage(props){
                 </SpeechBubble>
                 )}
                 <Image src={tigerPencil} alt="샘플" />           
-            </Box>
+            </AutoBox>
         </Wrapper>
     </>
     );

@@ -103,7 +103,7 @@ const TextBox = styled.div`
   margin: 0 auto;
   padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
 
-  font-size: clamp(20px, 2vw, 30px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
+  font-size: clamp(16px, 2vw, 24px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
   line-height: 1.6; /* ✅ 줄 간격을 여유 있게 */
   letter-spacing: 0.02em; /* ✅ 글자 간격 미세 조정 */
   font-weight: 400; /* ✅ 가독성 좋은 중간 두께 */
