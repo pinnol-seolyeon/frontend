@@ -193,7 +193,9 @@ function StudyPage(props){
     const [currentIndex,setCurrentIndex]=useState(0);
     const [sentences,setSentences]=useState([]);
     const [isSummaryFinished,setIsSummaryFinished]=useState(false);
-    const [preloadDone, setPreloadDone] = useState(false)
+    const [preloadDone, setPreloadDone] = useState(false);
+    const [showButton,setShowButton]=useState(false);
+    const [completed,setCompleted]=useState(false);
 
     useEffect(()=>{
             console.log("📦 현재 저장된 chapterData:", chapterData);
@@ -209,9 +211,27 @@ function StudyPage(props){
                 console.log("🎙️summary:",summary);
                 setSummary(summary);
 
-                const splitSentences = summary
+                const baseSentences = summary
                     .split(/(?<=[.?!])\s+/)
                     .filter((s) => s.trim() !== "");
+
+                //긴 문장 분할 함수(질문 제외)
+                const breakLongSentence = (sentence, max = 50) => {
+                if (sentence.length <= max) return [sentence];
+
+                const mid = Math.floor(sentence.length / 2);
+                let splitIndex = sentence.lastIndexOf(" ", mid);
+                if (splitIndex === -1) splitIndex = mid;
+                const first = sentence.slice(0, splitIndex).trim();
+                const second = sentence.slice(splitIndex).trim();
+                return [first, second];
+            };
+
+            //문장분해
+            const splitSentences=baseSentences
+                .map((s)=>breakLongSentence(s))
+                .flat();
+            console.log("🐋분할된 최종 문장 배열:",splitSentences);
 
                 setSentences(splitSentences);
                 setCurrentIndex(0);
@@ -228,9 +248,16 @@ function StudyPage(props){
       if(currentIndex<sentences.length-1){
         setCurrentIndex(currentIndex+1);
       }else{
+
+        setShowButton(true);
         setIsSummaryFinished(true);
       }
-    }
+    };
+
+    const handleComplete=()=>{
+      alert("✅ 좋아요! 이제 마지막 단계로 넘어가볼까요?");
+      setCompleted(true);
+    };
    
         
 
@@ -240,7 +267,13 @@ function StudyPage(props){
             <Box>
                 <MiniHeader
                     left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
-                    right={<Button onClick={()=>navigate(`/study/level6/2`)}>다음 단계로</Button>}
+                    right={
+                      completed?(
+                          <Button onClick={()=>navigate(`/study/level6/2`)}>다음 단계로</Button>
+                      ):(
+                        <Button disabled>진행 중 .. </Button>
+                      )
+                    }
                 >
                 6/6 : 마무리
                 </MiniHeader>
@@ -270,8 +303,10 @@ function StudyPage(props){
                     </TextBox>
                 </SpeechBubble>
                 <ButtonWrapper>
-                    <BubbleButton>잘 모르겠어..</BubbleButton>
-                    <BubbleButton>이해했어!</BubbleButton>
+                  {showButton&&
+                    <BubbleButton onClick={handleComplete}>✅</BubbleButton>
+                  }
+                  
                 </ButtonWrapper>
             </SpeechWrapper>
         </ImageWithSpeechWrapper>
