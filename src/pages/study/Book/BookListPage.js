@@ -6,7 +6,7 @@ function BookListPage() {
   const navigate = useNavigate();
 
   const bookList = [
-    { title: "초등학교 3,4학년 생활금융익힘책", icon: "📘", path:"/book/chapter"}, //해당 책의 id를 나중에 저장해놔야함
+    { title: "레벨 1", icon: "📘", path:"/book/chapter"}, //해당 책의 id를 나중에 저장해놔야함
     
   ];
 
