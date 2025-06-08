@@ -49,13 +49,15 @@ const Image=styled.img`
 const SpeechBubble=styled.div`
     display:flex;
     width:100%;
-    max-height:100px;
+    // max-height:100px;
     flex-direction: column;
     // height:250px; /* ✅ 고정 높이로 조정 */
     background-color:#FEF3E1;
     position:relative;
+    padding: 20px;                  /* 위아래 여유 주기 */
+    box-sizing: border-box;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start
 `;
 
 
