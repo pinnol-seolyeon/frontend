@@ -91,7 +91,7 @@ const SpeechBubble = styled.div`
   white-space: pre-wrap;          /* 기존 줄바꿈 유지, 넘치면 줄바꿈 */
 
   padding: 12px 16px;
-  background-color: #FEF3E1;
+  background-color: #2774B2;
   border: 0.2px solid black;
   border-radius: 0px 50px 50px 0px;
   box-sizing: border-box;
