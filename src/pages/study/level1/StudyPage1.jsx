@@ -9,61 +9,58 @@ import TtsPlayer from "../../../components/TtsPlayer";
 import tiger from "../../../assets/tiger-pencil.png";
 import { useChapter } from "../../../context/ChapterContext";
 
-/* 1) 전역 스타일 */
+/* 전역 스타일: 화면 스크롤 제거 + box-sizing 통일 */
 const GlobalStyle = createGlobalStyle`
   *, *::before, *::after { box-sizing: border-box; }
-  html, body {
-    margin: 0; padding: 0;
-    overflow: hidden;
-  }
+  html, body { margin: 0; padding: 0; overflow: hidden; }
 `;
 
-/* 2) 1280×720px 고정 컨테이너 */
+/* 1280×720px 고정 컨테이너 */
 const Container = styled.div`
   width: 1280px;
   height: 720px;
   margin: 0 auto;
   position: relative;
   background: #fff;
+  border: 1px solid #333;
+  border-radius: 16px;
   overflow: hidden;
 `;
 
-/* 3) 헤더: 상단 20px */
+/* 1) 헤더: 높이 80px */
 const HeaderArea = styled(Box)`
   position: absolute;
-  top: 20px;
-  left: 20px;
-  right: 20px;
-  height: 60px;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
 `;
 
-/* 4) 이미지: 컨테이너 상단에서 140px 아래, 중앙 정렬 */
+/* 2) 이미지: Y축 140px, 중앙 정렬 */
 const ImageWrapper = styled.div`
   position: absolute;
   top: 140px;
-  left: calc(50% - 150px); /* 이미지 폭(300px)/2 */
+  left: calc(50% - 150px);  /* 300px / 2 */
   width: 300px;
-  height: auto;
 `;
 
 const Image = styled.img`
   width: 300px;
   height: auto;
-  object-fit: contain;
 `;
 
-/* 5) 말풍선: 컨테이너 하단에서 100px 위, 폭 80% (최대 900px) */
+/* 3) 말풍선: 폭 900px, 하단 여백 80px */
 const SpeechBubble = styled.div`
   position: absolute;
-  bottom: 100px;
-  left: calc(50% - 450px); /* 900px/2 */
+  bottom: 80px;
+  left: calc(50% - 450px);  /* 900px / 2 */
   width: 900px;
   padding: 24px;
   background-color: #FEF3E1;
   border-radius: 8px;
 `;
 
-/* 6) 텍스트 박스 */
+/* 텍스트 */
 const TextBox = styled.div`
   font-size: 20px;
   line-height: 1.6;
@@ -71,7 +68,7 @@ const TextBox = styled.div`
   margin-bottom: 20px;
 `;
 
-/* 7) 말풍선 버튼: 내부 오른쪽 하단 */
+/* 말풍선 버튼 */
 const BubbleButton = styled(Button)`
   position: absolute;
   bottom: 24px;
@@ -96,7 +93,7 @@ export default function StudyPage() {
       try {
         if (chapterData?.chapterTitle) setTitle(chapterData.chapterTitle);
       } catch {
-        setTitle("⚠️단원명 로딩실패");
+        setTitle("⚠️ 단원명 로딩실패");
       } finally {
         setLoading(false);
         setPreloadDone(false);
@@ -109,7 +106,7 @@ export default function StudyPage() {
       setStep(1);
       setPreloadDone(false);
     } else {
-      alert("✅화면 상단 '다음 단계로' 버튼을 클릭해주세요!");
+      alert("화면 상단 ‘다음 단계로’ 버튼을 눌러주세요!");
     }
   };
 
@@ -150,7 +147,6 @@ export default function StudyPage() {
             style={{ display: "none" }}
             onPreloadDone={() => setPreloadDone(true)}
           />
-
           {!preloadDone ? (
             <TextBox>화면을 준비 중입니다...</TextBox>
           ) : (
