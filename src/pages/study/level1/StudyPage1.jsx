@@ -1,186 +1,204 @@
-import styled, { createGlobalStyle } from "styled-components";
-import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-
-import Header from "../../../components/Header";           // 전체 페이지 헤더
-import Box from "../../../components/Box";                 // 카드 역할
-import MiniHeader from "../../../components/study/MiniHeader"; 
-import Button from "../../../components/Button";
-import TtsPlayer from "../../../components/TtsPlayer";
+import styled from "styled-components";
+import Header from "../../../components/Header";
+import Box from "../../../components/Box";
 import tiger from "../../../assets/tiger-pencil.png";
-import { useChapter } from "../../../context/ChapterContext";
+import Button from "../../../components/Button";
+import { fetchChapterContents} from "../../../api/study/level3API";
+import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from "react";
+import {useParams} from "react-router-dom";
+import MiniHeader from "../../../components/study/MiniHeader";
+import {useChapter} from "../../../context/ChapterContext";
+import TtsPlayer from "../../../components/TtsPlayer";
 
-/* 전역 스타일: box-sizing 통일 + 스크롤 숨김 */
-const GlobalStyle = createGlobalStyle`
-  *, *::before, *::after { box-sizing: border-box; }
-  html, body {
-    margin:0; padding:0;
-    overflow: hidden; /* 필요에 따라 auto로 바꿔도 됩니다 */
+/*학습하기-3단계-1*/
+
+
+const Wrapper=styled.div`
+    width:100%;
+    height:100vh;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+`;
+
+const ImageWrapper=styled.div`
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    margin:top:129ox;
+    gap:12px;
+`
+
+
+
+const Image=styled.img`
+    width:100%; 
+    height:auto;
+    object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
+    max-width:300px;
+    display:block;
+    
+     /*가로 중앙 정렬, 세로 원하는 위치에 자유롭게 배치*/
+    align-self:center;/*가로 중앙 정렬*/
+    margin-top:120px;
+    margin-bottom:0px;
+
+`;
+
+const SpeechBubble=styled.div`
+    display:flex;
+    width:100%;
+    height:20%;
+    background-color:#FEF3E1;
+    
+
+    position:relative;
+
+`;
+
+const TextBox = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+
+  width: 80%;
+  margin: 0 auto;
+  padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
+
+  font-size: clamp(20px, 3vw, 32px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
+  line-height: 1.6; /* ✅ 줄 간격을 여유 있게 */
+  letter-spacing: 0.03em; /* ✅ 글자 간격 미세 조정 */
+  font-weight: 500; /* ✅ 가독성 좋은 중간 두께 */
+  font-family: "Noto Sans KR", sans-serif; /* ✅ 국문에 적합한 서체 */
+  color: #333;
+`;
+
+const BubbleButton = styled.button`
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+
+  padding: 10px 16px;
+  background-color: #2774B2;
+  color: white;
+  border-radius: 30px;
+  cursor: pointer;
+  border:0.2px solid black;
+
+  font-size:18px;
+
+  transition: background-color 0.3s;
+  &:hover {
+    background-color: #1b5c91;
   }
 `;
 
-/* 1) 화면 전체를 감싸는 Wrapper: 수직으로 쌓되, 위에서부터 배치 */
-const Wrapper = styled.div`
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-`;
 
-/* 2) 페이지 헤더 아래에 띄울 Box(카드) */
-const Card = styled(Box)`
-  position: relative;       /* 내부 말풍선 절대 배치용 */
-  width: 80%;
-  max-width: 900px;
-  margin-top: 24px;         /* Header와 간격 */
-  height: 600px;            /* 원하는 고정 높이 */
-  overflow: hidden;         
-`;
 
-/* 3) MiniHeader (카드 내부 단계 헤더) */
-const StepHeader = styled(MiniHeader)`
-  /* 필요시 스타일 추가 */
-`;
+function StudyPage(){
 
-/* 4) 이미지: 카드 내부에서 140px 아래, 중앙정렬 */
-const ImageWrapper = styled.div`
-  position: absolute;
-  top: 140px;
-  left: calc(50% - 150px);  /* 300px 이미지 폭의 절반 */
-  width: 300px;
-`;
+    const navigate=useNavigate();
+    const {chapterId}=useParams();
+    const [title,setTitle]=useState("");
+    const [loading,setLoading]=useState(true);
+    const [step,setStep]=useState(0); //0이면 인사, 1이면 제목 출력
+    const {chapterData}=useChapter();
 
-const Image = styled.img`
-  width: 300px;
-  height: auto;
-  object-fit: contain;
-`;
+    const [preloadDone, setPreloadDone] = useState(false)
 
-/* 5) 말풍선: 카드 바닥에 딱 붙여, 좌우 여백 없이 꽉 채움 */
-const SpeechBubble = styled.div`
-  position: absolute;
-  bottom: 10px;
-  left: 0;
-  width: 100%;             /* 카드 폭 그대로 */
-  background-color: #FEF3E1;
-  padding: 24px;
-  box-sizing: border-box;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-`;
+    useEffect(()=>{
+        const loadChapterTitle=async()=>{
+            try{
+                if(chapterData?.chapterTitle){
+                    setTitle(chapterData.chapterTitle);
+                }
+                
+            }catch(err){
+                setTitle("⚠️단원명 로딩실패")
+            }finally{
+                setLoading(false);
+                setPreloadDone(false);
+            }
+        };
 
-/* 6) 말풍선 텍스트 */
-const TextBox = styled.div`
-  font-size: 20px;
-  line-height: 1.6;
-  text-align: center;
-  margin-bottom: 16px;
-`;
+        loadChapterTitle();
+    },[chapterId]);
 
-/* 7) 말풍선 버튼: 말풍선 안에서 오른쪽 아래 */
-const BubbleButton = styled(Button)`
-  position: absolute;
-  bottom: 24px;
-  right: 24px;
-  width: 120px;
-  height: 44px;
-  font-size: 18px;
-`;
-
-export default function StudyPage() {
-  const navigate = useNavigate();
-  const { chapterId } = useParams();
-  const { chapterData } = useChapter();
-
-  const [title, setTitle] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [step, setStep] = useState(0);
-  const [preloadDone, setPreloadDone] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        setTitle(chapterData?.chapterTitle ?? "⚠️단원명 로딩실패");
-      } finally {
-        setLoading(false);
-        setPreloadDone(false);
-      }
-    })();
-  }, [chapterId, chapterData]);
-
-  const handleNext = () => {
-    if (step === 0) {
-      setStep(1);
-      setPreloadDone(false);
-    } else {
-      alert("✅화면 상단 ‘다음 단계로’ 버튼을 클릭해주세요!");
+    const handleNext=()=>{
+        if (step===0){
+            setStep(1);
+            setPreloadDone(false);
+        }else{
+            alert("✅다음 단계로 넘어가볼까요? 다음 단계 버튼을 클릭해주세요!");
+        }
     }
-  };
 
-  const textToRead = useMemo(() => {
-    if (loading) return [];
-    return step === 0
-      ? ["안녕! 나는 호랑이 선생님이야"]
-      : [`이번 단원은 ${title} 이제 본격적으로 공부를 시작해보자`];
-  }, [loading, step, title]);
+    // tts 처리 위해서
+    // const textToRead =
+    // step === 0
+    //   ? ["안녕! 나는 호랑이 선생님이야"]
+    //   : [`이번 단원은 ${title} 이야. 이제 본격적으로 공부를 시작해보자`];
 
-  return (
+    const textToRead = useMemo(() => {
+        if (loading) {
+        return;
+        }
+        return step === 0
+        ? ["안녕! 나는 호랑이 선생님이야"]
+        : [`이번 단원은 ${title} 이제 본격적으로 공부를 시작해보자`];
+    }, [loading, step, title]);
+
+      
+    
+    return(
     <>
-      <GlobalStyle />
-
-      <Wrapper>
-        {/* 전체 사이트 헤더 */}
-        <Header />
-
-        {/* 메인 카드 */}
-        <Card>
-          {/* 카드 내부 단계 헤더 */}
-          <StepHeader
-            left={<Button onClick={() => navigate(-1)}>뒤로</Button>}
-            right={<Button onClick={() => navigate(`/study/2`)}>다음 단계로</Button>}
-          >
-            1/6 선생님과 학습하기
-          </StepHeader>
-
-          {/* 중앙 이미지 */}
-          <ImageWrapper>
-            <Image src={tiger} alt="호랑이 샘플" />
-          </ImageWrapper>
-
-          {/* TTS 프리로드 */}
-          <TtsPlayer
-            sentences={textToRead}
-            answers={[]}
-            isAnsweringPhase={false}
-            currentIndex={0}
-            autoPlay
-            style={{ display: "none" }}
-            onPreloadDone={() => setPreloadDone(true)}
-          />
-
-          {/* 말풍선: 카드 바닥에 딱 붙어, 좌우 여백 없음 */}
-          <SpeechBubble>
-            {!preloadDone ? (
-              <TextBox>화면을 준비 중입니다...</TextBox>
+        <Wrapper>
+            <Box>
+            <MiniHeader
+                    left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
+                    right={<Button onClick={()=>navigate(`/study/2`)}>다음 단계로</Button>}
+                >
+                1/6 선생님과 학습하기
+                </MiniHeader>
+            <ImageWrapper>
+                <Image src={tiger} alt="샘플" />
+            </ImageWrapper>
+            <TtsPlayer
+                sentences={textToRead}
+                answers={[]}
+                isAnsweringPhase={false}
+                currentIndex={0}
+                autoPlay={true}
+                style={{ display: "none" }}
+                onPreloadDone={() => setPreloadDone(true)}
+            />
+            { !preloadDone ? (
+                <TextBox>화면을 준비 중입니다...</TextBox>
             ) : (
-              <>
-                <TextBox>
-                  {loading
-                    ? "단원을 준비 중이에요..."
-                    : step === 0
-                    ? "안녕! 나는 호랑이 선생님이야"
-                    : `이번 단원은 ${title} 이제 본격적으로 공부를 시작해보자`}
-                </TextBox>
-                <BubbleButton onClick={handleNext}>
-                  {step === 0 ? "다음" : "시작하기"}
-                </BubbleButton>
-              </>
+                <SpeechBubble>
+                    <TextBox>
+                        {loading
+                            ? "단원을 준비 중이에요..."
+                            : step===0
+                                ? "안녕! 나는 호랑이 선생님이야"
+                                : `이번 단원은 ${title} 이제 본격적으로 공부를 시작해보자`}
+                    </TextBox>
+                    <BubbleButton onClick={handleNext}>
+                            {step===0?"다음":"시작하기"}
+                    </BubbleButton>
+                </SpeechBubble>
             )}
-          </SpeechBubble>
-        </Card>
-      </Wrapper>
+            </Box>
+        </Wrapper>
     </>
-  );
+    );
 }
+
+export default StudyPage;
