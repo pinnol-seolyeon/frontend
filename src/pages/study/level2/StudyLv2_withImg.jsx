@@ -15,17 +15,16 @@ import TtsPlayer from "../../../components/TtsPlayer";
 /*학습하기2단계 - 학습목표+이미지 제시하며 질문..*/
 
 
-const Wrapper=styled.div`
-    width:100%;
-    height:100vh;
-
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    
-
-`;
+const Wrapper = styled.div`
+   width: 100%;
+   min-height: 100vh;           /* 최소 높이만 100vh */
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: flex-start; /* 위쪽부터 쌓이게 */
+   padding: 2rem 1rem;          /* 상하 여유 추가 */
+   overflow-y: auto;            /* 내용이 길면 스크롤 */
+ `;
 
 const ImageWrapper=styled.div`
     position:relative;
@@ -75,13 +74,11 @@ const ImageWithSpeechWrapper = styled.div`
 
 
 const SpeechBubble=styled.div`
-    display:inline-block;
-    max-width: 80%;
-    // height:100%;
-    // min-height:100px;
-    // padding:20px;
-    
-    background-color:#FEF3E1;
+
+    display: inline-block;
+   max-width: 80%;
+   padding: 0;                   /* 텍스트 박스에서만 padding */
+   background-color: #FEF3E1;
 
     border-radius:0px 50px 50px 0px;
     border:0.2px solid black;
@@ -95,15 +92,19 @@ const SpeechBubble=styled.div`
 
 `;
 
-const TextBox = styled.div`
-  display: block;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
 
-  width: 80%;
-  margin: 0 auto;
-  padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
+const TextBox = styled.div`
+  // display: block;
+  // justify-content: center;
+  // align-items: center;
+  // text-align: center;
+  display: block;             
+  padding: 12px 16px;         /* 말풍선 패딩과 동일하게 */
+  text-align: left;
+
+  // width: 80%;
+  // margin: 0 auto;
+  // padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
 
   font-size: clamp(20px, 2vw, 30px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
   line-height: 1.6; /* ✅ 줄 간격을 여유 있게 */
