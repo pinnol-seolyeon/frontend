@@ -1,216 +1,174 @@
-import styled from "styled-components";
+import styled, { createGlobalStyle } from "styled-components";
+import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+
 import Header from "../../../components/Header";
 import Box from "../../../components/Box";
 import tiger from "../../../assets/tiger-pencil.png";
 import Button from "../../../components/Button";
-import { fetchChapterContents} from "../../../api/study/level3API";
-import { useNavigate } from "react-router-dom";
-import React, { useState, useEffect, useMemo } from "react";
-import {useParams} from "react-router-dom";
 import MiniHeader from "../../../components/study/MiniHeader";
-import {useChapter} from "../../../context/ChapterContext";
 import TtsPlayer from "../../../components/TtsPlayer";
+import { useChapter } from "../../../context/ChapterContext";
 
-/*학습하기-3단계-1*/
-
-const Container = styled.div`
-  width: 100%;           /* 전체 화면 너비 */
-  min-height: 100vh;     /* 전체 화면 높이 */
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between; /* 헤더-메인-풋터 분배 */
-  align-items: center;
-  padding: 2rem;         /* 웹 여백 충분히 */
-  box-sizing: border-box;
-`;
-
-const Wrapper=styled.div`
-    width:100%;
-    height:100vh;
-
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-
-`;
-
-const ImageWrapper=styled.div`
-    position:relative;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    margin:top:129ox;
-    gap:12px;
-`
-
-
-
-const Image=styled.img`
-    width:100%; 
-    height:auto;
-    object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    max-width:300px;
-    display:block;
-    
-     /*가로 중앙 정렬, 세로 원하는 위치에 자유롭게 배치*/
-    align-self:center;/*가로 중앙 정렬*/
-    margin-top:120px;
-    margin-bottom:0px;
-
-`;
-
-const SpeechBubble=styled.div`
-    display:flex;
-    width:100%;
-    height:20%;
-    background-color:#FEF3E1;
-    
-
-    position:relative;
-
-`;
-
-const TextBox = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-
-  width: 80%;
-  margin: 0 auto;
-  padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
-
-  font-size: clamp(20px, 3vw, 32px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
-  line-height: 1.6; /* ✅ 줄 간격을 여유 있게 */
-  letter-spacing: 0.03em; /* ✅ 글자 간격 미세 조정 */
-  font-weight: 500; /* ✅ 가독성 좋은 중간 두께 */
-  font-family: "Noto Sans KR", sans-serif; /* ✅ 국문에 적합한 서체 */
-  color: #333;
-`;
-
-const BubbleButton = styled.button`
-  position: absolute;
-  right: 20px;
-  bottom: 20px;
-
-  padding: 10px 16px;
-  background-color: #2774B2;
-  color: white;
-  border-radius: 30px;
-  cursor: pointer;
-  border:0.2px solid black;
-
-  font-size:18px;
-
-  transition: background-color 0.3s;
-  &:hover {
-    background-color: #1b5c91;
+/* 전역 스타일: 스크롤 없애고 box-sizing 통일 */
+const GlobalStyle = createGlobalStyle`
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    overflow: hidden;
   }
 `;
 
+/* 1280×720 고정 크기 컨테이너 */
+const Container = styled.div`
+  width: 1280px;
+  height: 720px;
+  margin: 0 auto;      /* 브라우저 가운데 정렬 */
+  position: relative;  
+  background: white;
+  overflow: hidden;
+`;
 
+/* 헤더 영역: 절대 배치 */
+const HeaderArea = styled(Box)`
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  height: 60px;
+`;
 
-function StudyPage(){
+/* 이미지 영역: 절대 배치, 중앙 */
+const ImageWrapper = styled.div`
+  position: absolute;
+  top: 120px;
+  left: calc(50% - 150px); /* 300px 너비의 절반 */
+  width: 300px;
+`;
 
-    const navigate=useNavigate();
-    const {chapterId}=useParams();
-    const [title,setTitle]=useState("");
-    const [loading,setLoading]=useState(true);
-    const [step,setStep]=useState(0); //0이면 인사, 1이면 제목 출력
-    const {chapterData}=useChapter();
+const Image = styled.img`
+  width: 300px;
+  height: auto;
+`;
 
-    const [preloadDone, setPreloadDone] = useState(false)
+/* 말풍선 영역: 절대 배치, 중앙 하단 */
+const SpeechBubble = styled.div`
+  position: absolute;
+  bottom: 50px;
+  left: calc(50% - 400px); /* 800px 너비의 절반 */
+  width: 800px;
+  padding: 20px;
+  background-color: #FEF3E1;
+  border-radius: 8px;
+`;
 
-    useEffect(()=>{
-        const loadChapterTitle=async()=>{
-            try{
-                if(chapterData?.chapterTitle){
-                    setTitle(chapterData.chapterTitle);
-                }
-                
-            }catch(err){
-                setTitle("⚠️단원명 로딩실패")
-            }finally{
-                setLoading(false);
-                setPreloadDone(false);
-            }
-        };
+/* 텍스트 박스 */
+const TextBox = styled.div`
+  font-size: 20px;
+  line-height: 1.6;
+  text-align: center;
+  margin-bottom: 20px;
+`;
 
-        loadChapterTitle();
-    },[chapterId]);
+/* 말풍선 버튼: 절대 배치 제거, 내부 상대 배치 */
+const BubbleButton = styled(Button)`
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 100px;
+  height: 40px;
+  font-size: 16px;
+`;
 
-    const handleNext=()=>{
-        if (step===0){
-            setStep(1);
-            setPreloadDone(false);
-        }else{
-            alert("✅다음 단계로 넘어가볼까요? 다음 단계 버튼을 클릭해주세요!");
+export default function StudyPage() {
+  const navigate = useNavigate();
+  const { chapterId } = useParams();
+  const { chapterData } = useChapter();
+
+  const [title, setTitle] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [step, setStep] = useState(0);
+  const [preloadDone, setPreloadDone] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        if (chapterData?.chapterTitle) {
+          setTitle(chapterData.chapterTitle);
         }
+      } catch {
+        setTitle("⚠️ 단원명 로딩실패");
+      } finally {
+        setLoading(false);
+        setPreloadDone(false);
+      }
+    })();
+  }, [chapterId, chapterData]);
+
+  const handleNext = () => {
+    if (step === 0) {
+      setStep(1);
+      setPreloadDone(false);
+    } else {
+      alert("✅ 화면 상단 ‘다음 단계로’ 버튼을 클릭해주세요!");
     }
+  };
 
-    // tts 처리 위해서
-    // const textToRead =
-    // step === 0
-    //   ? ["안녕! 나는 호랑이 선생님이야"]
-    //   : [`이번 단원은 ${title} 이야. 이제 본격적으로 공부를 시작해보자`];
+  const textToRead = useMemo(() => {
+    if (loading) return [];
+    return step === 0
+      ? ["안녕! 나는 호랑이 선생님이야"]
+      : [`이번 단원은 ${title} 이제 본격적으로 공부를 시작해보자`];
+  }, [loading, step, title]);
 
-    const textToRead = useMemo(() => {
-        if (loading) {
-        return;
-        }
-        return step === 0
-        ? ["안녕! 나는 호랑이 선생님이야"]
-        : [`이번 단원은 ${title} 이제 본격적으로 공부를 시작해보자`];
-    }, [loading, step, title]);
-
-      
-    
-    return(
+  return (
     <>
-    <Container>
-        {/* <Wrapper> */}
-            <Box>
-            <MiniHeader
-                    left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
-                    right={<Button onClick={()=>navigate(`/study/2`)}>다음 단계로</Button>}
-                >
-                1/6 선생님과 학습하기
-                </MiniHeader>
-            <ImageWrapper>
-                <Image src={tiger} alt="샘플" />
-            </ImageWrapper>
-            <TtsPlayer
-                sentences={textToRead}
-                answers={[]}
-                isAnsweringPhase={false}
-                currentIndex={0}
-                autoPlay={true}
-                style={{ display: "none" }}
-                onPreloadDone={() => setPreloadDone(true)}
-            />
-            { !preloadDone ? (
-                <TextBox>화면을 준비 중입니다...</TextBox>
-            ) : (
-                <SpeechBubble>
-                    <TextBox>
-                        {loading
-                            ? "단원을 준비 중이에요..."
-                            : step===0
-                                ? "안녕! 나는 호랑이 선생님이야"
-                                : `이번 단원은 ${title} 이제 본격적으로 공부를 시작해보자`}
-                    </TextBox>
-                    <BubbleButton onClick={handleNext}>
-                            {step===0?"다음":"시작하기"}
-                    </BubbleButton>
-                </SpeechBubble>
-            )}
-            </Box>
-        {/* </Wrapper> */}
-    </Container>
-    </>
-    );
-}
+      <GlobalStyle />
+      <Container>
+        {/* 헤더 */}
+        <HeaderArea>
+          <MiniHeader
+            left={<Button onClick={() => navigate(-1)}>뒤로</Button>}
+            right={<Button onClick={() => navigate(`/study/2`)}>다음 단계로</Button>}
+          >
+            1/6 선생님과 학습하기
+          </MiniHeader>
+        </HeaderArea>
 
-export default StudyPage;
+        {/* 이미지 */}
+        <ImageWrapper>
+          <Image src={tiger} alt="샘플" />
+        </ImageWrapper>
+
+        {/* 말풍선 */}
+        <SpeechBubble>
+          <TtsPlayer
+            sentences={textToRead}
+            answers={[]}
+            isAnsweringPhase={false}
+            currentIndex={0}
+            autoPlay
+            style={{ display: "none" }}
+            onPreloadDone={() => setPreloadDone(true)}
+          />
+          {!preloadDone ? (
+            <TextBox>화면을 준비 중입니다...</TextBox>
+          ) : (
+            <>
+              <TextBox>
+                {loading
+                  ? "단원을 준비 중이에요..."
+                  : step === 0
+                  ? "안녕! 나는 호랑이 선생님이야"
+                  : `이번 단원은 ${title} 이제 본격적으로 공부를 시작해보자`}
+              </TextBox>
+              <BubbleButton onClick={handleNext}>
+                {step === 0 ? "다음" : "시작하기"}
+              </BubbleButton>
+            </>
+          )}
+        </SpeechBubble>
+      </Container>
+    </>
+  );
+}
