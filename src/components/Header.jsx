@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import finnolLogo from '../assets/finnol-logo.png';
 import { useNavigate } from 'react-router-dom';
+import {useEffect} from 'react';
 
 export const MainLayout = styled.div`
   min-height: 100vh;
@@ -132,7 +133,7 @@ function Header({ login, text, setLogin, userProgress, user }) {
         <FinnolLogo
           src={finnolLogo}
           alt="FINNOL Logo"
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/main')}
           style={{ cursor: 'pointer' }}
         />
         <UserStatus>

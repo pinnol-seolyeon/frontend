@@ -1,6 +1,6 @@
 // AppRoutes.jsx
 import React from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation,Navigate } from 'react-router-dom';
 import { createGlobalStyle } from "styled-components";
 import reset from "styled-reset";
 
@@ -45,8 +45,9 @@ const GlobalStyles = createGlobalStyle`
 
 //  Route 정보 배열로 정리
 const routes = [
-  { path: '/',element:<Main/>},
-  { path: '/dashbord', element: <Dashboard /> },
+  { path:'/', element: <Navigate to="/main" replace/>}, //첫 화면 //루트 접속 시 -> main으로 자동 리디렉션
+  { path: '/main',element:<Main/>},
+  { path: '/dashboard', element: <Dashboard /> },
   { path: '/login', element: <Login /> },
   { path: '/childInfo', element: <ChildInfo /> },
   { path: '/study/1', element: <StudyPage1 /> },

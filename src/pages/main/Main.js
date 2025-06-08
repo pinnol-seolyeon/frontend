@@ -1,10 +1,18 @@
-import React from 'react';
+import React,{useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOutletContext } from 'react-router-dom';
 import '../main/Main.css';
-function Dashboard({user}) {
+function Main({user}) {
   const navigate = useNavigate();
   // const { userProgress } = useOutletContext();
+
+  //로그인 안 된 경우 강제 리디렉션 
+  useEffect(()=>{
+    if(!user){
+      // alert("🐯로그인 후에 핀놀 서비스를 사용할 수 있어요!");
+      navigate("/login");
+    }
+  },[user,navigate]);
   
 
   const learningModules = [
@@ -18,7 +26,7 @@ function Dashboard({user}) {
     {
       title: "학습 분석",
       description: "나의 학습 상태를 분석하고 피드백을 받아보세요",
-      path: "/",
+      path: "/dashboard",
       icon: "📊",
       disabled: false,
     },
@@ -88,4 +96,4 @@ function Dashboard({user}) {
   );
 }
 
-export default Dashboard;
+export default Main;
