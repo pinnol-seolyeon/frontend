@@ -17,13 +17,13 @@ import TtsPlayer from "../../../components/TtsPlayer";
 
 const Wrapper = styled.div`
    width: 100%;
-   min-height: 100vh;           /* 최소 높이만 100vh */
+  //  min-height: 100vh;           /* 최소 높이만 100vh */
    display: flex;
    flex-direction: column;
    align-items: center;
    justify-content: flex-start; /* 위쪽부터 쌓이게 */
    padding: 2rem 1rem;          /* 상하 여유 추가 */
-   overflow-y: auto;            /* 내용이 길면 스크롤 */
+  //  overflow-y: auto;            /* 내용이 길면 스크롤 */
  `;
 
 const ImageWrapper=styled.div`
@@ -185,7 +185,7 @@ const AiResponseBox = styled.div`
 const ImageButton=styled.img`
   position: absolute;
   right: 16px;
-  top: 12px;
+  bottom: 12px;
   width:60px;
   height:auto;
   cursor:pointer;

@@ -6,11 +6,11 @@ const StyleBox = styled.div`
   display: flex;
   flex-direction: column;
   width: 80%;
-  height: 90vh;
+  height: auto;
   background-color: white;
   border-radius: 24px;
   border: 0.5px solid black;
-  overflow_hidden;
+  overflow: visible;
  
   position:relative;
 `;
