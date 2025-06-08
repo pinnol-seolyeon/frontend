@@ -302,7 +302,8 @@ function Question({}){
         const fetchDummyData = () => {
             setTimeout(() => {
                 const dummyMessages = [
-                    "궁금한게 있으면 물어봐🐯"
+                    "궁금한게 있으면 물어봐🐯",
+                    "마이크 버튼을 누르고 2초 정도 있다가 질문을 차근차근, 천천히 이야기해줘 🐯🎙️"
                 ];
 
                 dummyMessages.forEach(message => {
