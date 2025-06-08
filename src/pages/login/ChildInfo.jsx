@@ -129,7 +129,7 @@ function ChildInfo(){
         })
 
 
-        
+
         .then((res) => {
             if (!res.ok) throw new Error("요청 실패");
             return res.json();
