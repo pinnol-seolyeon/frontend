@@ -13,6 +13,16 @@ import TtsPlayer from "../../../components/TtsPlayer";
 
 /*학습하기-3단계-1*/
 
+const Container = styled.div`
+  width: 100%;           /* 전체 화면 너비 */
+  min-height: 100vh;     /* 전체 화면 높이 */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* 헤더-메인-풋터 분배 */
+  align-items: center;
+  padding: 2rem;         /* 웹 여백 충분히 */
+  box-sizing: border-box;
+`;
 
 const Wrapper=styled.div`
     width:100%;
@@ -159,7 +169,8 @@ function StudyPage(){
     
     return(
     <>
-        <Wrapper>
+    <Container>
+        {/* <Wrapper> */}
             <Box>
             <MiniHeader
                     left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
@@ -196,7 +207,8 @@ function StudyPage(){
                 </SpeechBubble>
             )}
             </Box>
-        </Wrapper>
+        {/* </Wrapper> */}
+    </Container>
     </>
     );
 }
