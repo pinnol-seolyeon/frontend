@@ -75,7 +75,7 @@ const ImageWithSpeechWrapper = styled.div`
 
 
 const SpeechBubble=styled.div`
-    display:flex;
+    display:inline-block;
     width:80%;
     // height:100%;
     // min-height:100px;
@@ -90,6 +90,7 @@ const SpeechBubble=styled.div`
 
     position:relative;
     box-sizing:border-box; /*패딩 포함*/
+    word-break: break-word;
 
 `;
 
