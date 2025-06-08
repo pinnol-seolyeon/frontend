@@ -74,11 +74,14 @@ const ImageWithSpeechWrapper = styled.div`
 
 
 const SpeechBubble=styled.div`
-
-   display: inline-block;
-   max-width: 80%;
-   padding: 12px 92px 12px 16px;
-   background-color: #FEF3E1;
+    display:flex;
+    width:80%;
+    // height:100%;
+    // min-height:100px;
+    max-height:100px;
+    // padding:20px;
+    
+    background-color:#FEF3E1;
 
     border-radius:0px 50px 50px 0px;
     border:0.2px solid black;
@@ -86,9 +89,6 @@ const SpeechBubble=styled.div`
 
     position:relative;
     box-sizing:border-box; /*패딩 포함*/
-    word-break: break-word;
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
 
 `;
 
