@@ -74,58 +74,47 @@ const ImageWithSpeechWrapper = styled.div`
 `;
 
 
-const SpeechBubble=styled.div`
-    display:inline-block;   // test1
-    // width:80%;
-    max-width: 80%;   // test1
-    // height:100%;
-    // min-height:100px;
-    // max-height:100px;
-    // padding:20px;
-    
-    background-color:#FEF3E1;
+const SpeechWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  align-items: flex-start; /* 세로 정렬을 시작점으로 */
+  width: 100%;
+`;
 
-    border-radius:0px 50px 50px 0px;
-    border:0.2px solid black;
-    // margin-bottom:20px;
+const SpeechBubble = styled.div`
+  display: inline-block;          /* 내용을 감싸는 크기 */
+  max-width: 80%;                 /* 화면 너비의 80%까지 */
+  flex-shrink: 1;                 /* 부모 flex 안에서 줄어들기 허용 */
+  overflow-wrap: break-word;      /* 단어 단위 줄바꿈 */
+  word-wrap: break-word;
+  white-space: pre-wrap;          /* 기존 줄바꿈 유지, 넘치면 줄바꿈 */
 
-    position:relative;
-    box-sizing:border-box; /*패딩 포함*/
-    word-break: break-word;   // test1
+  padding: 12px 16px;
+  background-color: #FEF3E1;
+  border: 0.2px solid black;
+  border-radius: 0px 50px 50px 0px;
+  box-sizing: border-box;
+  position: relative;
 
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 16px;
+    border-width: 8px 8px 0 8px;
+    border-style: solid;
+    border-color: #FEF3E1 transparent transparent transparent;
+  }
 `;
 
 const TextBox = styled.div`
-  display: block;   // test1
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-
-  word-break: break-word  // test1
-
-  width: 80%;
-  margin: 0 auto;
-  padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
-
-  font-size: clamp(20px, 2vw, 30px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
-  line-height: 1.6; /* ✅ 줄 간격을 여유 있게 */
-  letter-spacing: 0.02em; /* ✅ 글자 간격 미세 조정 */
-  font-weight: 400; /* ✅ 가독성 좋은 중간 두께 */
-  font-family: "Noto Sans KR", sans-serif; /* ✅ 국문에 적합한 서체 */
-  color: #333;
-`;
-
-
-
-const SpeechWrapper=styled.div`
-    position:relative;
-    width:100%;
-    // height:20%;
-    display:flex;
-    align-items:stretch;
-    flex-direction: row;
-    gap:20px; /*형제 요소 사이의 간격*/
-
+  display: block;
+  font-size: clamp(20px, 2vw, 30px);
+  line-height: 1.6;
+  word-break: break-word;
+  margin: 0;
+  padding: 0;
 `;
 
 
