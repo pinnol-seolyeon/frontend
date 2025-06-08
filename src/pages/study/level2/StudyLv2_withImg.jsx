@@ -75,11 +75,12 @@ const ImageWithSpeechWrapper = styled.div`
 
 
 const SpeechBubble=styled.div`
-    display:inline-block;
-    width:80%;
+    display:inline-block;   // test1
+    // width:80%;
+    max-width: 80%;   // test1
     // height:100%;
     // min-height:100px;
-    max-height:100px;
+    // max-height:100px;
     // padding:20px;
     
     background-color:#FEF3E1;
@@ -90,15 +91,17 @@ const SpeechBubble=styled.div`
 
     position:relative;
     box-sizing:border-box; /*패딩 포함*/
-    word-break: break-word;
+    word-break: break-word;   // test1
 
 `;
 
 const TextBox = styled.div`
-  display: flex;
+  display: block;   // test1
   justify-content: center;
   align-items: center;
   text-align: center;
+
+  word-break: break-word  // test1
 
   width: 80%;
   margin: 0 auto;
