@@ -245,7 +245,7 @@ function StudyLevel6_2(props){
           setTopic(chapterData.topic);
           setLoading(false);
         } else {
-          setTopic("❌ 전달받은 내용이 없어요");
+          // setTopic("❌ 전달받은 내용이 없어요");
           setLoading(false);
         }
       }, [chapterData]);
@@ -276,7 +276,7 @@ function StudyLevel6_2(props){
          
          setTimeout(()=>{
           setShowPopup(false);
-          navigate('/main');
+          navigate('/');
          },3000);
          
         } catch(e){

@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import finnolLogo from '../assets/finnol-logo.png';
 import { useNavigate } from 'react-router-dom';
+import {useEffect} from 'react';
 
 export const MainLayout = styled.div`
   min-height: 100vh;
@@ -84,6 +85,21 @@ export const LogoutButton = styled.button`
   }
 `;
 
+export const LoginButton = styled.button`
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #f8f9fa;
+  color: black;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: #1a73e8;
+  }
+`;
+
+
 export const MainContent = styled.main`
   padding: 2rem;
   max-width: 1200px;
@@ -126,11 +142,15 @@ function Header({ login, text, setLogin, userProgress, user }) {
             <PointsValue>{user?.coin || 0} P</PointsValue>
           </PointsDisplay>
           <UserInfo>
-            <UserEmail>{user?.childName || 'ゲスト'}</UserEmail>
-            {login && (
+            <UserEmail>{user?.childName}</UserEmail>
+            {login ? (
               <LogoutButton onClick={logout}>
                 로그아웃
               </LogoutButton>
+            ):(
+              <LoginButton onClick={()=>navigate('/login')}>
+                로그인
+              </LoginButton>
             )}
           </UserInfo>
         </UserStatus>

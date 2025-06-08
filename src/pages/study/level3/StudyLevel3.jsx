@@ -282,7 +282,7 @@ function StudyPage(){
     }else{
         setIsQuestionFinished(true); //질문 끝났다는 상태
         setIsFinished(true);
-        alert("✅학습을 모두 완료했어요! 다음 단계로 이동해볼까요? ")
+        alert("✅학습을 모두 완료했어요! 다음 단계로 이동해볼까요? 오른 쪽의 다음 단계로 버튼을 클릭해주세요 ")
     }
    };
 
@@ -343,7 +343,7 @@ function StudyPage(){
     if (currentIndex<sentences.length-1){
         setCurrentIndex(currentIndex+1);
     }else{
-        alert("✅다음 단계로 넘어가볼까요?")
+       
 
         //여태까지 질문한 내용들을 DB에 저장하는 API
         try{
@@ -364,7 +364,7 @@ function StudyPage(){
 
         //피드백 저장
         await saveFeedbacks(chapterData?.chapterId);
-        navigate("/study/level3/2") //추후 `/game`으로 변경
+        navigate("/game") //추후 `/game`으로 변경
     }
    };
 
@@ -393,10 +393,10 @@ function StudyPage(){
                         onClick={handleNext}
                         >다음 단계로</Button>
                     ):(
-                        <Button
-                        onClick={handleNavigate}
-                        >다음 단계로</Button>
-                        // <Button disabled>진행 중..</Button> //배포 시 disabled 로 변경 ⭐⭐
+                        // <Button
+                        // onClick={handleNavigate}
+                        // >다음 단계로</Button>
+                        <Button disabled>진행 중..</Button> //배포 시 disabled 로 변경 ⭐⭐
                     )
                     }
                 >

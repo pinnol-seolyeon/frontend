@@ -65,6 +65,8 @@ const UnderlinedInput = styled.input`
   }
 `;
 
+
+
 const StyledButton=styled(Button)`
 
     margin-top:10px;
@@ -127,6 +129,8 @@ function ChildInfo(){
                 phoneNumber:phoneNumber
             })
         })
+
+
 
         .then((res) => {
             if (!res.ok) throw new Error("요청 실패");
