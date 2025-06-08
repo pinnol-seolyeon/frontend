@@ -12,16 +12,16 @@ import TtsPlayer from "../../../components/TtsPlayer";
 
 /*학습하기-1단계-2*/
 
-const Wrapper=styled.div`
-    width:100%;
-    height:100vh;
-
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-
-`;
+const Wrapper = styled.div`
+   width: 100%;
+  //  min-height: 100vh;           /* 최소 높이만 100vh */
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: flex-start; /* 위쪽부터 쌓이게 */
+   padding: 2rem 1rem;          /* 상하 여유 추가 */
+  //  overflow-y: auto;            /* 내용이 길면 스크롤 */
+ `;
 
 const Image=styled.img`
     display:flex;
@@ -39,34 +39,41 @@ const Image=styled.img`
 `;
 
 const SpeechBubble=styled.div`
-    display:flex;
-    flex:1 1 400px;
-    width:80%;
-    height:70%;
-    background-color:#FEF3E1;
 
-    position:absolute;
-    right:100px;
-    top:120px;
+   display: inline-block;
+   max-width: 80%;
+   padding: 12px 92px 12px 16px;
+   background-color: #FEF3E1;
 
-    border: 0.5px solid black;
-    border-radius: 24px;
+    border-radius:0px 50px 50px 0px;
+    border:0.2px solid black;
+    // margin-bottom:20px;
+
+    position:relative;
+    box-sizing:border-box; /*패딩 포함*/
+    word-break: break-word;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+
 `;
 
 const TextBox = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
+  // display: block;
+  // justify-content: center;
+  // align-items: center;
+  // text-align: center;
+  display: block;             
+  padding: 12px 16px;         /* 말풍선 패딩과 동일하게 */
+  text-align: left;
 
-  width: 80%;
-  margin: 0 auto;
-  padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
+  // width: 80%;
+  // margin: 0 auto;
+  // padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
 
-  font-size: clamp(20px, 3vw, 32px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
+  font-size: clamp(20px, 2vw, 30px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
   line-height: 1.6; /* ✅ 줄 간격을 여유 있게 */
-  letter-spacing: 0.03em; /* ✅ 글자 간격 미세 조정 */
-  font-weight: 500; /* ✅ 가독성 좋은 중간 두께 */
+  letter-spacing: 0.02em; /* ✅ 글자 간격 미세 조정 */
+  font-weight: 400; /* ✅ 가독성 좋은 중간 두께 */
   font-family: "Noto Sans KR", sans-serif; /* ✅ 국문에 적합한 서체 */
   color: #333;
 `;
