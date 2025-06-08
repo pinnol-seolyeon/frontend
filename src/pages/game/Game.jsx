@@ -600,7 +600,7 @@ export default function Game() {
               ))}
             </div>
 
-            <button onClick={() => { navigate("/study/level6/1"); }}
+            <button onClick={() => { navigate("/study/level6/summary"); }}
               style={{
                 marginTop: '1.5rem',
                 padding: '0.5rem 1.5rem'
