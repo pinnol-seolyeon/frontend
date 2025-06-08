@@ -276,7 +276,7 @@ function StudyLevel6_2(props){
          
          setTimeout(()=>{
           setShowPopup(false);
-          navigate('/main');
+          navigate('/');
          },3000);
          
         } catch(e){
