@@ -467,7 +467,6 @@ function StudyPage(){
                     <AnswerInputBox>
                         <Input
                             type="text"
-                            value={userAnswer}
                             onChange={(e)=>setUserAnswer(e.target.value)}
                             placeholder="🎙️너의 생각을 입력해봐"
                         />

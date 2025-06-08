@@ -75,9 +75,9 @@ function ChapterPage() {
               className={`book-card
                   ${isCompleted?'completed':''}
                   ${isCurrent?'current':''} `}
-              onClick={()=>{
-                if(isCompleted) handleChapterClick(id); //완료된 단원만 클릭 가능 
-              }}
+              // onClick={()=>{
+              //   if(isCompleted) handleChapterClick(id); //완료된 단원만 클릭 가능 
+              // }}
               style={{cursor:isCompleted?'pointer':'default'}}
             >
                <div className="module-icon">{isCompleted ? '📖' : '📘'}</div>
@@ -89,12 +89,13 @@ function ChapterPage() {
               {(isCompleted||isCurrent)&&(
                   <button
                     className="review-btn"
+                    disabled={isCompleted} //학습 완료된 경우 버튼 비활성화
                     onClick={(e)=>{
                       e.stopPropagation(); //부모 div 클릭 방지
-                      handleChapterClick(id);
+                      if(!isCompleted) handleChapterClick(id);
                     }}
                   >
-                    {isCompleted?'복습하기':'학습하기'}
+                    {isCompleted?'학습 완료':'학습하기'}
                   </button>
               )}
               {isCurrent&&(
