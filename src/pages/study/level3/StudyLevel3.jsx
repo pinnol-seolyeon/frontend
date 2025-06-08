@@ -50,11 +50,13 @@ const SpeechBubble=styled.div`
     display:flex;
     width:100%;
     max-height:100px;
+    flex-direction: column;
     // height:250px; /* ✅ 고정 높이로 조정 */
     background-color:#FEF3E1;
     position:relative;
     align-items: center;
     justify-content: center;
+    padding: 20px;
 `;
 
 
@@ -79,12 +81,11 @@ const TextBox = styled.div`
 
 
 const BubbleButton = styled.button`
-  position: absolute;
   right: 20px;
   bottom: 20px;
-  width:60px;
+  margin-top: 12px;
   height:auto;
-  padding: 20px 32px;
+  padding: 8px 16px;
   background-color: #2774B2;
   color: white;
   border: none;
