@@ -383,7 +383,7 @@ function StudyPage(){
 
     return(
     <>
-        <Wrapper>
+        <Wrapper> 
             <Box>
                 <MiniHeader
                     left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
