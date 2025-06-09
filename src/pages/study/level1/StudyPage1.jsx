@@ -11,7 +11,7 @@ import MiniHeader from "../../../components/study/MiniHeader";
 import {useChapter} from "../../../context/ChapterContext";
 import TtsPlayer from "../../../components/TtsPlayer";
 
-/*학습하기-3단계-1*/
+/*학습하기-1단계-1*/
 
 
 const Wrapper=styled.div`
@@ -106,23 +106,33 @@ function StudyPage(){
 
     const navigate=useNavigate();
     const {chapterId}=useParams();
+    const [titleText,setTitleText]=useState("");
     const [title,setTitle]=useState("");
+    const [onlyText,setOnlyText]=useState("");
     const [loading,setLoading]=useState(true);
     const [step,setStep]=useState(0); //0이면 인사, 1이면 제목 출력
     const {chapterData}=useChapter();
     const [isFinished,setIsFinished]=useState(false);
 
+    const fullTitle="";
     const [preloadDone, setPreloadDone] = useState(false)
 
     useEffect(()=>{
         const loadChapterTitle=async()=>{
             try{
                 if(chapterData?.chapterTitle){
-                    setTitle(chapterData.chapterTitle);
+                    const fullTitle=chapterData.chapterTitle;
+                    setTitle(fullTitle);
                 }
+
+                //텍스트만 추출
+                const match = fullTitle.match(/^\d+\.(.+)$/);
+                const onlyText=match?match[1]:"";
+                setTitleText(onlyText);
                 
             }catch(err){
                 setTitle("⚠️단원명 로딩실패")
+                setTitleText("");
             }finally{
                 setLoading(false);
                 setPreloadDone(false);
@@ -130,7 +140,9 @@ function StudyPage(){
         };
 
         loadChapterTitle();
-    },[chapterId]);
+    },[chapterId,chapterData]);
+
+
 
     const handleNext=()=>{
         if (step===0){
@@ -194,7 +206,7 @@ function StudyPage(){
                             ? "단원을 준비 중이에요..."
                             : step===0
                                 ? "안녕! 나는 호랑이 선생님이야"
-                                : `이번 단원은 ${title} 이제 본격적으로 공부를 시작해보자`}
+                                : `이번 단원은 ${titleText} 이제 본격적으로 공부를 시작해보자`}
                     </TextBox>
                     <BubbleButton onClick={handleNext}>
                             {step===0?"다음":"시작하기"}

@@ -304,7 +304,7 @@ function StudyLevel6_2(props){
             <Box>
                 <MiniHeader
                     left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
-                    right={<Button onClick={()=>navigate(`/main`)}>다음 단계로</Button>}
+                    // right={<Button disabled>다음 단계로</Button>}
                 >
                 6/6 : 마무리
                 </MiniHeader>
