@@ -380,6 +380,19 @@ export default function Game() {
           ctx.drawImage(ent.img, ent.x, ent.y, ent.width, ent.height);
         }
 
+        if (ent.type === 'flag' && ent.x + ent.width < player.x && !endingRef.current) {
+          endingRef.current = true;
+          playerImageRef.current = playerEndImage;
+          entities.splice(i, 1);
+          bgmRef.current?.pause();
+          bgmRef.current.currentTime = 0;
+          const finishSound = new Audio(require('../../assets/cute-level-up-3-189853.mp3'));
+          finishSound.volume = 0.7;
+          finishSound.play().catch(err => console.warn("끝 효과음 재생 실패:", err));
+          showEndEffect();
+          break; // 루프 탈출
+        }
+
         if (!isPaused && !endingRef.current && detectCollision(player, ent)) {
           if (ent.type === 'quiz' && !quiz) {
             console.log("퀴즈 박스와 충돌 감지!"); // 디버그 로그 추가
@@ -402,19 +415,20 @@ export default function Game() {
             coinSound.play().catch(err => console.warn("코인 효과음 재생 실패:", err));
             entities.splice(i, 1);
             i--;
-          } else if (ent.type === 'flag') {
-            if (ent.x + ent.width < player.x && !endingRef.current) {
-            endingRef.current = true;
-            playerImageRef.current = playerEndImage;
-            entities.splice(i, 1);
-            bgmRef.current?.pause();
-            bgmRef.current.currentTime = 0; // 🎵 완전 정지
-            const finishSound = new Audio(require('../../assets/cute-level-up-3-189853.mp3'));
-            finishSound.volume = 0.7;
-            finishSound.play().catch(err => console.warn("끝 효과음 재생 실패:", err));
-            showEndEffect();
           }
-        }
+        //    else if (ent.type === 'flag') {
+        //     if (ent.x + ent.width < player.x && !endingRef.current) {
+        //     endingRef.current = true;
+        //     playerImageRef.current = playerEndImage;
+        //     entities.splice(i, 1);
+        //     bgmRef.current?.pause();
+        //     bgmRef.current.currentTime = 0; // 🎵 완전 정지
+        //     const finishSound = new Audio(require('../../assets/cute-level-up-3-189853.mp3'));
+        //     finishSound.volume = 0.7;
+        //     finishSound.play().catch(err => console.warn("끝 효과음 재생 실패:", err));
+        //     showEndEffect();
+        //   }
+        // }
         }
       }
 
