@@ -456,6 +456,8 @@ export default function Game() {
   }, [gameOver, quizLoaded, quizList, isGameStarted]); // quizLoaded와 quizList를 의존성에 추가
 
   useEffect(() => {
+
+  if (!bgmRef.current) return; // ✅ ref가 null이면 아무 것도 하지 않음 //민서 수정
   const bgm = bgmRef.current;
 
   const tryPlayBGM = () => {

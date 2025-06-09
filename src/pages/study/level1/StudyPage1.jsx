@@ -110,6 +110,7 @@ function StudyPage(){
     const [loading,setLoading]=useState(true);
     const [step,setStep]=useState(0); //0이면 인사, 1이면 제목 출력
     const {chapterData}=useChapter();
+    const [isFinished,setIsFinished]=useState(false);
 
     const [preloadDone, setPreloadDone] = useState(false)
 
@@ -137,6 +138,7 @@ function StudyPage(){
             setPreloadDone(false);
         }else{
             alert("✅다음 단계로 넘어가볼까요? 다음 단계 버튼을 클릭해주세요!");
+            setIsFinished(true);
         }
     }
 
@@ -163,7 +165,11 @@ function StudyPage(){
             <Box>
             <MiniHeader
                     left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
-                    right={<Button onClick={()=>navigate(`/study/2`)}>다음 단계로</Button>}
+                    right={
+                    isFinished?(
+                        <Button onClick={()=>navigate(`/study/2`)}>다음 단계로</Button>
+                    ):<Button disabled>진행 중...</Button>
+                    }
                 >
                 1/6 선생님과 학습하기
                 </MiniHeader>

@@ -6,32 +6,39 @@ import Header from './components/Header';
 import axios from 'axios';
 import { ChapterProvider } from './context/ChapterContext';
 
+
 function AppContent() {
   const [login, setLogin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/user`, { withCredentials: true })
       .then(response => {
-        const isFirstLogin = response.data.firstLogin;
-        console.log("✅로그인 확인",response.data);
+        console.log("✅ 로그인 확인", response.data);
         setLogin(true);
         setUser(response.data);
-
-        // if (isFirstLogin) {
-        //   navigate("/childInfo");
-        // } else {
-        //   navigate("/main");
-        // }
       })
       .catch(() => {
-        console.log('✖️로그인되어 있지 않습니다.');
+        console.log("✖️ 로그인되어 있지 않습니다.");
         setLogin(false);
-        setUser(null);
-        navigate("/login");
+        setUser(false);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   }, [navigate]);
+
+  // ✅ navigate는 Hook 안에서만 실행되도록
+  useEffect(() => {
+    if (!isLoading && user === false) {
+      navigate("/login");
+    }
+  }, [isLoading, user, navigate]);
+
+  // ✅ 로딩 중에는 아무 것도 보여주지 않음
+  if (isLoading) return null;
 
   return (
     <>
@@ -40,6 +47,7 @@ function AppContent() {
     </>
   );
 }
+
 
 export default function App() {
   return (

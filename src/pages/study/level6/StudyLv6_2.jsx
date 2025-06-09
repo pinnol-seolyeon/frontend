@@ -326,14 +326,14 @@ function StudyLevel6_2(props){
                       <BubbleButton onClick={()=>setShowFamilyButton(true)}>꼭 해볼게✅</BubbleButton>
                   
                   </SpeechBubble>
-                  <Image src={tigerPencil} alt="샘플" />
+                  {/* <Image src={tigerPencil} alt="샘플" /> */}
               </SpeechWrapper>
               
               {showFamilyButton&&
                 <NextButton onClick={handleComplete}>학습결과와 토론 주제 전송하기</NextButton>
               }
                 {showPopup &&(
-                    <Popup>🐯 학습을 완료했어요! 🐯</Popup>
+                    <Popup>🐯 학습을 완료했어요! 🐯<br/> (카카오톡 전송 기능은 추후 업데이트 될 예정이예요)</Popup>
                 )}
             </Box>
         </Wrapper>
