@@ -326,7 +326,7 @@ function StudyLevel6_2(props){
                       <BubbleButton onClick={()=>setShowFamilyButton(true)}>꼭 해볼게✅</BubbleButton>
                   
                   </SpeechBubble>
-                  <Image src={tigerPencil} alt="샘플" />
+                  {/* <Image src={tigerPencil} alt="샘플" /> */}
               </SpeechWrapper>
               
               {showFamilyButton&&
