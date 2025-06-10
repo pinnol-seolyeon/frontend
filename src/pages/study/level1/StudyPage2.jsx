@@ -21,38 +21,19 @@ const Wrapper = styled.div`
    justify-content: flex-start; /* 위쪽부터 쌓이게 */
    padding: 2rem 1rem;          /* 상하 여유 추가 */
   //  overflow-y: auto;            /* 내용이 길면 스크롤 */
+   
  `;
 
-const Image=styled.img`
-    display:flex;
-    width:100%; 
-    height:auto;
-    object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    max-width:300px;
-    display:block;
-    margin:0 auto; /*가로 중앙 정렬*/
-    padding:50px;
-
-    position:absolute;
-    left:20px;
-    bottom:20px;
-`;
-
-const AutoBox = styled(Box)`
-  height: auto !important;
-  overflow: visible !important;
-`;
 
 const SpeechBubble=styled.div`
     display:flex;
-    flex:1 1 400px;
     width:80%;
-    height:70%;
+    flex-direction:column;
+    min-height:60%;
+    max-height:70%;
     background-color:#FEF3E1;
-
-    position:absolute;
-    right:100px;
-    top:120px;
+    // padding:2rem;
+    margin:2rem auto; //상하 좌우
 
     border: 0.5px solid black;
     border-radius: 24px;
@@ -64,9 +45,11 @@ const TextBox = styled.div`
   align-items: center;
   text-align: center;
 
+
   width: 80%;
-  margin: 0 auto;
-  padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
+  margin: auto;
+  padding: 20px; /* ✅ 오타 수정 및 공간 확보 */
+  
 
   font-size: clamp(20px, 3vw, 32px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
   line-height: 1.6; /* ✅ 줄 간격을 여유 있게 */
@@ -78,14 +61,22 @@ const TextBox = styled.div`
 
 
 const BubbleButton = styled.button`
-  position: absolute;
-  right: 20px;
-  bottom: 20px;
+position:absolute;
+transform: translateX(-50%); // 👉 가로 정중앙에 고정
+left:50%;
 
-  padding: 20px 32px;
+ width:10%; 
+ min-width:90px;
+ height:10%;
+ min-height:60px;
+ max-height:80px;
+//  margin: auto;
+
+
+
+
   background-color: #2774B2;
   color: white;
-  border: none;
   border-radius: 30px;
   cursor: pointer;
   border:0.2px solid black;
@@ -97,6 +88,43 @@ const BubbleButton = styled.button`
     background-color: #1b5c91;
   }
 `;
+
+const Image=styled.img`
+
+    position:absolute;
+    top:0; // 이미지의 top을 SecondWrapper에 맞춤 //아래쪽으로만 커지도록
+    left:-10%;
+
+
+
+    display:flex;
+    
+    // width:100%; 
+    // max-width:300px;
+    // min-width:200px;
+    // height:auto;
+    height:200%;
+    width:auto;
+    object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
+    display:block;
+
+    // margin:-2em;
+`;
+
+const SecondWrapper=styled.div`
+    display:flex;
+    flex-direction:row;
+    position:relative;
+    height:30%;
+
+    display:flex;
+    margin-top:0.5em;
+    justify-content:center;
+    align-items:center;
+`;
+
+
+
 
 
 
@@ -143,7 +171,7 @@ function StudyPage(props){
         return;
         }
         return [
-        `먼저 이번 단원의 학습목표에 대해서 알아볼까? 이번 단원에서는 ${objective} 그럼 이제 본격적으로 공부를 시작해보자`,
+        `먼저 이번 단원의 학습목표에 대해서 알아볼까? 이번 단원에서는 ${objective} 그럼 시작해볼까?`,
         ];
     }, [loading, objective]);
 
@@ -151,7 +179,7 @@ function StudyPage(props){
     return(
     <>
         <Wrapper>
-            <AutoBox>
+            <Box>
                 <MiniHeader
                     left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
                     right={<Button onClick={()=>navigate(`/study/level2-img`)}>다음 단계로</Button>}
@@ -176,19 +204,25 @@ function StudyPage(props){
                         {loading
                             ? "학습 목표 준비중.."
                             :<p>
-                                먼저 이번 단원의 학습목표에 대해서 알아볼까? 이번 단원에서는 {" "}
+                                먼저 이번 단원의 학습목표에 대해서 알아볼까?<br/> 이번 단원에서는 {" "}
                                 <span style={{ fontWeight: "bold", color: "#2774B2" }}>
                                 {objective}
-                                </span>
-                                그럼 이제 본격적으로 공부를 시작해보자 🐯
+                                </span><br/>
+                                그럼 시작해볼까? 🐯
                             </p>
                             }
+
                     </TextBox>
-                    <BubbleButton onClick={()=>navigate(`/study/level2-img`)}>좋아✅</BubbleButton>
+                    
+                    <SecondWrapper>
+                        <Image src={tigerPencil} alt="샘플" />
+                        <BubbleButton onClick={()=>navigate(`/study/level2-img`)}>좋아✅</BubbleButton>  
+                    </SecondWrapper>
+                    
                 </SpeechBubble>
                 )}
-                <Image src={tigerPencil} alt="샘플" />           
-            </AutoBox>
+      
+            </Box>
         </Wrapper>
     </>
     );
