@@ -26,7 +26,7 @@ const Wrapper=styled.div`
 const SpeechWrapper=styled.div`
   position:relative;
   display:flex;
-  margin-top:2%;
+  margin-top:5%;
   // flex-direction:column;
 
   width:100%;
