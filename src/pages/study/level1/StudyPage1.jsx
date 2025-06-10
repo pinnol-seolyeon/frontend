@@ -224,7 +224,7 @@ function StudyPage(){
                             ? "단원을 준비 중이에요..."
                             : step===0
                                 ? "안녕! 나는 호랑이 선생님이야"
-                                : `이번 단원을 소개할게.\n이번 단원은 ${titleText}`}
+                                : `이번 단원을 소개할게.\n이번 단원은 ${titleText}이야`}
                     </TextBox>
                     <BubbleButton onClick={handleNext}>
                             {step===0?"다음":"시작하기"}
