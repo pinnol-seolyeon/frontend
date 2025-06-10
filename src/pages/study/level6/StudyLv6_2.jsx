@@ -26,14 +26,16 @@ const Wrapper=styled.div`
 const SpeechWrapper=styled.div`
   position:relative;
   display:flex;
-  flex-direction:column;
+  margin-top:5%;
+  // flex-direction:column;
 
   width:100%;
-  height:60%;
-  align-itmes:flex-start;
-  justify-content:flex-start;
+  // height:50%;
 
-  margin:2% 0;
+  align-itmes:center;
+  justify-content:center;
+  
+
 `;
 
 const Image = styled.img`
@@ -60,25 +62,27 @@ const Image = styled.img`
 
 
 
+
 const SpeechBubble = styled.div`
-  position:relative;
+  // position:relative;
   display: flex;
   flex-direction: column;
   width: 80%;
   height: auto;
-  min-height: 300px;
+  // min-height: 300px;
 
   background-color: #FEF3E1;
-  // position: absolute;
-  // right: 100px;
-  // top: 150px;
+
 
   border: 0.5px solid black;
   border-radius: 24px;
   padding: 20px;
 
-  margin-top:5%;
-  margin-left:6%;
+  // align-itmes:center;
+  // justify-content:center;
+
+  // margin-top:5%;
+  // margin-left:6%;
   // margin-bottom:10%;
 `;
 
@@ -108,17 +112,23 @@ const TextBox = styled.div`
 
 
 const BubbleButton = styled.button`
-  position: absolute;
-  right: 20px;
-  bottom: 20px;
+  // position: absolute;
+  // right: 20px;
+  // bottom: 20px;
 
-  padding: 20px 32px;
+  width:20%;
+
+
+  padding: 20px;
   background-color: #2774B2;
   color: white;
   border: none;
   border-radius: 30px;
   cursor: pointer;
   border:0.2px solid black;
+
+  margin:auto; //정렬 가운데 
+ 
 
   font-size:20px;
 
@@ -147,9 +157,8 @@ const Title=styled.div`
 
 const NextButton = styled(Button)`
 
-  // width:220px;
-  // height:50px;
-  margin:3px;
+  width:20%;
+  min-width:350px;
 
   background-color: #2774B2;
   color: white;
@@ -158,15 +167,19 @@ const NextButton = styled(Button)`
   border: 0.2px solid black;
   font-size: 20px;
 
+  margin-top:2%;
+  margin-left:auto;
+  margin-right:auto;
+
 
   transition: background-color 0.3s;
   &:hover {
     background-color: #1b5c91;
   }
 
-  position:absolute;
-  bottom:20px;
-  right:20px;
+  // position:absolute;
+  // bottom:20px;
+  // right:20px;
 `;
 
 
