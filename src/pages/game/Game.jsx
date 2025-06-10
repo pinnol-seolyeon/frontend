@@ -236,7 +236,7 @@ export default function Game() {
     const groundHeightRatio = 0.15;
     playerRef.current = {
       x: 100, y: 0, width: 0, height: 0,
-      vy: 0, gravity: 2, jumpForce: -25, isJumping: false,
+      vy: 0, gravity: 1.8, jumpForce: -35, isJumping: false,
     };
 
     function resizeCanvas() {
@@ -422,7 +422,7 @@ export default function Game() {
 
       if (!isPaused) {
         frameRef.current++;
-        gameSpeedRef.current += 0.001;
+        gameSpeedRef.current += 0;
       }
       animationIdRef.current = requestAnimationFrame(updateRef.current);
 
