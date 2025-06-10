@@ -77,6 +77,7 @@ const SpeechBubble = styled.div`
   border: 0.5px solid black;
   border-radius: 24px;
   padding: 20px;
+  margin:auto;
 
   // align-itmes:center;
   // justify-content:center;
@@ -95,9 +96,9 @@ const TextBox = styled.div`
   text-align: center;
 
   padding: 30px;
-  margin: 0 auto;
+  margin: auto;
 
-  font-size: clamp(18px, 2.5vw, 28px);
+  font-size: clamp(18px, 2.0vw, 24px);
   line-height: 1.6;
   letter-spacing: 0.02em;
   font-weight: 500;
@@ -117,6 +118,7 @@ const BubbleButton = styled.button`
   // bottom: 20px;
 
   width:20%;
+  height:20%;
 
 
   padding: 20px;
@@ -128,9 +130,12 @@ const BubbleButton = styled.button`
   border:0.2px solid black;
 
   margin:auto; //정렬 가운데 
+
+  align-itmes:center;
+  justify-content:center;
  
 
-  font-size:20px;
+  font-size:15px;
 
   transition: background-color 0.3s;
   &:hover {
@@ -155,10 +160,11 @@ const Title=styled.div`
     background-color:#FEF3E1;
 `
 
-const NextButton = styled(Button)`
+const NextButton = styled.button`
 
   width:20%;
   min-width:350px;
+  height:7%;
 
   background-color: #2774B2;
   color: white;
@@ -167,10 +173,10 @@ const NextButton = styled(Button)`
   border: 0.2px solid black;
   font-size: 20px;
 
-  margin-top:2%;
-  margin-left:auto;
-  margin-right:auto;
 
+  margin:auto;
+  // padding-top:5px;
+  font-size:15px;
 
   transition: background-color 0.3s;
   &:hover {
