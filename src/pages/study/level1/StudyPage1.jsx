@@ -67,6 +67,7 @@ const TextBox = styled.div`
   justify-content: center;
   align-items: center;
   text-align: center;
+  white-space: pre-line;
 
   width: 80%;
   margin: 0 auto;
@@ -117,31 +118,54 @@ function StudyPage(){
     const fullTitle="";
     const [preloadDone, setPreloadDone] = useState(false)
 
-    useEffect(()=>{
-        const loadChapterTitle=async()=>{
-            try{
-                if(chapterData?.chapterTitle){
-                    const fullTitle=chapterData.chapterTitle;
-                    setTitle(fullTitle);
-                }
+    // useEffect(()=>{
+    //     const loadChapterTitle=async()=>{
+    //         try{
+    //             if(chapterData?.chapterTitle){
+    //                 const fullTitle=chapterData.chapterTitle;
+    //                 setTitle(fullTitle);
+    //             }
 
-                //텍스트만 추출
-                const match = fullTitle.match(/^\d+\.(.+)$/);
-                const onlyText=match?match[1]:"";
-                setTitleText(onlyText);
+    //             //텍스트만 추출
+    //             const match = fullTitle.match(/^\d+\.(.+)$/);
+    //             const onlyText=match?match[1]:"";
+    //             setTitleText(onlyText);
                 
-            }catch(err){
-                setTitle("⚠️단원명 로딩실패")
-                setTitleText("");
-            }finally{
-                setLoading(false);
-                setPreloadDone(false);
-            }
-        };
+    //         }catch(err){
+    //             setTitle("⚠️단원명 로딩실패")
+    //             setTitleText("");
+    //         }finally{
+    //             setLoading(false);
+    //             setPreloadDone(false);
+    //         }
+    //     };
 
+    //     loadChapterTitle();
+    // },[chapterId,chapterData]);
+    useEffect(() => {
+    const loadChapterTitle = async () => {
+        try {
+        // 1) fullTitle을 밖에서 선언
+        const fullTitle = chapterData?.chapterTitle || "";
+
+        // 2) 제목 원문 저장
+        setTitle(fullTitle);
+
+        // 3) 숫자·점 제거 후 순수 텍스트만 추출
+        const match = fullTitle.match(/^\d+\.(.+)$/);
+        const onlyText=match?match[1]:"";
+        setTitleText(onlyText);
+        } catch (err) {
+        setTitle("⚠️단원명 로딩실패");
+        setTitleText("");
+        } finally {
+        setLoading(false);
+        setPreloadDone(false);
+        }
+    };
         loadChapterTitle();
-    },[chapterId,chapterData]);
-
+    
+    }, [chapterData]);
 
 
     const handleNext=()=>{
@@ -154,20 +178,14 @@ function StudyPage(){
         }
     }
 
-    // tts 처리 위해서
-    // const textToRead =
-    // step === 0
-    //   ? ["안녕! 나는 호랑이 선생님이야"]
-    //   : [`이번 단원은 ${title} 이야. 이제 본격적으로 공부를 시작해보자`];
-
     const textToRead = useMemo(() => {
         if (loading) {
         return;
         }
         return step === 0
         ? ["안녕! 나는 호랑이 선생님이야"]
-        : [`이번 단원은 ${title} 이제 본격적으로 공부를 시작해보자`];
-    }, [loading, step, title]);
+        : [`이번 단원을 소개할게.\n이번 단원은 ${titleText}`];
+    }, [loading, step, titleText]);
 
       
     
@@ -206,7 +224,7 @@ function StudyPage(){
                             ? "단원을 준비 중이에요..."
                             : step===0
                                 ? "안녕! 나는 호랑이 선생님이야"
-                                : `이번 단원은 ${titleText} 이제 본격적으로 공부를 시작해보자`}
+                                : `이번 단원을 소개할게.\n이번 단원은 ${titleText}`}
                     </TextBox>
                     <BubbleButton onClick={handleNext}>
                             {step===0?"다음":"시작하기"}
