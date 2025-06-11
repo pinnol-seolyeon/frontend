@@ -1,4 +1,4 @@
-export async function saveScoreToDB(unit, score, coin) {
+export async function saveScoreToDB(coin) {
   try {
     const res = await fetch("https://finnol.site/api/scores", {
       method: "POST",
@@ -7,8 +7,6 @@ export async function saveScoreToDB(unit, score, coin) {
       },
       credentials: "include",  // ✅ 중요! 쿠키 기반 세션을 보내려면 이 옵션 필요
       body: JSON.stringify({
-        unit,
-        score,
         coin
       })
     });
