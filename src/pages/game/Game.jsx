@@ -7,7 +7,7 @@ import quizBoxImg from '../../assets/quizpop.png';
 import backgroundImg from '../../assets/game-background1.png';
 import flagImg from '../../assets/flag.png';
 import playerEndImg from '../../assets/finish_player.png';
-import { saveScoreToDB } from '../../api/analyze/saveScoreToDB';
+import { saveCoinToDB } from '../../api/analyze/saveCoinToDB';
 import { useChapter } from "../../context/ChapterContext";
 import { fetchQuizByChapterId } from '../../api/study/fetchQuiz';
 import { useNavigate } from "react-router-dom";
@@ -210,7 +210,7 @@ export default function Game() {
     if (!quizLoaded || !isGameStarted) return;
     
     if (gameOver) {
-        saveScoreToDB(1, quizScoreRef.current , scoreRef.current);
+        saveCoinToDB(scoreRef.current);
         sendQuizResults(quizResultsRef.current);
       }
     const canvas = canvasRef.current;
