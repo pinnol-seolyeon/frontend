@@ -1,5 +1,5 @@
 export async function fetchQuizByChapterId(chapterId) {
-  const res = await fetch(`https://finnol.site/api/quiz?chapterId=${chapterId}`, {
+  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/quiz?chapterId=${chapterId}`, {
     credentials: 'include',
   });
 
