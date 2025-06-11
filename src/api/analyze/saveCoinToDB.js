@@ -1,4 +1,4 @@
-export async function saveScoreToDB(coin) {
+export async function saveCoinToDB(coin) {
   try {
     const res = await fetch("https://finnol.site/api/upload-coin", {
       method: "POST",
