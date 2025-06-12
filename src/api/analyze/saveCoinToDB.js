@@ -1,6 +1,6 @@
 export async function saveCoinToDB(coin) {
   try {
-    const res = await fetch("https://finnol.site/api/upload-coin", {
+    const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/upload-coin`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
