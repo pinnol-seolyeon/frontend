@@ -18,7 +18,9 @@ import TtsPlayer from "../../../components/TtsPlayer";
 
 const Wrapper=styled.div`
     width:100%;
-    height:100vh;
+    // height:100vh;
+    min-height:100vh;
+    height:auto; //높이 제한 없음
 
     display:flex;
     flex-direction:column;
@@ -30,26 +32,26 @@ const Wrapper=styled.div`
 const ImageWrapper=styled.div`
     position:relative;
     display:flex;
-    align-items:flex-start;
+    align-items:flex-end; //아래쪽 정렬
     // justify-content:center;
+    gap:10%;
 
-    margin-top:39px;
-    gap:12px;
+    
 `
 
 
 
 const Image=styled.img`
-    width:80%; 
+    // width:80%; 
     height:auto;
     object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    max-width:300px;
+    width: clamp(100px,40vw,250px); //최소 150px, 최대 250px, 화면 너비 40%까지 가능
     display:block;
 
     
      /*가로 중앙 정렬, 세로 원하는 위치에 자유롭게 배치*/
     // align-self:center;/*가로 중앙 정렬*/
-    margin-top:120px;
+    // margin-top:10rem;
     margin-bottom:0px;
 
 `;
@@ -74,26 +76,22 @@ position: absolute;
 
 
 
-const TestImage = styled.img`
-  width: 30%;               // 💡 명확히 비율 고정하고 싶을 때
+const SummaryImage = styled.img`
+  width: clamp(0px,40vw,250px);             // 💡 명확히 비율 고정하고 싶을 때
   height: auto;
   object-fit: contain;
-  margin-right:20px;       // px로 명확한 spacing (또는 rem 사용 가능)
+  margin-bottom:2rem;
+  // margin-top:8rem;
 
-  @media (max-width: 768px) {
-    width: 40%;             // 💡 모바일 대응
-    margin-top: 16px;
-    margin-right: 10px;
-  }
+ 
 `;
 
 const SpeechBubble=styled.div`
     display:flex;
     width:80%;
     // height:100%;
-    min-height:120px;
     max-height:150px;
-    padding:20px;
+    // padding:20px;
     
     background-color:#FEF3E1;
 
@@ -115,10 +113,10 @@ const TextBox = styled.div`
   margin: 0 auto;
   padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
 
-  font-size: clamp(20px, 3vw, 32px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
+  font-size: clamp(16px, 2vw, 24px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
   line-height: 1.6; /* ✅ 줄 간격을 여유 있게 */
-  letter-spacing: 0.03em; /* ✅ 글자 간격 미세 조정 */
-  font-weight: 500; /* ✅ 가독성 좋은 중간 두께 */
+  letter-spacing: 0.02em; /* ✅ 글자 간격 미세 조정 */
+  font-weight: 400; /* ✅ 가독성 좋은 중간 두께 */
   font-family: "Noto Sans KR", sans-serif; /* ✅ 국문에 적합한 서체 */
   color: #333;
 `;
@@ -153,7 +151,7 @@ const SpeechWrapper=styled.div`
     display:flex;
     align-items:stretch;
     flex-direction: row;
-    gap:0px; /*형제 요소 사이의 간격*/
+    gap:20px; /*형제 요소 사이의 간격*/
 
 `
 
@@ -179,7 +177,7 @@ const ImageWithSpeechWrapper = styled.div`
   align-items: flex-start;
   
   width: 100%;
-  margin-top: 3rem;
+  margin: 1rem 0rem;
 `;
 
 
@@ -280,7 +278,7 @@ function StudyPage(props){
         <ImageWithSpeechWrapper>
             <ImageWrapper>
                 <Image src={tiger} alt="샘플" />
-                <TestImage src={image} alt="샘플" />
+                <SummaryImage src={image} alt="샘플" />
             </ImageWrapper>
             <TtsPlayer
               sentences={sentences}
@@ -310,7 +308,7 @@ function StudyPage(props){
                 </ButtonWrapper>
             </SpeechWrapper>
         </ImageWithSpeechWrapper>
-            </Box>
+        </Box>
         </Wrapper>
     </>
     );

@@ -6,7 +6,7 @@ const HeaderWrapper = styled.div`
   display: flex;
   width: 100%;
   // height: 60px;
-  min-height:90px;
+  min-height:80px;
   padding: 0 20px;
   background-color: #2774B2;
   justify-content: space-between;
