@@ -11,9 +11,22 @@ import { useChapter } from "../../../context/ChapterContext";
 
 /*학습하기-6단계-2*/
 
+// const Wrapper=styled.div`
+//     width:100%;
+//     height:100vh;
+
+//     display:flex;
+//     flex-direction:column;
+//     align-items:center;
+//     justify-content:center;
+
+// `;
+
 const Wrapper=styled.div`
     width:100%;
-    height:100vh;
+    // height:100vh;
+    min-height:100vh;
+    height:auto; //높이 제한 없음
 
     display:flex;
     flex-direction:column;
