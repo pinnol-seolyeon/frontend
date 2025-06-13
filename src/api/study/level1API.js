@@ -1,5 +1,5 @@
 export async function fetchChapterTitle(chapterId){
-    const response=await fetch(`https://finnol.site/api/study/chapter?chapterId=${chapterId}`,{
+    const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/chapter?chapterId=${chapterId}`,{
         method:"GET",
         credentials:"include"
     });
