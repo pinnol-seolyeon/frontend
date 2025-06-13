@@ -17,13 +17,26 @@ import TtsPlayer from "../../../components/TtsPlayer";
 /*학습하기-3단계-1*/
 
 
+// const Wrapper=styled.div`
+//     width:100%;
+//     height:100vh;
+//     display:flex;
+//     flex-direction:column;
+//     align-items:center;
+//     justify-content:center;
+// `;
+
 const Wrapper=styled.div`
     width:100%;
-    height:100vh;
+    // height:100vh;
+    min-height:100vh;
+    height:auto; //높이 제한 없음
+
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
+
 `;
 
 const ImageWrapper=styled.div`
@@ -31,19 +44,17 @@ const ImageWrapper=styled.div`
     display:flex;
     align-items:center;
     justify-content:center;
-    margin-top: 3rem;
-    gap:12px;
+    margin-top:6%;
+    // gap:12px;
 `;
 
 const Image=styled.img`
     width:100%; 
     height:auto;
     object-fit:contain;
-    max-width:300px;
-    display:block;
+    width: clamp(100px,40vw,250px); //최소 150px, 최대 250px, 화면 너비 40%까지 가능
     align-self:center;
-    margin-top:100px;
-    margin-bottom:0px;
+    margin-top:8vh;
 `;
 
 const SpeechBubble=styled.div`
@@ -57,7 +68,8 @@ const SpeechBubble=styled.div`
     padding: 20px;                  /* 위아래 여유 주기 */
     box-sizing: border-box;
     align-items: center;
-    justify-content: flex-start
+    justify-content: flex-start;
+    margin-bottom:2rem;
 `;
 
 
@@ -69,7 +81,7 @@ const TextBox = styled.div`
   width: 80%;
 //   height: 180px; /* ✅ 고정 높이 */
   margin: 0 auto;
-  padding: 40px;
+  padding: 20px;
   font-size: clamp(16px, 2vw, 24px);  
   line-height: 1.6;
   letter-spacing: 0.03em;
@@ -84,7 +96,7 @@ const TextBox = styled.div`
 const BubbleButton = styled.button`
   right: 20px;
   bottom: 20px;
-  margin-top: 12px;
+//   margin-top: 12px;
   height:auto;
   padding: 8px 16px;
   background-color: #2774B2;
@@ -393,10 +405,7 @@ function StudyPage(){
                         onClick={handleNext}
                         >다음 단계로</Button>
                     ):(
-                        // <Button
-                        // onClick={handleNavigate}
-                        // >다음 단계로</Button>
-                        <Button disabled>진행 중..</Button> //배포 시 disabled 로 변경 ⭐⭐
+                        <Button disabled>진행 중..</Button> 
                     )
                     }
                 >
