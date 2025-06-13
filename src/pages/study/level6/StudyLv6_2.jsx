@@ -170,6 +170,8 @@ const Title=styled.div`
     font-size: clamp(20px, 1.5vw, 25px);
     font-weight: bold;
 
+    padding:10px;
+
     background-color:#FEF3E1;
 `
 
@@ -185,6 +187,7 @@ const NextButton = styled.button`
   cursor: pointer;
   border: 0.2px solid black;
   font-size: 20px;
+  padding:10px; //추가
 
 
   margin:auto;
