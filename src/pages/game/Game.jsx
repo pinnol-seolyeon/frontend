@@ -396,8 +396,7 @@ export default function Game() {
           break; // 루프 탈출
         }
 
-        if (!isPaused && !endingRef.current && detectCollision(player, ent)) {
-          if (ent.type === 'quiz' && !quiz) {
+        if (ent.type === 'quiz' && !quiz && ent.x + ent.width < player.x) {
             console.log("퀴즈 박스와 충돌 감지!"); // 디버그 로그 추가
             cancelAnimationFrame(animationIdRef.current);
             snapshotState();
@@ -405,7 +404,10 @@ export default function Game() {
             setIsPaused(true);
             showQuiz();
             return;
-          } else if (ent.type === 'hurdle') {
+          } 
+
+        if (!isPaused && !endingRef.current && detectCollision(player, ent)) {
+          if (ent.type === 'hurdle') {
             scoreRef.current = Math.max(0, scoreRef.current - 5)
             showPenaltyEffect();
             entities.splice(i, 1);
