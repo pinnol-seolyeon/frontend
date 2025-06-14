@@ -55,6 +55,9 @@ export default function Game() {
   const [wrongVisible, setWrongVisible] = useState(false);
   const [endVisible, setEndVisible] = useState(false);
 
+  //모바일 화면에서
+  const [touchX,setTouchX]=useState(0);
+
   const flagImageRef = useRef(null);
 
   const [flagScheduled, setFlagScheduled] = useState(false);
@@ -328,8 +331,8 @@ export default function Game() {
           y = yBase - height - player.height * 1.3;
         } else if (type === 'quiz') {
           img = quizBoxImageRef.current;
-          width = canvas.width * 0.25;
-          height = canvas.height * 0.4;
+          width = canvas.width * 0.15;
+          height = canvas.height * 0.25;
           y = canvas.height * 0.7 - height / 2;
         }
 
@@ -393,8 +396,7 @@ export default function Game() {
           break; // 루프 탈출
         }
 
-        if (!isPaused && !endingRef.current && detectCollision(player, ent)) {
-          if (ent.type === 'quiz' && !quiz) {
+        if (ent.type === 'quiz' && !quiz && ent.x + ent.width < player.x) {
             console.log("퀴즈 박스와 충돌 감지!"); // 디버그 로그 추가
             cancelAnimationFrame(animationIdRef.current);
             snapshotState();
@@ -402,7 +404,10 @@ export default function Game() {
             setIsPaused(true);
             showQuiz();
             return;
-          } else if (ent.type === 'hurdle') {
+          } 
+
+        if (!isPaused && !endingRef.current && detectCollision(player, ent)) {
+          if (ent.type === 'hurdle') {
             scoreRef.current = Math.max(0, scoreRef.current - 5)
             showPenaltyEffect();
             entities.splice(i, 1);
@@ -457,21 +462,64 @@ export default function Game() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    document.addEventListener('keydown', e => {
-      const player = playerRef.current;
-      if (e.code === 'Space' && !player.isJumping && !gameOver && !isPaused) {
-        player.vy = player.jumpForce;
-        player.isJumping = true;
-      }
-    });
+    const handleInput=(e)=>{
+        if(e.type==='keydown'&&e.code!=='Space') return;
+        triggerJump();
+    };
 
-    return () => window.removeEventListener('resize', resizeCanvas);
+    //키보드, 클릭, 터치 이벤트 ㄷ등록
+    document.addEventListener('keydown',handleInput);
+    document.addEventListener('click',handleInput);
+    document.addEventListener('touchstart',handleInput);
+
+    //clean-up
+    return()=>{
+      window.removeEventListener('resize',resizeCanvas);
+      document.removeEventListener('keydown',handleInput);
+      document.removeEventListener('click',handleInput);
+      document.removeEventListener('touchstart',handleInput);
+    };
+
+    // //점프
+    // document.addEventListener('keydown', e => {
+    //   const player = playerRef.current;
+    //   if (e.code === 'Space' && !player.isJumping && !gameOver && !isPaused) {
+    //     player.vy = player.jumpForce;
+    //     player.isJumping = true;
+    //   }
+    // });
+
+    // return () => window.removeEventListener('resize', resizeCanvas);
     
   }, [gameOver, quizLoaded, quizList, isGameStarted]); // quizLoaded와 quizList를 의존성에 추가
 
+  //모바일 환경 점프
+  const triggerJump=()=>{
+    console.log("점프 클릭");
+    const player=playerRef.current;
+    if(!player.isJumping&&!gameOver&&!isPaused){
+      player.vy=player.jumpForce;
+      player.isJumping=true;
+    }
+  };
+
+  // useEffect(()=>{
+  //   const handleGlobalClick=()=>{
+  //     triggerJump();
+  //   };
+
+  //   document.body.addEventListener('click',handleGlobalClick);
+  //   document.body.addEventListener('touchstart',handleGlobalClick);
+
+  //   return()=>{
+  //     document.body.removeEventListener('click',handleGlobalClick);
+  //     document.body.removeEventListener('touchstart',handleGlobalClick);
+  //   };
+  // },[gameOver,isPaused]);
+
   useEffect(() => {
 
-  if (!bgmRef.current) return; // ✅ ref가 null이면 아무 것도 하지 않음 //민서 수정
+  if (!bgmRef.current) return; // ✅ ref가 null이면 아무 것도 하지 않음
   const bgm = bgmRef.current;
 
   const tryPlayBGM = () => {
@@ -514,7 +562,9 @@ export default function Game() {
 
   return (
     <>
-      <canvas ref={canvasRef} style={{ display: 'block', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh' }} />
+      {/*모바일 점프 추가*/}
+      
+      <canvas ref={canvasRef} onClick={triggerJump} onTouchStart={triggerJump} style={{ display: 'block', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',pointerEvents:'auto' }} /> 
       <audio ref={bgmRef} src={bgmSrc} loop />
 
       {quiz && (
