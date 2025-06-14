@@ -12,22 +12,35 @@ import TtsPlayer from "../../../components/TtsPlayer";
 
 /*학습하기-1단계-2*/
 
-const Wrapper = styled.div`
-   width: 100%;
-  //  min-height: 100vh;           /* 최소 높이만 100vh */
-   display: flex;
-   flex-direction: column;
-   align-items: center;
-   justify-content: flex-start; /* 위쪽부터 쌓이게 */
-   padding: 2rem 1rem;          /* 상하 여유 추가 */
-  //  overflow-y: auto;            /* 내용이 길면 스크롤 */
+// const Wrapper = styled.div`
+//    width: 100%;
+//   //  min-height: 100vh;           /* 최소 높이만 100vh */
+//    display: flex;
+//    flex-direction: column;
+//    align-items: center;
+//    justify-content: flex-start; /* 위쪽부터 쌓이게 */
+//    padding: 2rem 1rem;          /* 상하 여유 추가 */
+//   //  overflow-y: auto;            /* 내용이 길면 스크롤 */
    
- `;
+//  `;
+
+const Wrapper=styled.div`
+    width:100%;
+    // height:100vh;
+    min-height:100vh;
+    height:auto; //높이 제한 없음
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+`;
 
 
 const SpeechBubble=styled.div`
     display:flex;
-    width:80%;
+    width:90%;
     flex-direction:column;
     min-height:60%;
     max-height:70%;
@@ -46,9 +59,9 @@ const TextBox = styled.div`
   text-align: center;
 
 
-  width: 80%;
+  width: 90%;
   margin: auto;
-  padding: 20px; /* ✅ 오타 수정 및 공간 확보 */
+  padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
   
 
   font-size: clamp(20px, 3vw, 24px); /* ✅ 최대값을 줄여서 더 안정된 크기 */

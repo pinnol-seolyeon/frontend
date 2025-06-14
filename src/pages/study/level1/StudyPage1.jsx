@@ -31,23 +31,26 @@ const ImageWrapper=styled.div`
     align-items:center;
     justify-content:center;
 
-    margin:top:129ox;
-    gap:12px;
+    margin-top:6%;
+    // gap:12px;
 `
 
 
 
 const Image=styled.img`
+    display:flex;
     width:100%; 
     height:auto;
     object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    max-width:300px;
+    width: clamp(100px,40vw,250px); //최소 150px, 최대 250px, 화면 너비 40%까지 가능
     display:block;
     
      /*가로 중앙 정렬, 세로 원하는 위치에 자유롭게 배치*/
     align-self:center;/*가로 중앙 정렬*/
-    margin-top:120px;
-    margin-bottom:0px;
+    margin-top:8vh;
+    // margin-bottom:0px;
+
+    
 
 `;
 
@@ -56,6 +59,8 @@ const SpeechBubble=styled.div`
     width:100%;
     height:20%;
     background-color:#FEF3E1;
+    justify-content: center; /* 수평 중앙 */
+    align-items: center;     /* 수직 중앙 */
     
 
     position:relative;
@@ -71,9 +76,10 @@ const TextBox = styled.div`
 
   width: 80%;
   margin: 0 auto;
-  padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
+  padding: 40px clamp(4vw, 6vw, 90px) 40px clamp(4vw, 6vw, 90px); 
+  /* ⬆️ 좌우 여백은 반응형으로, 하단은 버튼 공간 확보 */
 
-  font-size: clamp(20px, 3vw, 32px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
+  font-size: clamp(20px, 2vw, 28px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
   line-height: 1.6; /* ✅ 줄 간격을 여유 있게 */
   letter-spacing: 0.03em; /* ✅ 글자 간격 미세 조정 */
   font-weight: 500; /* ✅ 가독성 좋은 중간 두께 */
@@ -86,20 +92,33 @@ const BubbleButton = styled.button`
   right: 20px;
   bottom: 20px;
 
-  padding: 10px 16px;
+  max-width:20%;
+
+  display:flex;
+  align-items: center;
+  text-align: center;
+//   flex-basis:auto;
+
+  padding: 1% 3%; 
+
   background-color: #2774B2;
   color: white;
   border-radius: 30px;
   cursor: pointer;
   border:0.2px solid black;
 
-  font-size:18px;
+  font-size:clamp(13px,1vw,20px);
+//   white-space:nowrap; //줄바꿈방지
 
   transition: background-color 0.3s;
   &:hover {
     background-color: #1b5c91;
   }
 `;
+
+
+
+
 
 
 
