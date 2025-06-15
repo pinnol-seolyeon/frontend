@@ -23,7 +23,7 @@ export default function Game() {
   const updateRef = useRef(null);
 
   const frameRef = useRef(0);
-  const gameSpeedRef = useRef(8);
+  const gameSpeedRef = useRef(9);
   const backgroundXRef = useRef(0);
   const entitiesRef = useRef([]);
   const playerRef = useRef({});
