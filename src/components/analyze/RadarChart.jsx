@@ -15,10 +15,10 @@ export default function RadarGraph({ thisWeek, lastWeek }) {
 
   const getSummaryText = () => {
     const avg = (thisWeek.engagement + thisWeek.focus + thisWeek.understanding + thisWeek.expression) / 4;
-    if (avg >= 0.8) return "학습 태도가 매우 우수합니다! 👍 꾸준한 집중과 질문 활동이 돋보여요.";
+    if (avg >= 0.8) return "학습 태도가 매우 우수합니다! 👍";
     if (avg >= 0.6) return "양호한 학습 태도입니다. 약간의 개선 여지는 있지만 좋은 흐름이에요.";
-    if (avg >= 0.4) return "노력이 필요해요. 특히 집중도나 표현력 부분을 개선해보세요.";
-    return "학습 활동이 부족해요. 꾸준한 참여와 질문을 시도해보세요.";
+    if (avg >= 0.4) return "노력이 필요해요. 열심히 하면 못할 건 없어요!";
+    return "학습 활동이 부족해요. 충분한 학습이 필요합니다.";
   };
 
   return (

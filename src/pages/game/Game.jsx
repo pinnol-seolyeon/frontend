@@ -23,7 +23,7 @@ export default function Game() {
   const updateRef = useRef(null);
 
   const frameRef = useRef(0);
-  const gameSpeedRef = useRef(8);
+  const gameSpeedRef = useRef(9);
   const backgroundXRef = useRef(0);
   const entitiesRef = useRef([]);
   const playerRef = useRef({});
@@ -331,8 +331,8 @@ export default function Game() {
           y = yBase - height - player.height * 1.3;
         } else if (type === 'quiz') {
           img = quizBoxImageRef.current;
-          width = canvas.width * 0.25;
-          height = canvas.height * 0.4;
+          width = canvas.width * 0.15;
+          height = canvas.height * 0.25;
           y = canvas.height * 0.7 - height / 2;
         }
 

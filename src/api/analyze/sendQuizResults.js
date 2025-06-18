@@ -1,7 +1,7 @@
 export async function sendQuizResults(results) {
   try {
 
-    const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}api/quiz-result`, {
+    const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/quiz-result`, {
 
       method: 'POST',
       headers: {
