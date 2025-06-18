@@ -6,6 +6,7 @@ on:
 
 jobs:
   build:
+    if: github.repository == 'pinnol-seolyeon/frontend'
     runs-on: ubuntu-latest
     container: pandoc/latex
     steps:
