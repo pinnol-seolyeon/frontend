@@ -708,6 +708,18 @@ export default function Game() {
               <span>스페이스 바로 점프!</span>
             </div>
           </div>
+          <div style={{
+            position: 'absolute',
+            bottom: '1rem',
+            left: 0,
+            width: '100%',
+            textAlign: 'center',
+            fontSize: '0.75rem',
+            color: 'rgba(255,255,255,0.7)',
+            pointerEvents: 'none'
+          }}>
+            BGM “ Tiki_Bar_Mixer.mp3 ” by Kevin MacLeod (incompetech.com) — CC BY 3.0
+          </div>
 
           {/* 시작 버튼 */}
           <button onClick={() => {
