@@ -458,7 +458,7 @@ function Question({}){
                                 msg.type === 'sent' ? (
                                     <Message key={index}>{msg.text}</Message>
                                 ) : (
-                                    <div key={index} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '8px' }}>
+                                    <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                                         <ProfileArea>
                                             <TigerImg src={hopin} alt="샘플" />
                                         </ProfileArea>
