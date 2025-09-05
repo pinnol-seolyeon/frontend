@@ -1,122 +1,44 @@
 import styled from "styled-components";
-import logo from '../../assets/finnol-logo.png';
-import login from "../../assets/login.png";
-import MiniHeader from "../../components/study/MiniHeader";
-import Button from "../../components/Button";
+import Box, { InputWrapper, Label, StyledInput, CustomSelect, RadioGroup, RadioOption, StyledButton } from "../../components/Box";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const Wrapper=styled.div`
-    width:100%;
-    height:100vh;
-
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-
-    gap:30px;
-
-
+const Wrapper = styled.div`
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #F0F4F8;
+    gap: 30px;
 `;
-
-const Box=styled.div`
-    width:400px;
-    height:500px;
-
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    // justify-content:center;
-
-    background-color: #FEF3E1;
-    border-radius: 30px;
-    
-`;
-
-const StyledMiniHeader=styled(MiniHeader)`
-    width:50%;
-`;
-
-const InputWrapper = styled.div`
-  width: 70%;
-  margin: 20px 0;
-  display: flex;
-  flex-direction: column;
-`;
-
-const Label = styled.label`
-  font-size: 1rem;
-  color: #333;
-  margin-bottom: 8px;
-  margin-top:10px;
-`;
-
-const UnderlinedInput = styled.input`
-  border: none;
-  border-bottom: 2px solid #2774B2;
-  background: transparent;
-  padding: 8px 4px;
-  font-size: 1rem;
-  outline: none;
-
-  &:focus {
-    border-bottom: 2px solid #145a8a;
-  }
-`;
-
-
-
-const StyledButton=styled(Button)`
-
-    margin-top:10px;
-
-    border-radius:10px;
-    width:70px;
-    height:30px;
-
-    background-color:#2774B2;
-    color:white;
-    border:transparent;
-
-    &:hover {
-        background-color: #145a8a;
-    }
-
-`;
-
-const Text=styled.div`
-    color:#808080;
-    font-size:13px;
-
-`
-
-
-
 
 function ChildInfo(){
-    const navigate=useNavigate();
+    const navigate = useNavigate();
 
-    const [childName,setChildName]=useState("");
-    const [childAge,setChildAge]=useState("");
-    const [phoneNumber,setPhoneNumber]=useState("");
+    const [childName, setChildName] = useState("");
+    const [childGrade, setChildGrade] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState("");
+    const [gender, setGender] = useState("");
 
-
-    const handleNameChange=(e)=>{
+    const handleNameChange = (e) => {
         setChildName(e.target.value);
-        console.log("")
     };
 
-    const handleAgeChange=(e)=>{
-        setChildAge(e.target.value);
+    const handleGradeChange = (value) => {
+        setChildGrade(value);
     };
 
-    const handlePhoneNumberChange=(e)=>{
+    const handlePhoneNumberChange = (e) => {
         setPhoneNumber(e.target.value);
-    }
+    };
 
+    const handleGenderChange = (e) => {
+        setGender(e.target.value);
+    };
 
-    const writeChildInfo=()=>{
+    const writeChildInfo = () => {
         fetch(`${process.env.REACT_APP_API_BASE_URL}/api/user/child`,{
             method:"PATCH",
             headers: {
@@ -125,13 +47,10 @@ function ChildInfo(){
             credentials:"include",
             body: JSON.stringify({
                 childName: childName,
-                childAge: Number(childAge),
-                phoneNumber:phoneNumber
+                childAge: Number(childGrade),
+                phoneNumber: phoneNumber
             })
         })
-
-
-
         .then((res) => {
             if (!res.ok) throw new Error("요청 실패");
             return res.json();
@@ -147,28 +66,78 @@ function ChildInfo(){
           });
       };
 
-
     return(
         <Wrapper>
-            <Box>
-                <StyledMiniHeader>자녀 정보 입력</StyledMiniHeader>
+            <Box 
+                title="자녀 정보 입력"
+                subtitle="맞춤형 금융교육을 위해 자녀의 정보를 입력해주세요"
+            >
                 <InputWrapper>
                     <Label>이름</Label>
-                    <UnderlinedInput type="text" value={childName} onChange={handleNameChange}/>
+                    <StyledInput 
+                        type="text" 
+                        value={childName} 
+                        onChange={handleNameChange}
+                        placeholder="이름을 입력해주세요"
+                    />
                 </InputWrapper>
 
                 <InputWrapper>
-                    <Label>나이</Label>
-                    <UnderlinedInput type="number" value={childAge} onChange={handleAgeChange}/>
+                    <Label>학년</Label>
+                    <CustomSelect 
+                        value={childGrade} 
+                        onChange={handleGradeChange}
+                        placeholder="학년을 선택해주세요"
+                        options={[
+                            { value: "1", label: "1학년" },
+                            { value: "2", label: "2학년" },
+                            { value: "3", label: "3학년" },
+                            { value: "4", label: "4학년" },
+                            { value: "5", label: "5학년" },
+                            { value: "6", label: "6학년" }
+                        ]}
+                    />
                 </InputWrapper>
 
                 <InputWrapper>
-                    <Label>전화번호</Label>
-                    <Text>부모님의 전화번호를 입력해주세요(000-0000-0000)</Text>
-                    <UnderlinedInput type="text" value={phoneNumber} onChange={handlePhoneNumberChange}/>
+                    <Label>번호</Label>
+                    <StyledInput 
+                        type="text" 
+                        value={phoneNumber} 
+                        onChange={handlePhoneNumberChange}
+                        placeholder="전화번호를 입력해주세요"
+                    />
                 </InputWrapper>
 
-                <StyledButton onClick={writeChildInfo}>입력</StyledButton>
+                <InputWrapper>
+                    <Label>성별</Label>
+                    <RadioGroup>
+                        <RadioOption>
+                            <input 
+                                type="radio" 
+                                name="gender" 
+                                value="male" 
+                                checked={gender === "male"}
+                                onChange={handleGenderChange}
+                            />
+                            남자아이
+                        </RadioOption>
+                        <RadioOption>
+                            <input 
+                                type="radio" 
+                                name="gender" 
+                                value="female" 
+                                checked={gender === "female"}
+                                onChange={handleGenderChange}
+                            />
+                            여자아이
+                        </RadioOption>
+                    </RadioGroup>
+                </InputWrapper>
+
+                <StyledButton onClick={writeChildInfo}>
+                    핀놀 시작하기
+                </StyledButton>
             </Box>
         </Wrapper>
     );
