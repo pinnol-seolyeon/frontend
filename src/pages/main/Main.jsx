@@ -26,6 +26,7 @@ const TitleText = styled.div`
   font-size: 3rem;
   font-weight: 700;
   color: #333333;
+  margin-top: 2rem;
   margin-bottom: 0.5rem
 `;
 
@@ -63,8 +64,10 @@ const Main = ({user}) => {
                 오늘의 학습을 시작해보자!`}
               backgroundColor = "linear-gradient(180deg, #EFF6FF, #AED2FF)"
               iconBackgroundColor="#BFDBFF"
-              onButtonClick={() => console.log('클릭!')}
-          />
+              onButtonClick={() => {
+                console.log('클릭!');
+                navigate('/book');
+              }}          />
           <Card
             icon={analysis}
             title="학습 분석"
