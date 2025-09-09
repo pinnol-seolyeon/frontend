@@ -1,6 +1,6 @@
 // AppRoutes.jsx
 import React from 'react';
-import { Routes, Route, useLocation,Navigate } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { createGlobalStyle } from "styled-components";
 import reset from "styled-reset";
 
@@ -16,7 +16,7 @@ import StudyLv6_2 from './pages/study/level6/StudyLv6_2';
 import Question from './pages/Question';
 import Game from './pages/game/Game';
 import ChildInfo from './pages/login/ChildInfo';
-import Main from './pages/main/Main';
+import Main from './pages/main/Main.jsx';
 import ReviewPage from './pages/review/ReviewPage';
 import BookListPage from './pages/study/Book/BookListPage';
 import ChapterPage from './pages/study/Chapter/ChapterPage';
@@ -36,9 +36,9 @@ const GlobalStyles = createGlobalStyle`
     align-items: center;
     width: 100%;
   }
-  #root {
-    width: 80%;
-  }
+  // #root {
+  //   width: 80%;
+  // }
   ::-webkit-scrollbar {
     display: none;
   }
@@ -73,21 +73,18 @@ export default function AppRoutes({ login, setLogin, user }) {
   return (
     <>
       {!isDashboard && <GlobalStyles />}
-      <Routes location={location} key={location.pathname}> {/*key로 강제 재마운트*/}
-        {/* / 경로 접근 시 로그인 상태에 따라 리디렉션*/}
+      <Routes location={location} key={location.pathname}> 
+        {/* 로그인 체크 제거 - 자유롭게 페이지 이동 가능 */}
         <Route
           path="/"
-          element={
-            user===null
-            ? null 
-            :<Navigate to={user?"/main":"/login"} replace/>}
+          element={<Main />}
         />
 
         {routes.map(({ path, element }) => (
           <Route 
             key={path}
             path={path}
-            element={React.cloneElement(element, { login, setLogin, user })} //원래의 컴포넌트에 login,setLogin,user props를 주입 -> 코드 반복 제거.
+            element={React.cloneElement(element, { login, setLogin, user })} 
           />
         ))}
 

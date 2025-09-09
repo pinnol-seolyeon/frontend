@@ -9,21 +9,133 @@ import MiniHeader from "../components/study/MiniHeader";
 import Box from "../components/Box";
 import tiger from "../assets/tiger-upperbody1.png";
 import me from "../assets/me.png";
-import mic from "../assets/mic.png";
+import mic from "../assets/mic_img.svg";
 import { askQuestion } from '../api/question/questionToAI';
+import background from "../assets/background_question.png";
+import hopin from "../assets/hopin_face.svg";
 
 /*질문 버튼 눌렀을 때*/
 
 
 const Wrapper=styled.div`
-    width:100%;
+    width:100vw;
     height:100vh;
-
+    background-color: #ffffff;
+    background-image: url(${background});
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
 
+`;
+
+const MainWrapper = styled.div` 
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: calc(var(--header-height, 70px) + 20px) 20px 20px 20px;
+    margin: 0 50%;
+`;
+
+
+const BackButton = styled.div`
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    border: 1px solid #B8B8B8;
+    font-size: 0.8rem;
+    font-weight: 300;
+    color: #4C4C4C;
+    cursor: pointer;
+    background-color: white;
+    margin: 2rem 10rem 0;
+`;
+
+const QuestionArea = styled.div`
+    width: 90%;
+    max-width: 1000px;
+    height: 80vh;
+    display: flex;
+    flex-direction: column;
+    align-self: center;
+    overflow: hidden;
+    position: relative;
+`;
+
+const ChatContainer = styled.div`
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    overflow-y: auto;
+`;
+
+const InputArea = styled.div`
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1rem;
+`;
+
+const TextInput = styled.input`
+    flex: 1;
+    background: #EAEAEA;
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    font-size: 14px;
+    outline: none;
+    border: none;
+    
+    &::placeholder {
+        color: #9E9E9E;
+    }
+
+    &::focus {
+        outline: none;
+    }
+`;
+
+const MicButton = styled.button`
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: #ffffff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid #4A91FE;
+    transition: all 0.3s ease;
+    
+    &:hover {
+        border: 3px solid #3367D6;
+    }
+
+    &:active {
+        outline: none;
+    }
+`;
+
+const SendButton = styled.button`
+    padding: 0.8rem 1.2rem;
+    background: #4A91FE;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(153, 175, 203, 0.5);
+    
+    &:hover {
+        background: #3367D6;
+    }
 `;
 
 const QuestionWrapper=styled.div`
@@ -32,10 +144,12 @@ const QuestionWrapper=styled.div`
     display:flex;
     flex-direction:column;
     align-items:center;
+    justify-content:center;
+    width:100%;
+    height:100%;
     // padding-bottom:12vh;
 `
 
-///페이드인 애니메이션 정의 
 const fadeIn=keyframes`
     from{
         opacity:0;
@@ -49,26 +163,18 @@ const fadeIn=keyframes`
 
 const MessageList=styled.div`
     width:100%;
-    margin-bottom:20px;
     flex-grow:1;
     overflow-y:auto;
     display:flex;
     flex-direction:column;
-    align-items:flex-end;
+    padding: 10px;
+    gap: 8px;
 `;
 
 
 const TigerImg=styled.img`
-    width:10%; 
-    height:auto;
-    object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    max-width:70px;
-    display:block;
-    
-    align-self:flex-start;
-    margin-top:10px;
-    margin-bottom:0px;
-
+    width: 70%; 
+    height: auto;
 `;
 
 const MyImg=styled.img`
@@ -84,99 +190,96 @@ const MyImg=styled.img`
 
 `;
 
+const ProfileArea = styled.div`
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius: 50%;
+    width: 5rem;
+    height: 5rem;
+    background: linear-gradient(to bottom, #EFF6FF, #AED2FF);
+    overflow: hidden;
+    flex-shrink: 0;
+`;
+
 const ReceiveMessage = styled.div`
-  background-color: #FEF3E1;
-  border-top: 0.2px solid black;
-  border-bottom: 0.2px solid black;
-  border-right: 0.2px solid black;
-  
-  border-radius: 0px 30px 30px 0px;
-  padding: 20px;
-  
-  font-weight: bold;
-  font-size: 16px;            // ✅ 글자 크기 명시
-  line-height: 1.8;           // ✅ 줄 간격 넓게
-  letter-spacing: 0.5px;      // ✅ 글자 간격 추가
-  
-  margin-bottom: 10px;
-  max-width: 60%;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-  
-  align-self: flex-start;
-  animation: ${fadeIn} 0.5s ease-out;
+    background-color: #ffffff;
+    border-radius: 30px;
+    padding: 1.2rem 1.5rem;
+    
+    font-size: 16px;
+    line-height: 1.4;
+    font-weight: 500;
+    color: #2F2F2F;
+    border: 1px solid #B8B8B8;
+
+    
+    max-width: 70%;
+    min-width: fit-content;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    
+    animation: ${fadeIn} 0.3s ease-out;
 `;
 
 const Message = styled.div`
-  background-color: #FBC344;
-  border-top: 0.2px solid black;
-  border-bottom: 0.2px solid black;
-  border-left: 0.2px solid black;
+    background-color: #FFEFC1;
+    border-radius: 30px;
+    padding: 0.8rem 1rem;
+    border: 1px solid #B8B8B8;
+    
+    font-size: 16px;
+    line-height: 1.4;
+    color: #2F2F2F;
+    font-weight: 500;
 
-  border-radius: 30px 0px 0px 30px;
-  padding: 20px;
-  
-  font-weight: bold;
-  font-size: 16px;
-  line-height: 1.8;
-  letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
+    max-width: 70%;
+    min-width: fit-content;
 
-  margin-bottom: 10px;
-  margin-top: 5px;
-  max-width: 60%;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    align-self: flex-end;
 
-  word-wrap: break-word;
-  white-space: pre-wrap;
-  align-self: flex-end;
-
-  animation: ${fadeIn} 0.5s ease-out;
+    animation: ${fadeIn} 0.3s ease-out;
 `;
-const MicButton=styled.button`
-    background:none;
-    border:none;
-    padding:0;
-    cursor:pointer;
-
-    margin-bottom:20px;
-`;
-
 const MicIcon=styled.img`
-    width:80px;
-    height:auto;
+    width:70%;
 `;
 
 const TranscriptBox = styled.div`
-  width: 80%;
-  height: 80px;
-//   padding: 10px;
-  font-size: 16px;
-  border-radius: 30px;
-  margin:15px;
+    width: 80%;
+    height: 80px;
+    //   padding: 10px;
+    font-size: 16px;
+    border-radius: 30px;
+    margin:15px;
 
-  border: 1px solid #ccc;
-  background-color: #FEF3E1;
+    border: 1px solid #ccc;
+    background-color: #FEF3E1;
 `;
 
 const TranscriptWrapper = styled.div`
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding-bottom:20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-bottom:20px;
 `;
 
 const StopButton = styled.button`
-  background-color: red;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin:15px;
+    background-color: red;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin:15px;
 
-  &:hover {
-    background-color: darkred;
-  }
+    &:hover {
+        background-color: darkred;
+    }
 `;
 
 const CloseButton=styled.button`
@@ -189,10 +292,9 @@ const CloseButton=styled.button`
 
     &:hover {
     color:black;
-  }
+    }
 
 `;
-
 
 function Question({}){
     
@@ -227,26 +329,37 @@ function Question({}){
             .map(result => result[0])
             .map(result => result.transcript)
             .join('');
-            setTranscript(transcript);
+            
+            // 음성인식 결과가 있으면 실제 텍스트로 교체
+            if(transcript.trim()) {
+                setTranscript(transcript);
+            }
         };
         recognitionRef.current=recognition;
     },[location.state]);
-      
 
     const handleStop=()=>{
         console.log("녹음 정지");
         setIsListening(false);
         recognitionRef.current.stop();
-        // onRecordComplete(transcript); //인식된 transcript를 부모 컴포넌트로 넘김
-        handleMessage(transcript);
         
+        // 음성인식된 텍스트가 있으면 메시지 전송
+        if(transcript && transcript.trim()) {
+            handleMessage(transcript);
+        }
     };
 
     const handleClick=()=>{
         console.log("마이크 버튼 클릭");
-        setTranscript('');
-        setIsListening(true); //MicButton 사라지고 TranscriptBox 보이게 
-        recognitionRef.current.start();
+        if(isListening) {
+            // 음성인식 중이면 정지
+            handleStop();
+        } else {
+            // 음성인식 시작
+            setTranscript('');
+            setIsListening(true);
+            recognitionRef.current.start();
+        }
     };
 
 
@@ -302,8 +415,8 @@ function Question({}){
         const fetchDummyData = () => {
             setTimeout(() => {
                 const dummyMessages = [
-                    "궁금한게 있으면 물어봐🐯",
-                    "마이크 버튼을 누르고 2초 정도 있다가 질문을 차근차근, 천천히 이야기해줘 🐯🎙️"
+                    "궁금한게 있으면 물어봐!",
+                    "마이크 버튼을 누르고 2초 정도 있다가 질문을 차근차근, 천천히 이야기해줘"
                 ];
 
                 dummyMessages.forEach(message => {
@@ -331,47 +444,47 @@ function Question({}){
 
 
     return(
-        
-    <>
         <Wrapper>
-            <Box>
-                <MiniHeader onClose={
-                    <CloseButton onClick={handleClose}>X</CloseButton>
-                }>
-                궁금한걸 물어보세요❗
-                </MiniHeader>
-                <QuestionWrapper>
-                    <MessageList>
-                        {messages.map((msg, index) =>
-                            msg.type === 'sent' ? (
-                                <>
-                                    <MyImg src={me} alt="샘플" />
+            <Header/>
+            <MainWrapper>
+                <BackButton
+                onClick={() => navigate('/main')}
+                >{'<'} 이전 페이지로 돌아가기</BackButton>                
+                <QuestionArea>
+                    <ChatContainer>
+                        <MessageList>
+                            {messages.map((msg, index) =>
+                                msg.type === 'sent' ? (
                                     <Message key={index}>{msg.text}</Message>
-                                </>
-                            ) : (
-                                <>
-                                    <TigerImg src={tiger} alt="샘플" />
-                                    <ReceiveMessage key={index}>{msg.text}</ReceiveMessage>
-                                </>
-                            )
-                            )}
-                        <div ref={messageEndRef} />
-                        {loading}
-                    </MessageList>
-                </QuestionWrapper>
-                {isListening?(
-                    <TranscriptWrapper>
-                        <TranscriptBox>{transcript||"음성 인식 중.."}</TranscriptBox>
-                        <StopButton onClick={handleStop}>정지</StopButton>
-                    </TranscriptWrapper>
-                ):(
-                    <MicButton onClick={handleClick}>
-                        <MicIcon src={mic} alt="마이크 버튼"/>
-                    </MicButton>
-                )}
-            </Box>
+                                ) : (
+                                    <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                        <ProfileArea>
+                                            <TigerImg src={hopin} alt="샘플" />
+                                        </ProfileArea>
+                                        <ReceiveMessage>{msg.text}</ReceiveMessage>
+                                    </div>
+                                )
+                                )}
+                            <div ref={messageEndRef} />
+                            {loading}
+                        </MessageList>
+                    </ChatContainer>
+                    <InputArea>
+                        <TextInput 
+                            placeholder={isListening ? "음성인식중이에요..." : "질문을 입력하거나 마이크를 사용하세요"}
+                            value={transcript}
+                            onChange={(e) => setTranscript(e.target.value)}
+                        />
+                        <MicButton $isListening={isListening} onClick={handleClick}>
+                            <MicIcon src={mic} alt="마이크 버튼"/>
+                        </MicButton>
+                        <SendButton onClick={() => handleMessage(transcript)}>
+                            답변하기
+                        </SendButton>
+                    </InputArea>
+                </QuestionArea>
+            </MainWrapper>
         </Wrapper>
-    </>
     );
 }
 

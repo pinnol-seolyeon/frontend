@@ -1,23 +1,115 @@
 import styled from 'styled-components';
 import finnolLogo from '../assets/finnol-logo.png';
 import { useNavigate } from 'react-router-dom';
+import userimg from '../assets/user.svg';
+import point from '../assets/point.svg';
+import logoutimg from '../assets/logout.svg';
 import {useEffect} from 'react';
 
-export const MainLayout = styled.div`
-  min-height: 100vh;
-  background-color: #f0f2f5;
+const ContentArea = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
 `;
 
-export const MainHeader = styled.header`
-  background-color: white;
-  padding: 0.5rem 1.5rem; /*상하 좌우*/
+const MainHeader = styled.header`
+  background: linear-gradient(to right, #A7CEFF 0%, #4A91FE 100%);
+  padding: 0.5rem 10rem; /*상하 좌우*/
   display: flex;
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 70px;
+  
+  /* CSS 변수로 Header 높이 설정 */
+  --header-height: 70px;
 `;
 
-export const FinnolLogo = styled.img`
+const Image=styled.img`
+    width:80%; 
+    height:auto;
+    object-fit:contain;
+`
+
+
+const Logo = styled.div`
+  width: 30%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.5rem;
+`
+
+const LogoContainer = styled.div`
+  width: 3rem;
+  height: 3rem;
+  background-color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+`
+
+const LogoTitle = styled.div`
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+`
+
+
+const UserInfo = styled.div`
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.5rem;
+`;
+
+const UserImgWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`
+
+const UserName = styled.div`
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+`
+
+const UserImg = styled.img`
+`
+
+const UserText = styled.div`  
+  font-size: 13px;
+  font-weight: 300;
+  color: white;
+`
+
+const PointWraper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: #F0F4FC;
+  border-radius: 37.5px;
+  padding: 0.5rem 1rem;
+`
+
+const PointValue = styled.div`
+  font-size: 24px;
+  font-weight: 500;
+  color: #4A91FE;
+`
+
+const FinnolLogo = styled.img`
   height: 40px;
   transition: transform 0.3s ease;
 
@@ -26,52 +118,49 @@ export const FinnolLogo = styled.img`
   }
 `;
 
-export const HeaderTitle = styled.h1`
+const HeaderTitle = styled.h1`
   color: #1a73e8;
   margin: 0;
 `;
 
-export const ProgressInfo = styled.div`
+const ProgressInfo = styled.div`
   display: flex;
   gap: 2rem;
   color: #5f6368;
 `;
 
-export const UserStatus = styled.div`
+const UserStatus = styled.div`
   display: flex;
   align-items: center;
   gap: 2rem;
 `;
 
-export const PointsDisplay = styled.div`
+const PointsDisplay = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background-color: #f8f9fa;
+  background-color: rgba(255, 255, 255, 0.2);
   border-radius: 20px;
   font-weight: bold;
+  color: white;
 `;
 
-export const PointsIcon = styled.span`
+const PointsIcon = styled.span`
   font-size: 1.2rem;
 `;
 
-export const PointsValue = styled.span`
-  color: #1a73e8;
+const PointsValue = styled.span`
+  color: #4A91FE;
 `;
 
-export const UserInfo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+
+const UserEmail = styled.span`
+  color: white;
+  font-weight: 500;
 `;
 
-export const UserEmail = styled.span`
-  color: #666;
-`;
-
-export const LogoutButton = styled.button`
+const LogoutButton = styled.button`
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 4px;
@@ -85,35 +174,48 @@ export const LogoutButton = styled.button`
   }
 `;
 
-export const LoginButton = styled.button`
+const LogoutWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+`
+
+const LogoutImg = styled.img`
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+`
+
+const LogoutText = styled.div`
+  font-size: 13px;
+  font-weight: 300;
+  color: white;
+`
+
+const LoginButton = styled.button`
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 4px;
-  background-color: #f8f9fa;
-  color: black;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
   cursor: pointer;
   transition: background-color 0.3s;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 
   &:hover {
-    background-color: #1a73e8;
+    background-color: rgba(255, 255, 255, 0.3);
   }
 `;
 
 
-export const MainContent = styled.main`
+const MainContent = styled.main`
   padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
 `;
 
-export const ContentArea = styled.section`
-  background-color: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-`;
-
-export const NoDataMessage = styled.p`
+const NoDataMessage = styled.p`
   text-align: center;
   padding: 20px;
   color: var(--text-color);
@@ -130,13 +232,30 @@ function Header({ login, text, setLogin, userProgress, user }) {
   
     return (
       <MainHeader>
-        <FinnolLogo
-          src={finnolLogo}
-          alt="FINNOL Logo"
-          onClick={() => navigate('/main')}
-          style={{ cursor: 'pointer' }}
-        />
-        <UserStatus>
+        <Logo>
+          <LogoContainer>
+            <Image src={finnolLogo} alt="FINNOL Logo" />
+          </LogoContainer>
+          <LogoTitle>FINNOL</LogoTitle>
+        </Logo>
+        <ContentArea>
+          <UserInfo>
+            <UserImgWrapper>
+              <UserImg src={userimg}/>
+              <UserName>{user?.childName}어린이</UserName>
+            </UserImgWrapper>
+            <UserText>4학년 • 엄마/아빠: 김엄마</UserText>
+          </UserInfo>
+          <PointWraper>
+            <Image src={point}/>
+            <PointValue>{user?.coin || 0}P</PointValue>
+          </PointWraper>
+          <LogoutWrapper onClick={logout}>
+            <LogoutImg src={logoutimg} onClick={logout}/>
+            <LogoutText>로그아웃</LogoutText>
+          </LogoutWrapper>
+        </ContentArea>
+        {/* <UserStatus>
           <PointsDisplay>
             <PointsIcon>💰</PointsIcon>
             <PointsValue>{user?.coin || 0} P</PointsValue>
@@ -153,7 +272,7 @@ function Header({ login, text, setLogin, userProgress, user }) {
               </LoginButton>
             )}
           </UserInfo>
-        </UserStatus>
+        </UserStatus> */}
       </MainHeader>
     );
   }
