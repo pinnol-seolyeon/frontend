@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 // import Calendar from 'react-calendar';
 // import 'react-calendar/dist/Calendar.css';
 // import './QnAViewer.css';
-// import { fetchQuestionDates, fetchQuestionsByDate } from '../../api/analyze/analytics';
+import { fetchQuestionDates, fetchQuestionsByDate } from '../../api/analyze/analytics';
 
 const QnAContainer = styled.div`
   background: white;
@@ -173,43 +173,41 @@ const EmptyMessage = styled.div`
 `;
 
 export default function QnAViewer() {
-  // API 데이터 주석처리 - 하드코딩된 데이터로 디자인 작업
-  // const [markedDates, setMarkedDates] = useState([]);
-  // const [selectedDate, setSelectedDate] = useState(new Date());
-  // const [qnaList, setQnaList] = useState([]);
+  const [markedDates, setMarkedDates] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [qnaList, setQnaList] = useState([]);
 
-  // useEffect(() => {
-  //   fetchQuestionDates()
-  //     .then((data) => {
-  //       const dates = data.map((dateStr) => dateStr.slice(0, 10));
-  //       setMarkedDates(dates);
-  //     })
-  //     .catch((err) => console.error('❌ 질문 날짜 불러오기 실패:', err));
-  // }, []);
+  useEffect(() => {
+    fetchQuestionDates()
+      .then((data) => {
+        const dates = data.map((dateStr) => dateStr.slice(0, 10));
+        setMarkedDates(dates);
+      })
+      .catch((err) => console.error('❌ 질문 날짜 불러오기 실패:', err));
+  }, []);
 
-  // useEffect(() => {
-  //   const dateStr = selectedDate.toLocaleDateString('sv-SE');
-  //   fetchQuestionsByDate(dateStr)
-  //     .then((data) => {
-  //       const formatted = data.flatMap((item) =>
-  //         item.questions.map((q, i) => ({
-  //           question: q,
-  //           answer: item.answers[i] || '',
-  //         }))
-  //       );
-  //       setQnaList(formatted);
-  //     })
-  //     .catch((err) => console.error('❌ 질문 내역 불러오기 실패:', err));
-  // }, [selectedDate]);
+  useEffect(() => {
+    const dateStr = selectedDate.toLocaleDateString('sv-SE');
+    fetchQuestionsByDate(dateStr)
+      .then((data) => {
+        const formatted = data.flatMap((item) =>
+          item.questions.map((q, i) => ({
+            question: q,
+            answer: item.answers[i] || '',
+          }))
+        );
+        setQnaList(formatted);
+      })
+      .catch((err) => console.error('❌ 질문 내역 불러오기 실패:', err));
+  }, [selectedDate]);
 
   // 현재 날짜 가져오기
   const today = new Date();
-  const [selectedDate, setSelectedDate] = useState(today.getDate()); // 현재 일
   const [currentMonth, setCurrentMonth] = useState(today.getMonth() + 1); // 현재 월
   const [currentYear, setCurrentYear] = useState(today.getFullYear()); // 현재 년도
 
   // 선택된 날짜의 전체 날짜 문자열 생성
-  const selectedDateString = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}`;
+  const selectedDateString = `${currentYear}-${String(currentMonth).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
 
   // 월 이동 함수
   const goToPreviousMonth = () => {
@@ -321,11 +319,11 @@ export default function QnAViewer() {
     }
   };
 
-  const qnaData = generateQnAData(new Date(currentYear, currentMonth - 1, selectedDate));
+  const qnaData = generateQnAData(new Date(currentYear, currentMonth - 1, selectedDate.getDate()));
 
   const handleDateClick = (dayData) => {
     if (dayData.isCurrentMonth) {
-      setSelectedDate(dayData.day);
+      setSelectedDate(new Date(currentYear, currentMonth - 1, dayData.day));
     }
   };
 
@@ -350,7 +348,7 @@ export default function QnAViewer() {
             {calendarDays.map((dayData, index) => (
               <CalendarDay
                 key={index}
-                isSelected={dayData.day === selectedDate && dayData.isCurrentMonth}
+                isSelected={dayData.day === selectedDate.getDate() && dayData.isCurrentMonth}
                 isWeekend={dayData.isWeekend}
                 isOtherMonth={dayData.isOtherMonth}
                 onClick={() => handleDateClick(dayData)}

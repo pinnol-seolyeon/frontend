@@ -203,83 +203,83 @@ const ProfileArea = styled.div`
 `;
 
 const ReceiveMessage = styled.div`
-  background-color: #ffffff;
-  border-radius: 30px;
-  padding: 1.2rem 1.5rem;
-  
-  font-size: 16px;
-  line-height: 1.4;
-  font-weight: 500;
-  color: #2F2F2F;
-  border: 1px solid #B8B8B8;
+    background-color: #ffffff;
+    border-radius: 30px;
+    padding: 1.2rem 1.5rem;
+    
+    font-size: 16px;
+    line-height: 1.4;
+    font-weight: 500;
+    color: #2F2F2F;
+    border: 1px solid #B8B8B8;
 
-  
-  max-width: 70%;
-  min-width: fit-content;
-  word-wrap: break-word;
-  white-space: pre-wrap;
-  
-  animation: ${fadeIn} 0.3s ease-out;
+    
+    max-width: 70%;
+    min-width: fit-content;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    
+    animation: ${fadeIn} 0.3s ease-out;
 `;
 
 const Message = styled.div`
-  background-color: #FFEFC1;
-  border-radius: 30px;
-  padding: 0.8rem 1rem;
-  border: 1px solid #B8B8B8;
-  
-  font-size: 16px;
-  line-height: 1.4;
-  color: #2F2F2F;
-  font-weight: 500;
+    background-color: #FFEFC1;
+    border-radius: 30px;
+    padding: 0.8rem 1rem;
+    border: 1px solid #B8B8B8;
+    
+    font-size: 16px;
+    line-height: 1.4;
+    color: #2F2F2F;
+    font-weight: 500;
 
-  margin-bottom: 0.5rem;
-  margin-top: 0.5rem;
-  max-width: 70%;
-  min-width: fit-content;
+    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
+    max-width: 70%;
+    min-width: fit-content;
 
-  word-wrap: break-word;
-  white-space: pre-wrap;
-  align-self: flex-end;
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    align-self: flex-end;
 
-  animation: ${fadeIn} 0.3s ease-out;
+    animation: ${fadeIn} 0.3s ease-out;
 `;
 const MicIcon=styled.img`
     width:70%;
 `;
 
 const TranscriptBox = styled.div`
-  width: 80%;
-  height: 80px;
-//   padding: 10px;
-  font-size: 16px;
-  border-radius: 30px;
-  margin:15px;
+    width: 80%;
+    height: 80px;
+    //   padding: 10px;
+    font-size: 16px;
+    border-radius: 30px;
+    margin:15px;
 
-  border: 1px solid #ccc;
-  background-color: #FEF3E1;
+    border: 1px solid #ccc;
+    background-color: #FEF3E1;
 `;
 
 const TranscriptWrapper = styled.div`
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding-bottom:20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-bottom:20px;
 `;
 
 const StopButton = styled.button`
-  background-color: red;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin:15px;
+    background-color: red;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin:15px;
 
-  &:hover {
-    background-color: darkred;
-  }
+    &:hover {
+        background-color: darkred;
+    }
 `;
 
 const CloseButton=styled.button`
@@ -292,7 +292,7 @@ const CloseButton=styled.button`
 
     &:hover {
     color:black;
-  }
+    }
 
 `;
 
@@ -337,7 +337,6 @@ function Question({}){
         };
         recognitionRef.current=recognition;
     },[location.state]);
-      
 
     const handleStop=()=>{
         console.log("녹음 정지");

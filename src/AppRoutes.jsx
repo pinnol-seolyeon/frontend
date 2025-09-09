@@ -1,6 +1,6 @@
 // AppRoutes.jsx
 import React from 'react';
-import { Routes, Route, useLocation,Navigate } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { createGlobalStyle } from "styled-components";
 import reset from "styled-reset";
 
@@ -66,7 +66,7 @@ const routes = [
   {path:'/study/level2-img',element:<StudyLv2_withImg/>}
 ];
 
-export default function AppRoutes() {
+export default function AppRoutes({ login, setLogin, user }) {
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard';
 
@@ -84,8 +84,7 @@ export default function AppRoutes() {
           <Route 
             key={path}
             path={path}
-            // element={React.cloneElement(element, { login, setLogin, user })} 
-            element={element} 
+            element={React.cloneElement(element, { login, setLogin, user })} 
           />
         ))}
 

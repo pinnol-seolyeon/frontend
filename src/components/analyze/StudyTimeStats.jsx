@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-// import { fetchStudyTimeStats } from '../../api/analyze/analytics';
+import { fetchStudyTimeStats } from '../../api/analyze/analytics';
 import {
   BarChart,
   Bar,
   XAxis,
   YAxis,
-  Tooltip,
-  Legend,
   ResponsiveContainer,
 } from 'recharts';
 
@@ -88,12 +86,6 @@ const ChartContainer = styled.div`
   // border: 1px solid #f0f0f0;
 `;
 
-const ChartPlaceholder = styled.div`
-  text-align: center;
-  color: #666;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
-`;
 
 const ButtonContainer = styled.div`
   display: flex;
@@ -114,26 +106,25 @@ const PeriodButton = styled.button`
 `;
 
 export default function StudyTimeStats() {
-  // API 데이터 주석처리 - 하드코딩된 데이터로 디자인 작업
-  // const [preferredType, setPreferredType] = useState('');
-  // const [weeklyData, setWeeklyData] = useState([]);
-  // const [error, setError] = useState(false);
+  const [preferredType, setPreferredType] = useState('');
+  const [weeklyData, setWeeklyData] = useState([]);
+  const [error, setError] = useState(false);
 
-  // useEffect(() => {
-  //   fetchStudyTimeStats()
-  //     .then(data => {
-  //       if (!data) {
-  //         setError(true);
-  //         return;
-  //       }
-  //       setPreferredType(data.preferredType || '');
-  //       // ... 기존 로직
-  //     })
-  //     .catch(err => {
-  //       console.error("❌ 공부 시간 데이터 요청 실패:", err);
-  //       setError(true);
-  //     });
-  // }, []);
+  useEffect(() => {
+    fetchStudyTimeStats()
+      .then(data => {
+        if (!data) {
+          setError(true);
+          return;
+        }
+        setPreferredType(data.preferredType || '');
+        setWeeklyData(data.weeklyData || []);
+      })
+      .catch(err => {
+        console.error("❌ 공부 시간 데이터 요청 실패:", err);
+        setError(true);
+      });
+  }, []);
 
   // 버튼 active 상태 관리
   const [activePeriod, setActivePeriod] = useState('weekly');
@@ -142,8 +133,8 @@ export default function StudyTimeStats() {
     setActivePeriod(period);
   };
 
-  // 하드코딩된 데이터로 차트 표시
-  const data = [
+  // API 데이터가 있으면 사용, 없으면 하드코딩된 데이터 사용
+  const data = weeklyData.length > 0 ? weeklyData : [
     { day: '일', morning: 2, afternoon: 4, evening: 6, night: 1 },
     { day: '월', morning: 3, afternoon: 5, evening: 4, night: 0 },
     { day: '화', morning: 4, afternoon: 3, evening: 5, night: 1 },
@@ -160,7 +151,7 @@ export default function StudyTimeStats() {
           <CardTitle>선호 학습 시간대</CardTitle>
           <CardSubtitle>선호 학습시간대를 알아보아요!</CardSubtitle>
         </HeaderLeft>
-        <TypeButton>언제든지 좋아형</TypeButton>
+        <TypeButton>{preferredType || '언제든지 좋아형'}</TypeButton>
       </CardHeader>
 
       <LegendContainer>

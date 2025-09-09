@@ -101,6 +101,7 @@ const Footer = styled.div`
 `
 
 function Login(){
+  console.log(process.env.REACT_APP_API_BASE_URL);
 
     //로그인 버튼 클릭시 호출
     const redirectToKakao=()=>{
