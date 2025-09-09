@@ -229,6 +229,8 @@ function Header({ login, text, setLogin, userProgress, user }) {
       setLogin(false);
       navigate('/login');
     };
+
+    console.log(user?.childName);
   
     return (
       <MainHeader>
