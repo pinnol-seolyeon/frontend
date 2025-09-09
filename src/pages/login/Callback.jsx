@@ -12,7 +12,7 @@ export default function Callback() {
       .then(res => {
         const isFirstLogin = res.data.firstLogin;
         if (isFirstLogin) {
-          navigate('/childInfo');
+          navigate('/childinfo');
         } else {
           navigate('/main');
         }

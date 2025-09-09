@@ -1,7 +1,7 @@
 // App.jsx
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, useNavigate } from 'react-router-dom';
-import styled, { ThemeProvider, createGlobalStyle } from 'styled-components';
+import { ThemeProvider, createGlobalStyle } from 'styled-components';
 import AppRoutes from './AppRoutes';
 import Header from './components/Header';
 import axios from 'axios';
@@ -35,44 +35,44 @@ const theme = {
 };
 
 function AppContent() {
-  // const [login, setLogin] = useState(false);
-  // const [isLoading, setIsLoading] = useState(false); // 로딩 상태를 false로 변경
-  // const [user, setUser] = useState(null);
-  // const navigate = useNavigate();
+  const [login, setLogin] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // 로딩 상태를 false로 변경
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
-  // 로그인 체크 로직 주석처리 - 디자인 작업 중
-  // useEffect(() => {
-  //   axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/user`, { withCredentials: true })
-  //     .then(response => {
-  //       console.log("✅ 로그인 확인", response.data);
-  //       setLogin(true);
-  //       setUser(response.data);
-  //     })
-  //     .catch(() => {
-  //       console.log("✖️ 로그인되어 있지 않습니다.");
-  //       setLogin(false);
-  //       setUser(false);
-  //     })
-  //     .finally(() => {
-  //       setIsLoading(false);
-  //     });
-  // }, []); // navigate 제거
+  // 로그인 체크 로직
+  useEffect(() => {
+    axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/user`, { withCredentials: true })
+    // axios.get(`https://api.finnol.co.kr/api/user`, { withCredentials: true })
+      .then(response => {
+        console.log("✅ 로그인 확인", response.data);
+        setLogin(true);
+        setUser(response.data);
+      })
+      .catch(() => {
+        console.log("✖️ 로그인되어 있지 않습니다.");
+        setLogin(false);
+        setUser(false);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [navigate]); // navigate 제거
 
-  // ✅ navigate는 Hook 안에서만 실행되도록 - 주석처리
-  // useEffect(() => {
-  //   if (!isLoading && user === false) {
-  //     navigate("/login");
-  //   }
-  // }, [isLoading, user, navigate]);
+  // ✅ navigate는 Hook 안에서만 실행되도록
+  useEffect(() => {
+    if (!isLoading && user === false) {
+      navigate("/login");
+    }
+  }, [isLoading, user, navigate]);
 
   // ✅ 로딩 중에는 아무 것도 보여주지 않음
-  // if (isLoading) return null;
+  if (isLoading) return null;
 
   return (
     <>
-      {/* <Header login={login} setLogin={setLogin} user={user} /> */}
-      {/* <AppRoutes login={login} setLogin={setLogin} user={user} /> */}
-      <AppRoutes />
+      <Header login={login} setLogin={setLogin} user={user} />
+      <AppRoutes login={login} setLogin={setLogin} user={user} />
     </>
   );
 }

@@ -242,14 +242,13 @@ function Header({ login, text, setLogin, userProgress, user }) {
           <UserInfo>
             <UserImgWrapper>
               <UserImg src={userimg}/>
-              {/* <UserName>{user?.childName}어린이</UserName> */}
-              <UserName>홍길동 어린이</UserName>
+              <UserName>{user?.childName}어린이</UserName>
             </UserImgWrapper>
             <UserText>4학년 • 엄마/아빠: 김엄마</UserText>
           </UserInfo>
           <PointWraper>
             <Image src={point}/>
-            <PointValue>12,500P</PointValue>
+            <PointValue>{user?.coin || 0}P</PointValue>
           </PointWraper>
           <LogoutWrapper onClick={logout}>
             <LogoutImg src={logoutimg} onClick={logout}/>
