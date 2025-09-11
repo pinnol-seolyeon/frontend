@@ -76,11 +76,16 @@ function AppContent() {
 
   // ✅ navigate는 Hook 안에서만 실행되도록
   useEffect(() => {
-    if (!isLoading && (user === false || user === null)) {
-      console.log("🚀 로그인 페이지로 리다이렉트 (user:", user, ")");
-      navigate("/login");
+    if (!isLoading) {
+      if (user === false || user === null) {
+        console.log("🚀 로그인 페이지로 리다이렉트 (user:", user, ")");
+        navigate("/login");
+      } else if (user && login && window.location.pathname === '/') {
+        console.log("🚀 메인 페이지로 리다이렉트 (로그인된 사용자)");
+        navigate("/main");
+      }
     }
-  }, [isLoading, user, navigate]);
+  }, [isLoading, user, login, navigate]);
 
   // ✅ 로딩 중에는 아무 것도 보여주지 않음
   if (isLoading) return null;
