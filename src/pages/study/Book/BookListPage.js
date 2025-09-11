@@ -296,7 +296,7 @@ const BookCardComponent = ({ book, onSelect }) => {
 function BookListPage({ user, login, setLogin }) {
   const navigate = useNavigate();
   
-  // 🛡 useOutletContext가 null일 수 있으므로 방어적 처리
+  // useOutletContext가 null일 수 있으므로 방어적 처리
   const outletContext = useOutletContext() || {};
   const { userProgress = { completedSteps: [] } } = outletContext;
 
@@ -305,11 +305,20 @@ function BookListPage({ user, login, setLogin }) {
   // useMemo를 사용하여 completedStages를 계산
   const completedStages = useMemo(() => {
     try {
-      return Array.isArray(userProgress?.completedSteps)
+      console.log('🔍 BookListPage API 데이터:', {
+        userProgress,
+        completedSteps: userProgress?.completedSteps,
+        outletContext
+      });
+      
+      const result = Array.isArray(userProgress?.completedSteps)
         ? userProgress.completedSteps
         : Object.keys(userProgress?.completedSteps || {}).map(Number);
+      
+      console.log('✅ 계산된 completedStages:', result);
+      return result;
     } catch (error) {
-      console.error('Book page error:', error);
+      console.error('❌ Book page error:', error);
       setError(error.message || '데이터를 처리하는 중 오류가 발생했습니다.');
       return [];
     }
@@ -402,6 +411,9 @@ function BookListPage({ user, login, setLogin }) {
       currentProgress
     };
   });
+
+  // 최종 bookList 출력
+  console.log('📚 최종 bookList:', bookList);
 
   const handleBookSelect = (path) => {
     navigate(path);
