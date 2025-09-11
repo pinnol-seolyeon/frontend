@@ -5,12 +5,7 @@ import styled,{keyframes} from "styled-components";
 import axios from 'axios';
 
 import Header from "../components/Header";
-import MiniHeader from "../components/study/MiniHeader";
-import Box from "../components/Box";
-import tiger from "../assets/tiger-upperbody1.png";
-import me from "../assets/me.png";
 import mic from "../assets/mic_img.svg";
-import { askQuestion } from '../api/question/questionToAI';
 import background from "../assets/background_question.png";
 import hopin from "../assets/hopin_face.svg";
 
@@ -296,7 +291,7 @@ const CloseButton=styled.button`
 
 `;
 
-function Question({}){
+function Question({ user, login, setLogin }){
     
     const[messages,setMessages]=useState([]);
     const messageEndRef=useRef(null);
@@ -445,7 +440,7 @@ function Question({}){
 
     return(
         <Wrapper>
-            <Header/>
+            <Header user={user} login={login} setLogin={setLogin} />
             <MainWrapper>
                 <BackButton
                 onClick={() => navigate('/main')}

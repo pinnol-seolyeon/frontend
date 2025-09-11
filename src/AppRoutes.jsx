@@ -77,7 +77,7 @@ export default function AppRoutes({ login, setLogin, user }) {
         {/* 로그인 체크 제거 - 자유롭게 페이지 이동 가능 */}
         <Route
           path="/"
-          element={<Main />}
+          element={<Main login={login} setLogin={setLogin} user={user} />}
         />
 
         {routes.map(({ path, element }) => (
