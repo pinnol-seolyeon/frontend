@@ -147,7 +147,7 @@ const LoadingText = styled.p`
   font-size: 1.1rem;
 `;
 
-export default function Dashboard() {
+export default function Dashboard({ user, login, setLogin }) {
   const [studyStats, setStudyStats] = useState({ totalCompleted: 0, weeklyCompleted: 0 });
   const [thisWeek, setThisWeek] = useState({});
   const [lastWeek, setLastWeek] = useState({});
@@ -168,7 +168,7 @@ export default function Dashboard() {
 
   return (
     <Wrapper>
-      <Header />
+      <Header user={user} login={login} setLogin={setLogin} />
       <MainWrapper>
         <BackButton
           onClick={() => navigate('/main')}
