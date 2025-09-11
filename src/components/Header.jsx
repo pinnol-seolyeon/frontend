@@ -232,6 +232,40 @@ const Tooltip = styled.div`
   }
 `
 
+// 페이지 정보 표시 컴포넌트
+const PageInfoContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: 2rem;
+`;
+
+const PageInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+`;
+
+const PageIcon = styled.div`
+  font-size: 1.2rem;
+`;
+
+const PageText = styled.div`
+  color: white;
+  font-weight: 500;
+  font-size: 0.9rem;
+`;
+
+const PageSubText = styled.div`
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
+`;
+
 const LoginButton = styled.button`
   padding: 0.5rem 1rem;
   border: none;
@@ -261,7 +295,7 @@ const NoDataMessage = styled.p`
   font-size: 1.1rem;
 `;
 
-function Header({ login, text, setLogin, userProgress, user }) {
+function Header({ login, text, setLogin, userProgress, user, pageInfo }) {
     const navigate = useNavigate();
 
     const logout = () => {
@@ -280,6 +314,20 @@ function Header({ login, text, setLogin, userProgress, user }) {
           <LogoTitle>FINNOL</LogoTitle>
           <Tooltip>핀놀 메인 화면으로 돌아갑니다</Tooltip>
         </Logo>
+        
+        {/* 페이지 정보 표시 (데이터가 있을 때만) */}
+        {pageInfo && (
+          <PageInfoContainer>
+            <PageInfo>
+              <PageIcon>{pageInfo.icon}</PageIcon>
+              <div>
+                <PageText>{pageInfo.title}</PageText>
+                {pageInfo.subtitle && <PageSubText>{pageInfo.subtitle}</PageSubText>}
+              </div>
+            </PageInfo>
+          </PageInfoContainer>
+        )}
+        
         <ContentArea>
           <UserInfo>
             <UserImgWrapper>

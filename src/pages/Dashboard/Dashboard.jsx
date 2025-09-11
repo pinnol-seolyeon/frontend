@@ -166,9 +166,16 @@ export default function Dashboard({ user, login, setLogin }) {
     });
   }, []);
 
+  // 페이지 정보 설정
+  const pageInfo = {
+    icon: "📊",
+    title: "Lv.01",
+    subtitle: "What is money?"
+  };
+
   return (
     <Wrapper>
-      <Header user={user} login={login} setLogin={setLogin} />
+      <Header user={user} login={login} setLogin={setLogin} pageInfo={pageInfo} />
       <MainWrapper>
         <BackButton
           onClick={() => navigate('/main')}

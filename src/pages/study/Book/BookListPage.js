@@ -422,7 +422,7 @@ function BookListPage({ user, login, setLogin }) {
 
   if (error) return (
     <Wrapper>
-      <Header user={user} login={login} setLogin={setLogin} />
+        <Header user={user} login={login} setLogin={setLogin} pageInfo={null} />
       <MainWrapper>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
           <div style={{ fontSize: '16px', color: '#e74c3c' }}>{error}</div>
@@ -433,7 +433,7 @@ function BookListPage({ user, login, setLogin }) {
 
   return (
     <Wrapper>
-      <Header user={user} login={login} setLogin={setLogin} />
+        <Header user={user} login={login} setLogin={setLogin} pageInfo={null} />
       <MainWrapper>
         <BackButton
           onClick={() => navigate('/main')}
