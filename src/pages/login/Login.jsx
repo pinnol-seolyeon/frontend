@@ -110,37 +110,39 @@ function Login(){
     //     window.location.href=kakaoURL;
     // };   
 
-    const redirectToKakao = () => {              
-      // 환경 변수 대신 현재 도메인 기반으로 리다이렉트 URI 설정
-      const redirectUri = window.location.hostname === 'localhost' 
-        ? 'http://localhost:3000/callback'
-        : `https://${window.location.hostname}/callback`;
+    const redirectToKakao = () => {
+      // 디버깅용 로그 추가
+      console.log('🔍 NODE_ENV:', process.env.NODE_ENV);
+      console.log('🔍 현재 도메인:', window.location.hostname);
+      console.log('🔍 API_BASE_URL:', process.env.REACT_APP_API_BASE_URL);
+      console.log('🔍 REDIRECT_URI:', process.env.REACT_APP_KAKAO_REDIRECT_URI);
       
-      const kakaoURL = `${process.env.REACT_APP_API_BASE_URL}/oauth2/authorization/kakao?redirect_uri=${encodeURIComponent(redirectUri)}`;
+      const kakaoURL = `${process.env.REACT_APP_API_BASE_URL}/oauth2/authorization/kakao?redirect_uri=${encodeURIComponent(process.env.REACT_APP_KAKAO_REDIRECT_URI)}`;
+      console.log('🔍 Full Kakao URL:', kakaoURL);
+      
       window.location.href = kakaoURL;
-    };
+  };
 
-
-    const getData = () => {
-        fetch(`${process.env.REACT_APP_API_BASE_URL}/api/my`, {
-          method: "GET",
-          credentials: "include" // 쿠키 기반 로그인 세션 유지
-        })
-          .then((res) => {
-            if (!res.ok) {
-              throw new Error("로그인되지 않았습니다.");
-            }
-            return res;
-          })
-          .then((data) => {
-            // 로그인 성공 시 유저 정보 표시
-            alert(`✅ 로그인 성공! 닉네임: ${data ?? "Unknown"}`);
-          })
-          .catch((error) => {
-            alert("❌ 로그인 상태가 아닙니다. 다시 로그인해주세요.");
-            console.error(error);
-          });
-      };
+  const getData = () => {
+    fetch(`${process.env.REACT_APP_API_BASE_URL}/api/my`, {
+        method: "GET",
+        credentials: "include"
+    })
+    .then((res) => {
+        if (!res.ok) {
+            throw new Error("로그인되지 않았습니다.");
+        }
+        return res.json(); // .json() 추가!
+    })
+    .then((data) => {
+        console.log('🔍 API Response:', data); // 디버깅용
+        alert(`✅ 로그인 성공! 닉네임: ${data.userName || data.name || data.nickname || "Unknown"}`);
+    })
+    .catch((error) => {
+        alert("❌ 로그인 상태가 아닙니다. 다시 로그인해주세요.");
+        console.error(error);
+    });
+};
       
 
     return(
