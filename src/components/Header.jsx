@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import userimg from '../assets/user.svg';
 import point from '../assets/point.svg';
 import logoutimg from '../assets/logout.svg';
-import {useEffect} from 'react';
 
 const ContentArea = styled.div`
   display: flex;
@@ -45,6 +44,12 @@ const Logo = styled.div`
   justify-content: flex-start;
   align-items: center;
   gap: 0.5rem;
+  cursor: pointer;
+  position: relative;
+  
+  &:hover {
+    opacity: 0.8;
+  }
 `
 
 const LogoContainer = styled.div`
@@ -193,6 +198,40 @@ const LogoutText = styled.div`
   color: white;
 `
 
+const Tooltip = styled.div`
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  z-index: 1000;
+  pointer-events: none;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-bottom: 5px solid rgba(0, 0, 0, 0.8);
+  }
+  
+  ${Logo}:hover & {
+    opacity: 1;
+    visibility: visible;
+  }
+`
+
 const LoginButton = styled.button`
   padding: 0.5rem 1rem;
   border: none;
@@ -234,17 +273,18 @@ function Header({ login, text, setLogin, userProgress, user }) {
   
     return (
       <MainHeader>
-        <Logo>
+        <Logo onClick={()=>navigate('/')}>
           <LogoContainer>
             <Image src={finnolLogo} alt="FINNOL Logo" />
           </LogoContainer>
           <LogoTitle>FINNOL</LogoTitle>
+          <Tooltip>핀놀 메인 화면으로 돌아갑니다</Tooltip>
         </Logo>
         <ContentArea>
           <UserInfo>
             <UserImgWrapper>
               <UserImg src={userimg}/>
-              <UserName>{user?.childName}어린이</UserName>
+              <UserName>{user?.childName} 어린이</UserName>
             </UserImgWrapper>
             <UserText>4학년 • 엄마/아빠: 김엄마</UserText>
           </UserInfo>
