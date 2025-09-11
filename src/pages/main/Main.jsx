@@ -46,6 +46,8 @@ const CardWrapper = styled.div`
 
 const Main = ({user, login, setLogin}) => {
   console.log('REDIRECT_URI:', process.env.REACT_APP_KAKAO_REDIRECT_URI);
+  console.log('현재 NODE_ENV:', process.env.NODE_ENV);
+
 
   const navigate = useNavigate();
   return (

@@ -440,7 +440,7 @@ function Question({ user, login, setLogin }){
 
     return(
         <Wrapper>
-            <Header user={user} login={login} setLogin={setLogin} />
+            <Header user={user} login={login} setLogin={setLogin} pageInfo={null} />
             <MainWrapper>
                 <BackButton
                 onClick={() => navigate('/main')}
