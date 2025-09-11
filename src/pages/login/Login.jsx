@@ -104,11 +104,21 @@ function Login(){
   console.log(process.env.REACT_APP_API_BASE_URL);
 
     //로그인 버튼 클릭시 호출
-    const redirectToKakao=()=>{
+    // const redirectToKakao=()=>{
     
-        const kakaoURL = `${process.env.REACT_APP_API_BASE_URL}/oauth2/authorization/kakao`
-        window.location.href=kakaoURL;
-    };   
+    //     const kakaoURL = `${process.env.REACT_APP_API_BASE_URL}/oauth2/authorization/kakao`
+    //     window.location.href=kakaoURL;
+    // };   
+
+    const redirectToKakao = () => {              
+      const kakaoURL = `${process.env.REACT_APP_API_BASE_URL}/oauth2/authorization/kakao?redirect_uri=${encodeURIComponent(process.env.REACT_APP_KAKAO_REDIRECT_URI)}`;
+      console.log('🔍 Full Kakao URL:', kakaoURL);
+      console.log('🔍 API_BASE_URL:', process.env.REACT_APP_API_BASE_URL);
+      console.log('🔍 REDIRECT_URI:', process.env.REACT_APP_KAKAO_REDIRECT_URI);
+      window.location.href = kakaoURL;
+    };
+
+    console.log('REDIRECT_URI:', process.env.REACT_APP_KAKAO_REDIRECT_URI);
 
     const getData = () => {
         fetch(`${process.env.REACT_APP_API_BASE_URL}/api/my`, {
