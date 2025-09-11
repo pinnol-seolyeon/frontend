@@ -111,14 +111,15 @@ function Login(){
     // };   
 
     const redirectToKakao = () => {              
-      const kakaoURL = `${process.env.REACT_APP_API_BASE_URL}/oauth2/authorization/kakao?redirect_uri=${encodeURIComponent(process.env.REACT_APP_KAKAO_REDIRECT_URI)}`;
-      console.log('🔍 Full Kakao URL:', kakaoURL);
-      console.log('🔍 API_BASE_URL:', process.env.REACT_APP_API_BASE_URL);
-      console.log('🔍 REDIRECT_URI:', process.env.REACT_APP_KAKAO_REDIRECT_URI);
+      // 환경 변수 대신 현재 도메인 기반으로 리다이렉트 URI 설정
+      const redirectUri = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000/callback'
+        : `https://${window.location.hostname}/callback`;
+      
+      const kakaoURL = `${process.env.REACT_APP_API_BASE_URL}/oauth2/authorization/kakao?redirect_uri=${encodeURIComponent(redirectUri)}`;
       window.location.href = kakaoURL;
     };
 
-    console.log('REDIRECT_URI:', process.env.REACT_APP_KAKAO_REDIRECT_URI);
 
     const getData = () => {
         fetch(`${process.env.REACT_APP_API_BASE_URL}/api/my`, {
