@@ -1,5 +1,5 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import styled from 'styled-components';
 import '../Book/BookPage.css';
 import Header from '../../../components/Header';
@@ -192,13 +192,6 @@ const ProgressFill = styled.div`
   `}
 `;
 
-const ProgressText = styled.div`
-  font-size: 0.8rem;
-  color: #666;
-  margin-top: 0.3rem;
-  text-align: right;
-`;
-
 const ActionButton = styled.button`
   width: 100%;
   padding: 0.8rem 1rem;
@@ -302,8 +295,28 @@ const BookCardComponent = ({ book, onSelect }) => {
 
 function BookListPage({ user, login, setLogin }) {
   const navigate = useNavigate();
-  // 책 목록 데이터 (API 연동 시 이 부분만 수정하면 됩니다)
-  const bookList = [
+  
+  // 🛡 useOutletContext가 null일 수 있으므로 방어적 처리
+  const outletContext = useOutletContext() || {};
+  const { userProgress = { completedSteps: [] } } = outletContext;
+
+  const [error, setError] = useState(null);
+
+  // useMemo를 사용하여 completedStages를 계산
+  const completedStages = useMemo(() => {
+    try {
+      return Array.isArray(userProgress?.completedSteps)
+        ? userProgress.completedSteps
+        : Object.keys(userProgress?.completedSteps || {}).map(Number);
+    } catch (error) {
+      console.error('Book page error:', error);
+      setError(error.message || '데이터를 처리하는 중 오류가 발생했습니다.');
+      return [];
+    }
+  }, [userProgress?.completedSteps]);
+
+  // 책 목록 데이터 (API 데이터와 연결)
+  const baseBookList = [
     { 
       id: 1,
       level: "Lv.01",
@@ -312,8 +325,6 @@ function BookListPage({ user, login, setLogin }) {
       iconColor: "#BFDBFF",
       path: "/book/chapter",
       description: "돈의 기본 개념과 역할을 배워보며 금융의 첫걸음을 시작해요!",
-      status: "completed",
-      currentProgress: 6,
       totalProgress: 6
     },
     { 
@@ -324,8 +335,6 @@ function BookListPage({ user, login, setLogin }) {
       iconColor: "#E0F2F1",
       path: "/book/chapter",
       description: "돈의 기본 개념과 역할을 배워보며 금융의 첫걸음을 시작해요!",
-      status: "completed",
-      currentProgress: 6,
       totalProgress: 6
     },
     { 
@@ -336,8 +345,6 @@ function BookListPage({ user, login, setLogin }) {
       iconColor: "#F3E5F5",
       path: "/book/chapter",
       description: "돈의 기본 개념과 역할을 배워보며 금융의 첫걸음을 시작해요!",
-      status: "in_progress",
-      currentProgress: 3,
       totalProgress: 6
     },
     { 
@@ -348,8 +355,6 @@ function BookListPage({ user, login, setLogin }) {
       iconColor: "#FFF3E0",
       path: "/book/chapter",
       description: "돈의 기본 개념과 역할을 배워보며 금융의 첫걸음을 시작해요!",
-      status: "locked",
-      currentProgress: 0,
       totalProgress: 6
     },
     { 
@@ -360,8 +365,6 @@ function BookListPage({ user, login, setLogin }) {
       iconColor: "#FCE4EC",
       path: "/book/chapter",
       description: "돈의 기본 개념과 역할을 배워보며 금융의 첫걸음을 시작해요!",
-      status: "locked",
-      currentProgress: 0,
       totalProgress: 6
     },
     { 
@@ -372,15 +375,49 @@ function BookListPage({ user, login, setLogin }) {
       iconColor: "#FFF8E1",
       path: "/book/chapter",
       description: "돈의 기본 개념과 역할을 배워보며 금융의 첫걸음을 시작해요!",
-      status: "locked",
-      currentProgress: 0,
       totalProgress: 6
     },
   ];
 
+  // API 데이터와 연결하여 동적으로 상태 설정
+  const bookList = baseBookList.map(book => {
+    const isCompleted = completedStages.includes(book.id);
+    const isPreviousCompleted = book.id === 1 || completedStages.includes(book.id - 1);
+    
+    let status, currentProgress;
+    if (isCompleted) {
+      status = "completed";
+      currentProgress = book.totalProgress;
+    } else if (isPreviousCompleted) {
+      status = "in_progress";
+      currentProgress = Math.floor(Math.random() * (book.totalProgress - 1)) + 1; // 임시 진행률
+    } else {
+      status = "locked";
+      currentProgress = 0;
+    }
+
+    return {
+      ...book,
+      status,
+      currentProgress
+    };
+  });
+
   const handleBookSelect = (path) => {
     navigate(path);
   };
+
+
+  if (error) return (
+    <Wrapper>
+      <Header user={user} login={login} setLogin={setLogin} />
+      <MainWrapper>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+          <div style={{ fontSize: '16px', color: '#e74c3c' }}>{error}</div>
+        </div>
+      </MainWrapper>
+    </Wrapper>
+  );
 
   return (
     <Wrapper>
@@ -393,7 +430,7 @@ function BookListPage({ user, login, setLogin }) {
         <PageHeader>
           {/* <PageTitle>{user?.childName}의 멋진 학습 여정🚀</PageTitle> */}
           <PageTitle>{user?.childName ? user.childName.slice(1) : "친구"}의 멋진 학습 여정🚀</PageTitle>
-          <PageSubtitle>벌써 2개 레벨을 완료했구나! 지금 레벨3을 열심히 배우고 있어!</PageSubtitle>
+          <PageSubtitle>벌써 {bookList.filter(book => book.status === 'completed').length}개 레벨을 완료했구나! 지금 열심히 배우고 있어!</PageSubtitle>
         </PageHeader>
 
         <BookGrid>
