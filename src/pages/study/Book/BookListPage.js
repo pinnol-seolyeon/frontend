@@ -392,7 +392,7 @@ function BookListPage({ user, login, setLogin }) {
         <BookPageContainer>
         <PageHeader>
           {/* <PageTitle>{user?.childName}의 멋진 학습 여정🚀</PageTitle> */}
-          <PageTitle>길동의 멋진 학습 여정🚀</PageTitle>
+          <PageTitle>{user?.childName ? user.childName.slice(1) : "친구"}의 멋진 학습 여정🚀</PageTitle>
           <PageSubtitle>벌써 2개 레벨을 완료했구나! 지금 레벨3을 열심히 배우고 있어!</PageSubtitle>
         </PageHeader>
 
