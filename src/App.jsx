@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, useNavigate } from 'react-router-dom';
 import { ThemeProvider, createGlobalStyle } from 'styled-components';
 import AppRoutes from './AppRoutes';
-import Header from './components/Header';
 import axios from 'axios';
 import { ChapterProvider } from './context/ChapterContext';
 
@@ -71,7 +70,6 @@ function AppContent() {
 
   return (
     <>
-      <Header login={login} setLogin={setLogin} user={user} />
       <AppRoutes login={login} setLogin={setLogin} user={user} />
     </>
   );

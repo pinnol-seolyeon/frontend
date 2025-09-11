@@ -44,16 +44,15 @@ const CardWrapper = styled.div`
   margin-top: 2.5rem;
 `;
 
-const Main = ({user}) => {
+const Main = ({user, login, setLogin}) => {
 
   const navigate = useNavigate();
   return (
     <Wrapper>
-      <Header />
+      <Header user={user} login={login} setLogin={setLogin} />
       <MainWrapper>
         <TitleText>
-          {/* {user?.childName}, 오늘도 함께 배워볼까? 👋 */}
-          길동, 오늘도 함께 배워볼까? 👋
+          {user?.childName || "친구"}, 오늘도 함께 배워볼까? 👋
         </TitleText>
         <SubTitleText>재미있는 금융 모험이 기다리고 있어!</SubTitleText>
         <CardWrapper>

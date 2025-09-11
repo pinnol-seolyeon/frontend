@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useOutletContext, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import '../Book/BookPage.css';
 import Header from '../../../components/Header';
@@ -300,10 +300,8 @@ const BookCardComponent = ({ book, onSelect }) => {
   );
 };
 
-function BookListPage() {
+function BookListPage({ user, login, setLogin }) {
   const navigate = useNavigate();
-  const context = useOutletContext();
-  const user = context?.user;
   // 책 목록 데이터 (API 연동 시 이 부분만 수정하면 됩니다)
   const bookList = [
     { 
@@ -386,7 +384,7 @@ function BookListPage() {
 
   return (
     <Wrapper>
-      <Header />
+      <Header user={user} login={login} setLogin={setLogin} />
       <MainWrapper>
         <BackButton
           onClick={() => navigate('/main')}
