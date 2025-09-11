@@ -45,8 +45,24 @@ function AppContent() {
     // axios.get(`https://api.finnol.co.kr/api/user`, { withCredentials: true })
       .then(response => {
         console.log("✅ 로그인 확인", response.data);
-        setLogin(true);
-        setUser(response.data);
+        
+        // 사용자 데이터 유효성 검증
+        const userData = response.data;
+        const isValidUser = userData && 
+          (userData.username || userData.childName) && 
+          typeof userData === 'object';
+        
+        if (isValidUser) {
+          console.log("✅ 유효한 사용자 데이터 확인");
+          setLogin(true);
+          setUser(userData);
+        } else {
+          console.log("⚠️ 사용자 데이터가 유효하지 않음:", userData);
+          setLogin(false);
+          setUser(null);
+          // 유효하지 않은 사용자 데이터면 로그인 페이지로 리다이렉트
+          navigate('/login');
+        }
       })
       .catch(() => {
         console.log("✖️ 로그인되어 있지 않습니다.");
@@ -60,7 +76,8 @@ function AppContent() {
 
   // ✅ navigate는 Hook 안에서만 실행되도록
   useEffect(() => {
-    if (!isLoading && user === false) {
+    if (!isLoading && (user === false || user === null)) {
+      console.log("🚀 로그인 페이지로 리다이렉트 (user:", user, ")");
       navigate("/login");
     }
   }, [isLoading, user, navigate]);
