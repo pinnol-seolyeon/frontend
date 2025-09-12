@@ -25,9 +25,19 @@ const MainHeader = styled.header`
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1000;  
-  /* CSS 변수로 Header 높이 설정 - 동적으로 업데이트됨 */
-  --header-height: 70px;
+  z-index: 1000;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    padding: 0.3rem 1rem;
+    min-height: 50px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0.2rem 0.5rem;
+    min-height: 45px;
+  }
+
 `;
 
 const Image=styled.img`
@@ -69,6 +79,17 @@ const LogoTitle = styled.div`
   color: white;
   position: relative;
   cursor: pointer;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    font-size: 18px;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 16px;
+  }
+
+
 `
 
 const LogoTitleTooltip = styled.div`
@@ -112,18 +133,38 @@ const UserInfo = styled.div`
   flex-direction: column;
   justify-content: center;
   gap: 0.5rem;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    align-items: center;
+    gap: 0.3rem;
+  }
 `;
 
 const UserImgWrapper = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    gap: 0.3rem;
+  }
 `
 
 const UserName = styled.div`
   font-size: 24px;
   font-weight: 700;
   color: white;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    font-size: 18px;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 16px;
+  }
 `
 
 const UserImg = styled.img`
@@ -133,6 +174,16 @@ const UserText = styled.div`
   font-size: 13px;
   font-weight: 300;
   color: white;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    font-size: 12px;
+    text-align: center;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 9px;
+  }
 `
 
 const PointWraper = styled.div`
@@ -141,13 +192,35 @@ const PointWraper = styled.div`
   gap: 0.5rem;
   background-color: #F0F4FC;
   border-radius: 37.5px;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.8rem;
+  min-width: fit-content;
+  width: auto;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    padding: 0.4rem 0.6rem;
+    gap: 0.3rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0.3rem 0.5rem;
+    gap: 0.2rem;
+  }
 `
 
 const PointValue = styled.div`
   font-size: 24px;
   font-weight: 500;
   color: #4A91FE;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    font-size: 20px;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 18px;
+  }
 `
 
 const FinnolLogo = styled.img`
@@ -232,6 +305,11 @@ const LogoutText = styled.div`
   font-size: 13px;
   font-weight: 300;
   color: white;
+  
+  /* 모바일에서 숨김 */
+  @media (max-width: 768px) {
+    display: none;
+  }
 `
 
 const Tooltip = styled.div`
@@ -272,6 +350,11 @@ const PageInfoContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
+  
+  /* 모바일에서 숨김 */
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 const PageInfo = styled.div`
@@ -296,7 +379,15 @@ const PageIcon = styled.div`
 const PageText = styled.div`
   color: white;
   font-weight: 600;
-  font-size: 20px;
+  font-size: 20px;  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    font-size: 16px;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 14px;
+  }
 `;
 
 const PageSubText = styled.div`
@@ -356,12 +447,14 @@ function Header({ login, text, setLogin, userProgress, user, pageInfo }) {
 
       // 초기 높이 설정
       updateHeaderHeight();
-
-      // 리사이즈 이벤트 리스너 추가
+      // 리사이즈 이벤트 리스너 추가 (모바일 회전 등 대응)
       window.addEventListener('resize', updateHeaderHeight);
+      window.addEventListener('orientationchange', updateHeaderHeight);
 
       return () => {
         window.removeEventListener('resize', updateHeaderHeight);
+        window.removeEventListener('orientationchange', updateHeaderHeight);
+
       };
     }, [pageInfo]); // pageInfo가 변경될 때마다 높이 재측정
 
