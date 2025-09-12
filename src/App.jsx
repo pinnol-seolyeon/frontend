@@ -35,7 +35,7 @@ const theme = {
 
 function AppContent() {
   const [login, setLogin] = useState(false);
-  const [isLoading, setIsLoading] = useState(false); // 로딩 상태를 false로 변경
+  const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
@@ -45,30 +45,8 @@ function AppContent() {
     // axios.get(`https://api.finnol.co.kr/api/user`, { withCredentials: true })
       .then(response => {
         console.log("✅ 로그인 확인", response.data);
-        
-        // 사용자 데이터 유효성 검증
-        const userData = response.data;
-        const isValidUser = userData && 
-          (userData.username || userData.childName) && 
-          typeof userData === 'object';
-        
-        if (isValidUser) {
-          console.log("✅ 유효한 사용자 데이터 확인");
-          setLogin(true);
-          setUser(userData);
-          
-          // 로그인된 사용자를 메인 페이지로 리다이렉트
-          if (window.location.pathname === '/') {
-            console.log("🚀 메인 페이지로 리다이렉트 (로그인 성공)");
-            navigate("/main");
-          }
-        } else {
-          console.log("⚠️ 사용자 데이터가 유효하지 않음:", userData);
-          setLogin(false);
-          setUser(null);
-          // 유효하지 않은 사용자 데이터면 로그인 페이지로 리다이렉트
-          navigate('/login');
-        }
+        setLogin(true);
+        setUser(response.data);
       })
       .catch(() => {
         console.log("✖️ 로그인되어 있지 않습니다.");
@@ -82,16 +60,13 @@ function AppContent() {
 
   // ✅ navigate는 Hook 안에서만 실행되도록
   useEffect(() => {
-    if (!isLoading) {
-      if (user === false || user === null) {
-        console.log("🚀 로그인 페이지로 리다이렉트 (user:", user, ")");
-        navigate("/login");
-      }
-      // 로그인 성공 시 리다이렉트는 위의 useEffect에서 처리
+    if (!isLoading && user === false) {
+
+      navigate("/login");
     }
   }, [isLoading, user, navigate]);
-
-  // ✅ 로딩 중에는 아무 것도 보여주지 않음
+  // 로딩 중에는 아무 것도 보여주지 않음
+  
   if (isLoading) return null;
 
   return (
