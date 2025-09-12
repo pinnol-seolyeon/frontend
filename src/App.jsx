@@ -56,6 +56,12 @@ function AppContent() {
           console.log("✅ 유효한 사용자 데이터 확인");
           setLogin(true);
           setUser(userData);
+          
+          // 로그인된 사용자를 메인 페이지로 리다이렉트
+          if (window.location.pathname === '/') {
+            console.log("🚀 메인 페이지로 리다이렉트 (로그인 성공)");
+            navigate("/main");
+          }
         } else {
           console.log("⚠️ 사용자 데이터가 유효하지 않음:", userData);
           setLogin(false);
@@ -80,12 +86,10 @@ function AppContent() {
       if (user === false || user === null) {
         console.log("🚀 로그인 페이지로 리다이렉트 (user:", user, ")");
         navigate("/login");
-      } else if (user && login && window.location.pathname === '/') {
-        console.log("🚀 메인 페이지로 리다이렉트 (로그인된 사용자)");
-        navigate("/main");
       }
+      // 로그인 성공 시 리다이렉트는 위의 useEffect에서 처리
     }
-  }, [isLoading, user, login, navigate]);
+  }, [isLoading, user, navigate]);
 
   // ✅ 로딩 중에는 아무 것도 보여주지 않음
   if (isLoading) return null;
