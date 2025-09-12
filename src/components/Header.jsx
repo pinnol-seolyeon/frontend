@@ -37,6 +37,7 @@ const MainHeader = styled.header`
     padding: 0.2rem 0.5rem;
     min-height: 45px;
   }
+
 `;
 
 const Image=styled.img`
@@ -87,6 +88,8 @@ const LogoTitle = styled.div`
   @media (max-width: 480px) {
     font-size: 16px;
   }
+
+
 `
 
 const LogoTitleTooltip = styled.div`
@@ -376,8 +379,7 @@ const PageIcon = styled.div`
 const PageText = styled.div`
   color: white;
   font-weight: 600;
-  font-size: 20px;
-  
+  font-size: 20px;  
   /* 모바일 반응형 */
   @media (max-width: 768px) {
     font-size: 16px;
@@ -445,7 +447,6 @@ function Header({ login, text, setLogin, userProgress, user, pageInfo }) {
 
       // 초기 높이 설정
       updateHeaderHeight();
-
       // 리사이즈 이벤트 리스너 추가 (모바일 회전 등 대응)
       window.addEventListener('resize', updateHeaderHeight);
       window.addEventListener('orientationchange', updateHeaderHeight);
@@ -453,6 +454,7 @@ function Header({ login, text, setLogin, userProgress, user, pageInfo }) {
       return () => {
         window.removeEventListener('resize', updateHeaderHeight);
         window.removeEventListener('orientationchange', updateHeaderHeight);
+
       };
     }, [pageInfo]); // pageInfo가 변경될 때마다 높이 재측정
 
