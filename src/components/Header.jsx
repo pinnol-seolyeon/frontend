@@ -174,7 +174,7 @@ const UserText = styled.div`
   
   /* 모바일 반응형 */
   @media (max-width: 768px) {
-    font-size: 12px;
+    font-size: 10px;
     text-align: center;
   }
   
