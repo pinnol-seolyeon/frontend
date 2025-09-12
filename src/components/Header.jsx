@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import finnolLogo from '../assets/finnol-logo.png';
 import { useNavigate } from 'react-router-dom';
+import { useRef, useEffect } from 'react';
 import userimg from '../assets/user.svg';
 import point from '../assets/point.svg';
 import logoutimg from '../assets/logout.svg';
@@ -25,10 +26,17 @@ const MainHeader = styled.header`
   left: 0;
   right: 0;
   z-index: 1000;
-  height: 70px;
   
-  /* CSS 변수로 Header 높이 설정 */
-  --header-height: 70px;
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    padding: 0.3rem 1rem;
+    min-height: 50px;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0.2rem 0.5rem;
+    min-height: 45px;
+  }
 `;
 
 const Image=styled.img`
@@ -37,19 +45,20 @@ const Image=styled.img`
     object-fit:contain;
 `
 
+const LeftArea = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 1;
+`
 
 const Logo = styled.div`
-  width: 30%;
   display: flex;
   justify-content: flex-start;
   align-items: center;
   gap: 0.5rem;
   cursor: pointer;
   position: relative;
-  
-  &:hover {
-    opacity: 0.8;
-  }
 `
 
 const LogoContainer = styled.div`
@@ -67,6 +76,51 @@ const LogoTitle = styled.div`
   font-size: 24px;
   font-weight: 700;
   color: white;
+  position: relative;
+  cursor: pointer;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    font-size: 18px;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 16px;
+  }
+`
+
+const LogoTitleTooltip = styled.div`
+  position: absolute;
+  bottom: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  z-index: 1001;
+  pointer-events: none;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 4px solid rgba(0, 0, 0, 0.9);
+  }
+  
+  ${LogoTitle}:hover & {
+    opacity: 1;
+    visibility: visible;
+  }
 `
 
 
@@ -76,18 +130,38 @@ const UserInfo = styled.div`
   flex-direction: column;
   justify-content: center;
   gap: 0.5rem;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    align-items: center;
+    gap: 0.3rem;
+  }
 `;
 
 const UserImgWrapper = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    gap: 0.3rem;
+  }
 `
 
 const UserName = styled.div`
   font-size: 24px;
   font-weight: 700;
   color: white;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    font-size: 18px;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 16px;
+  }
 `
 
 const UserImg = styled.img`
@@ -97,6 +171,16 @@ const UserText = styled.div`
   font-size: 13px;
   font-weight: 300;
   color: white;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    font-size: 12px;
+    text-align: center;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 9px;
+  }
 `
 
 const PointWraper = styled.div`
@@ -105,13 +189,35 @@ const PointWraper = styled.div`
   gap: 0.5rem;
   background-color: #F0F4FC;
   border-radius: 37.5px;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.8rem;
+  min-width: fit-content;
+  width: auto;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    padding: 0.4rem 0.6rem;
+    gap: 0.3rem;
+  }
+  
+  @media (max-width: 480px) {
+    padding: 0.3rem 0.5rem;
+    gap: 0.2rem;
+  }
 `
 
 const PointValue = styled.div`
   font-size: 24px;
   font-weight: 500;
   color: #4A91FE;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    font-size: 20px;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 18px;
+  }
 `
 
 const FinnolLogo = styled.img`
@@ -196,6 +302,11 @@ const LogoutText = styled.div`
   font-size: 13px;
   font-weight: 300;
   color: white;
+  
+  /* 모바일에서 숨김 */
+  @media (max-width: 768px) {
+    display: none;
+  }
 `
 
 const Tooltip = styled.div`
@@ -232,22 +343,30 @@ const Tooltip = styled.div`
   }
 `
 
-// 페이지 정보 표시 컴포넌트
 const PageInfoContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-left: 2rem;
+  
+  /* 모바일에서 숨김 */
+  @media (max-width: 768px) {
+    display: none;
+  }
 `;
 
 const PageInfo = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  background-color: rgba(255, 255, 255, 0.2);
+  gap: 1rem;
   padding: 0.5rem 1rem;
   border-radius: 20px;
   backdrop-filter: blur(10px);
+`;
+
+const PageDisplay = styled.div`
+  width: 1px;
+  height: 2rem;
+  background-color: #ffffff;
 `;
 
 const PageIcon = styled.div`
@@ -256,13 +375,23 @@ const PageIcon = styled.div`
 
 const PageText = styled.div`
   color: white;
-  font-weight: 500;
-  font-size: 0.9rem;
+  font-weight: 600;
+  font-size: 20px;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    font-size: 16px;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 14px;
+  }
 `;
 
 const PageSubText = styled.div`
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.8rem;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 300;
   margin-top: 0.2rem;
 `;
 
@@ -297,37 +426,64 @@ const NoDataMessage = styled.p`
 
 function Header({ login, text, setLogin, userProgress, user, pageInfo }) {
     const navigate = useNavigate();
+    const headerRef = useRef(null);
 
     const logout = () => {
       setLogin(false);
       navigate('/login');
     };
 
+    // Header 높이를 동적으로 측정하고 CSS 변수 업데이트
+    useEffect(() => {
+      const updateHeaderHeight = () => {
+        if (headerRef.current) {
+          const headerHeight = headerRef.current.offsetHeight;
+          document.documentElement.style.setProperty('--header-height', `${headerHeight}px`);
+          console.log('Header height updated:', headerHeight);
+        }
+      };
+
+      // 초기 높이 설정
+      updateHeaderHeight();
+
+      // 리사이즈 이벤트 리스너 추가 (모바일 회전 등 대응)
+      window.addEventListener('resize', updateHeaderHeight);
+      window.addEventListener('orientationchange', updateHeaderHeight);
+
+      return () => {
+        window.removeEventListener('resize', updateHeaderHeight);
+        window.removeEventListener('orientationchange', updateHeaderHeight);
+      };
+    }, [pageInfo]); // pageInfo가 변경될 때마다 높이 재측정
+
     console.log(user?.childName);
   
     return (
-      <MainHeader>
-        <Logo onClick={()=>navigate('/')}>
-          <LogoContainer>
-            <Image src={finnolLogo} alt="FINNOL Logo" />
-          </LogoContainer>
-          <LogoTitle>FINNOL</LogoTitle>
-          <Tooltip>핀놀 메인 화면으로 돌아갑니다</Tooltip>
-        </Logo>
-        
-        {/* 페이지 정보 표시 (데이터가 있을 때만) */}
-        {pageInfo && (
-          <PageInfoContainer>
-            <PageInfo>
-              <PageIcon>{pageInfo.icon}</PageIcon>
-              <div>
-                <PageText>{pageInfo.title}</PageText>
-                {pageInfo.subtitle && <PageSubText>{pageInfo.subtitle}</PageSubText>}
-              </div>
-            </PageInfo>
-          </PageInfoContainer>
-        )}
-        
+      <MainHeader ref={headerRef}>
+        <LeftArea>
+          <Logo onClick={()=>navigate('/')}>
+            <LogoContainer>
+              <Image src={finnolLogo} alt="FINNOL Logo" />
+            </LogoContainer>
+            <LogoTitle>FINNOL
+              <LogoTitleTooltip>핀놀 메인 화면으로 돌아갑니다</LogoTitleTooltip>
+            </LogoTitle>
+          </Logo>
+            {/* 페이지 정보 표시 (데이터가 있을 때만) */}
+            {pageInfo && (
+              <PageInfoContainer>
+                <PageInfo>
+                  <PageDisplay />
+                  <div>
+                    <PageText>{pageInfo.title}</PageText>
+                    {pageInfo.subtitle && <PageSubText>{pageInfo.subtitle}</PageSubText>}
+                  </div>
+                </PageInfo>
+              </PageInfoContainer>
+            )}
+          
+        </LeftArea>        
+
         <ContentArea>
           <UserInfo>
             <UserImgWrapper>

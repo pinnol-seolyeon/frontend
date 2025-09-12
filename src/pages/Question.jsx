@@ -13,30 +13,44 @@ import hopin from "../assets/hopin_face.svg";
 
 
 const Wrapper=styled.div`
-    width:100vw;
-    height:100vh;
+    width: 100vw;
+    height: 100vh;
     background-color: #ffffff;
     background-image: url(${background});
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto;
 `;
 
 const MainWrapper = styled.div` 
     width: 100%;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     padding: calc(var(--header-height, 70px) + 20px) 20px 20px 20px;
-    margin: 0 50%;
 `;
 
+const ContentContainer = styled.div`
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+`;
+
+const BackButtonWrapper = styled.div`
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    justify-content: flex-start;
+`;
 
 const BackButton = styled.div`
     border-radius: 8px;
@@ -47,7 +61,13 @@ const BackButton = styled.div`
     color: #4C4C4C;
     cursor: pointer;
     background-color: white;
-    margin: 2rem 10rem 0;
+    transition: all 0.2s ease;
+    
+    &:hover {
+        background-color: #f8f9fa;
+        border-color: #4A91FE;
+        color: #4A91FE;
+    }
 `;
 
 const QuestionArea = styled.div`
@@ -437,15 +457,24 @@ function Question({ user, login, setLogin }){
         });
     };
 
+    const pageInfo = {
+        title: "질문하기",
+        subtitle: "궁금한것을 호핀이에게 물어보세요!",
+    };
+
 
     return(
         <Wrapper>
-            <Header user={user} login={login} setLogin={setLogin} pageInfo={null} />
+            <Header user={user} login={login} setLogin={setLogin} pageInfo={pageInfo} />
             <MainWrapper>
-                <BackButton
-                onClick={() => navigate('/main')}
-                >{'<'} 이전 페이지로 돌아가기</BackButton>                
-                <QuestionArea>
+                <ContentContainer>
+                    <BackButtonWrapper>
+                        <BackButton
+                            onClick={() => navigate('/main')}
+                        >{'<'} 이전 페이지로 돌아가기</BackButton>
+                    </BackButtonWrapper>
+                    
+                    <QuestionArea>
                     <ChatContainer>
                         <MessageList>
                             {messages.map((msg, index) =>
@@ -477,7 +506,8 @@ function Question({ user, login, setLogin }){
                             답변하기
                         </SendButton>
                     </InputArea>
-                </QuestionArea>
+                    </QuestionArea>
+                </ContentContainer>
             </MainWrapper>
         </Wrapper>
     );

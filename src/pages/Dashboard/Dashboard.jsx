@@ -9,8 +9,15 @@ import { fetchStudyStats, fetchRadarScore } from '../../api/analyze/analytics';
 import { useNavigate } from 'react-router-dom';
 
 const Wrapper = styled.div`
-  width: 100%;
   background-color: #F0F4FC;
+  min-height: 100vh;
+  width: 100vw;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
 `;
 
 const MainWrapper = styled.div` 
@@ -18,8 +25,24 @@ const MainWrapper = styled.div`
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   padding: calc(var(--header-height, 70px) + 20px) 20px 20px 20px;
+`;
+
+const ContentContainer = styled.div`
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const BackButtonWrapper = styled.div`
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 2rem;
 `;
 
 const BackButton = styled.div`
@@ -31,7 +54,13 @@ const BackButton = styled.div`
   color: #4C4C4C;
   cursor: pointer;
   background-color: white;
-  margin: 2rem 10rem;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #f8f9fa;
+    border-color: #4A91FE;
+    color: #4A91FE;
+  }
 `;
 
 const TitleText = styled.div`
@@ -168,20 +197,22 @@ export default function Dashboard({ user, login, setLogin }) {
 
   // 페이지 정보 설정
   const pageInfo = {
-    icon: "📊",
     title: "Lv.01",
-    subtitle: "What is money?"
+    subtitle: "돈이란 무엇일까?"
   };
 
   return (
     <Wrapper>
       <Header user={user} login={login} setLogin={setLogin} pageInfo={pageInfo} />
       <MainWrapper>
-        <BackButton
-          onClick={() => navigate('/main')}
-        >{'<'} 이전 페이지로 돌아가기</BackButton>
-        
-        <ContentBox>
+        <ContentContainer>
+          <BackButtonWrapper>
+            <BackButton
+              onClick={() => navigate('/main')}
+            >{'<'} 이전 페이지로 돌아가기</BackButton>
+          </BackButtonWrapper>
+          
+          <ContentBox>
           {/* 위쪽 수평 두 개 */}
           <TopBox>
             <TopWrapper>
@@ -211,8 +242,9 @@ export default function Dashboard({ user, login, setLogin }) {
             <StudyTimeStats />
           </ChartBox>
 
-        <QnAViewer />
-        </ContentBox>
+          <QnAViewer />
+          </ContentBox>
+        </ContentContainer>
       </MainWrapper>
     </Wrapper>
   );

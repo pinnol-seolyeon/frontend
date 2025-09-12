@@ -27,13 +27,37 @@ const TitleText = styled.div`
   font-weight: 700;
   color: #333333;
   margin-top: 2rem;
-  margin-bottom: 0.5rem
+  margin-bottom: 0.5rem;
+  text-align: center;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    font-size: 2rem;
+    margin-top: 1rem;
+    margin-bottom: 0.3rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.2rem;
+  }
 `;
 
 const SubTitleText = styled.div`
   font-size: 1.5rem;
   font-weight: 400;
   color: #333333;
+  text-align: center;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    font-size: 1.2rem;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 1rem;
+  }
 `;
 
 const CardWrapper = styled.div` 
@@ -42,6 +66,26 @@ const CardWrapper = styled.div`
   justify-content: center;
   gap: 2.5rem;
   margin-top: 2.5rem;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+`;
+
+const CardsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  margin-top: 2.5rem;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
 `;
 
 const Main = ({user, login, setLogin}) => {
@@ -58,51 +102,53 @@ const Main = ({user, login, setLogin}) => {
           {user?.childName ? user.childName.slice(1) : "친구"}, 오늘도 함께 배워볼까? 👋
         </TitleText>
         <SubTitleText>재미있는 금융 모험이 기다리고 있어!</SubTitleText>
-        <CardWrapper>
-          <Card
-              icon={lesson}
-              title="AI 학습하기"
-              description={`AI 선생님과 함께
-                오늘의 학습을 시작해보자!`}
-              backgroundColor = "linear-gradient(180deg, #EFF6FF, #AED2FF)"
-              iconBackgroundColor="#BFDBFF"
+        <CardsContainer>
+          <CardWrapper>
+            <Card
+                icon={lesson}
+                title="AI 학습하기"
+                description={`AI 선생님과 함께
+                  오늘의 학습을 시작해보자!`}
+                backgroundColor = "linear-gradient(180deg, #EFF6FF, #AED2FF)"
+                iconBackgroundColor="#BFDBFF"
+                onButtonClick={() => {
+                  console.log('클릭!');
+                  navigate('/book');
+                }}          />
+            <Card
+              icon={analysis}
+              title="학습 분석"
+              description={`나의 학습 상태를 분석하고
+                  피드백을 받아보자!`}
+              backgroundColor = "linear-gradient(180deg, #EFFDF4, #A4FFC4)"
+              iconBackgroundColor="#B9F8CF"
               onButtonClick={() => {
                 console.log('클릭!');
-                navigate('/book');
-              }}          />
-          <Card
-            icon={analysis}
-            title="학습 분석"
-            description={`나의 학습 상태를 분석하고
-                피드백을 받아보자!`}
-            backgroundColor = "linear-gradient(180deg, #EFFDF4, #A4FFC4)"
-            iconBackgroundColor="#B9F8CF"
-            onButtonClick={() => {
-              console.log('클릭!');
-              navigate('/dashboard');
-            }}
-          />
-        </CardWrapper>
-        <CardWrapper>
-          <Card
-            icon={pencil}
-            title="복습하기"
-            description={`이전 학습 내용을 복습하고
-                퀴즈를 받아보자!`}
-            backgroundColor = "linear-gradient(180deg, #FFF7ED, #FFDD93)"
-            iconBackgroundColor="#FFDD8F"
-            onButtonClick={() => console.log('클릭!')}
-          />
-          <Card
-            icon={goal}
-            title="학습 현황"
-            description={`전체 학습 진도와
-              획득 포인트를 확인해보자!`}
-            backgroundColor = "linear-gradient(180deg, #FAF5FF, #E3C9FF)"
-            iconBackgroundColor="#EAD4FF"
-            onButtonClick={() => console.log('클릭!')}
-          />
-        </CardWrapper>
+                navigate('/dashboard');
+              }}
+            />
+          </CardWrapper>
+          <CardWrapper>
+            <Card
+              icon={pencil}
+              title="복습하기"
+              description={`이전 학습 내용을 복습하고
+                  퀴즈를 받아보자!`}
+              backgroundColor = "linear-gradient(180deg, #FFF7ED, #FFDD93)"
+              iconBackgroundColor="#FFDD8F"
+              onButtonClick={() => console.log('클릭!')}
+            />
+            <Card
+              icon={goal}
+              title="학습 현황"
+              description={`전체 학습 진도와
+                획득 포인트를 확인해보자!`}
+              backgroundColor = "linear-gradient(180deg, #FAF5FF, #E3C9FF)"
+              iconBackgroundColor="#EAD4FF"
+              onButtonClick={() => console.log('클릭!')}
+            />
+          </CardWrapper>
+        </CardsContainer>
       </MainWrapper>
     </Wrapper>
   );
