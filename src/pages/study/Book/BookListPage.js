@@ -8,6 +8,14 @@ import lock from '../../../assets/lock.png';
 
 const Wrapper = styled.div`
   background-color: #F0F4FC;
+  min-height: 100vh;
+  width: 100vw;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
 `;
 
 const MainWrapper = styled.div` 
@@ -15,12 +23,28 @@ const MainWrapper = styled.div`
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   padding: calc(var(--header-height, 70px) + 20px) 20px 20px 20px;
 `;
 
+const ContentContainer = styled.div`
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const BackButtonWrapper = styled.div`
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 2rem;
+`;
 
 const BackButton = styled.div`
+  display: flex;
   border-radius: 8px;
   padding: 0.6rem 1rem;
   border: 1px solid #B8B8B8;
@@ -29,13 +53,18 @@ const BackButton = styled.div`
   color: #4C4C4C;
   cursor: pointer;
   background-color: white;
-  margin: 2rem 10rem 0;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background-color: #f8f9fa;
+    border-color: #4A91FE;
+    color: #4A91FE;
+  }
 `;
 
 const BookPageContainer = styled.div`
-  width: 100vw;
+  width: 100%;
   padding: 1rem;
-  min-height: 100vh;
 `;
 
 const PageHeader = styled.div`
@@ -419,10 +448,15 @@ function BookListPage({ user, login, setLogin }) {
     navigate(path);
   };
 
+  const pageInfo = {
+    title: "AI 학습하기",
+    subtitle: "호핀이와 함께 단계별로 학습해요"
+  }
+
 
   if (error) return (
     <Wrapper>
-        <Header user={user} login={login} setLogin={setLogin} pageInfo={null} />
+        <Header user={user} login={login} setLogin={setLogin} pageInfo={pageInfo} />
       <MainWrapper>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
           <div style={{ fontSize: '16px', color: '#e74c3c' }}>{error}</div>
@@ -433,28 +467,33 @@ function BookListPage({ user, login, setLogin }) {
 
   return (
     <Wrapper>
-        <Header user={user} login={login} setLogin={setLogin} pageInfo={null} />
+        <Header user={user} login={login} setLogin={setLogin} pageInfo={pageInfo} />
       <MainWrapper>
-        <BackButton
-          onClick={() => navigate('/main')}
-        >{'<'} 이전 페이지로 돌아가기</BackButton>
-        <BookPageContainer>
-        <PageHeader>
-          {/* <PageTitle>{user?.childName}의 멋진 학습 여정🚀</PageTitle> */}
-          <PageTitle>{user?.childName ? user.childName.slice(1) : "친구"}의 멋진 학습 여정🚀</PageTitle>
-          <PageSubtitle>벌써 {bookList.filter(book => book.status === 'completed').length}개 레벨을 완료했구나! 지금 열심히 배우고 있어!</PageSubtitle>
-        </PageHeader>
+        <ContentContainer>
+          <BackButtonWrapper>
+            <BackButton
+              onClick={() => navigate('/main')}
+            >{'<'} 이전 페이지로 돌아가기</BackButton>
+          </BackButtonWrapper>
+          
+          <BookPageContainer>
+            <PageHeader>
+              {/* <PageTitle>{user?.childName}의 멋진 학습 여정🚀</PageTitle> */}
+              <PageTitle>{user?.childName ? user.childName.slice(1) : "친구"}의 멋진 학습 여정🚀</PageTitle>
+              <PageSubtitle>벌써 {bookList.filter(book => book.status === 'completed').length}개 레벨을 완료했구나! 지금 열심히 배우고 있어!</PageSubtitle>
+            </PageHeader>
 
-        <BookGrid>
-          {bookList.map((book) => (
-            <BookCardComponent
-              key={book.id}
-              book={book}
-              onSelect={handleBookSelect}
-            />
-          ))}
-        </BookGrid>
-        </BookPageContainer>
+            <BookGrid>
+              {bookList.map((book) => (
+                <BookCardComponent
+                  key={book.id}
+                  book={book}
+                  onSelect={handleBookSelect}
+                />
+              ))}
+            </BookGrid>
+          </BookPageContainer>
+        </ContentContainer>
       </MainWrapper>
     </Wrapper>
   );
