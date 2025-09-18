@@ -15,12 +15,11 @@ const ContentArea = styled.div`
 `;
 
 const MainHeader = styled.header`
-  background: linear-gradient(to right, #A7CEFF 0%, #4A91FE 100%);
-  padding: 0.5rem 10rem; /*상하 좌우*/
+  background: #ffffff;
+  padding: 0.8rem 1.5rem; /*상하 좌우*/
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   position: fixed;
   top: 0;
   left: 0;
@@ -59,6 +58,7 @@ const Logo = styled.div`
   gap: 0.5rem;
   cursor: pointer;
   position: relative;
+  width: 8rem;
 `
 
 const LogoContainer = styled.div`
@@ -117,7 +117,7 @@ const LogoTitleTooltip = styled.div`
     border-bottom: 4px solid rgba(0, 0, 0, 0.9);
   }
   
-  ${LogoTitle}:hover & {
+  ${Logo}:hover & {
     opacity: 1;
     visibility: visible;
   }
@@ -462,12 +462,8 @@ function Header({ login, text, setLogin, userProgress, user, pageInfo }) {
       <MainHeader ref={headerRef}>
         <LeftArea>
           <Logo onClick={()=>navigate('/')}>
-            <LogoContainer>
               <Image src={finnolLogo} alt="FINNOL Logo" />
-            </LogoContainer>
-            <LogoTitle>FINNOL
               <LogoTitleTooltip>핀놀 메인 화면으로 돌아갑니다</LogoTitleTooltip>
-            </LogoTitle>
           </Logo>
             {/* 페이지 정보 표시 (데이터가 있을 때만) */}
             {pageInfo && (
@@ -483,24 +479,6 @@ function Header({ login, text, setLogin, userProgress, user, pageInfo }) {
             )}
           
         </LeftArea>        
-
-        <ContentArea>
-          <UserInfo>
-            <UserImgWrapper>
-              <UserImg src={userimg}/>
-              <UserName>{user?.childName} 어린이</UserName>
-            </UserImgWrapper>
-            <UserText>4학년 • 엄마/아빠: 김엄마</UserText>
-          </UserInfo>
-          <PointWraper>
-            <Image src={point}/>
-            <PointValue>{user?.coin || 0}P</PointValue>
-          </PointWraper>
-          <LogoutWrapper onClick={logout}>
-            <LogoutImg src={logoutimg} onClick={logout}/>
-            <LogoutText>로그아웃</LogoutText>
-          </LogoutWrapper>
-        </ContentArea>
         {/* <UserStatus>
           <PointsDisplay>
             <PointsIcon>💰</PointsIcon>
