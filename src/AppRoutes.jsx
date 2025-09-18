@@ -29,13 +29,7 @@ const GlobalStyles = createGlobalStyle`
   * {
     box-sizing: border-box;
   }
-  body {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-  }
+
   // #root {
   //   width: 80%;
   // }
