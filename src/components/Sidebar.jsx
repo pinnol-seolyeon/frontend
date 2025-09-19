@@ -23,13 +23,13 @@ const Wrapper = styled.div`
   padding: 1rem 1.5rem;
   flex-shrink: 0;
   
-  /* 태블릿 크기에서 조정 */
-  @media (max-width: 1024px) {
-    width: 18vw;
-    min-width: 14rem;
-    max-width: 18rem;
-    padding: 1rem 1.2rem;
-  }
+  // /* 태블릿 크기에서 조정 */
+  // @media (max-width: 1024px) {
+  //   width: 18vw;
+  //   min-width: 14rem;
+  //   max-width: 18rem;
+  //   padding: 1rem 1.2rem;
+  // }
   
   /* 모바일에서 숨김 */
   @media (max-width: 768px) {
@@ -48,10 +48,53 @@ const LogoSection = styled.div`
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 2rem;
+  position: relative;
 `;
 
 const LogoImage = styled.img`
   width: 6rem;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
+const Tooltip = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 7rem;
+  transform: translateY(-50%);
+  background-color: #333;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  font-size: 14px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 1000;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -4px;
+    transform: translateY(-50%);
+    border: 4px solid transparent;
+    border-right-color: #333;
+  }
+`;
+
+const LogoContainer = styled.div`
+  position: relative;
+  
+  &:hover ${Tooltip} {
+    opacity: 1;
+    visibility: visible;
+  }
 `;
 
 
@@ -223,8 +266,8 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
 
     const menuItems = [
       { id: 'home', icon: homeimg, text: '홈', path: '/main' },
-      { id: 'study', icon: studyimg, text: '학습하기', path: '/study' },
-      { id: 'analysis', icon: analyzeimg, text: '학습분석', path: '/analyze' },
+      { id: 'study', icon: studyimg, text: '학습하기', path: '/book' },
+      { id: 'analysis', icon: analyzeimg, text: '학습분석', path: '/dashboard' },
       { id: 'review', icon: reviewimg, text: '복습하기', path: '/review' },
       { id: 'status', icon: statusimg, text: '학습현황', path: '/status' }
     ];
@@ -232,12 +275,31 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
     const handleMenuClick = (path) => {
       navigate(path);
     };
+
+    const handleLogoClick = () => {
+      navigate('/main');
+    };
+
+    const isActive = (path) => {
+      const currentPath = window.location.pathname;
+      if (path === '/main') {
+        return currentPath === '/main' || currentPath === '/';
+      }
+      return currentPath === path;
+    };
   
     return (
       <Wrapper>
         <TopSection>
           <LogoSection>
-            <LogoImage src={finnolLogo} alt="FINNOL" />
+            <LogoContainer>
+              <LogoImage 
+                src={finnolLogo} 
+                alt="FINNOL" 
+                onClick={handleLogoClick}
+              />
+              <Tooltip>핀놀 메인화면으로 돌아갑니다</Tooltip>
+            </LogoContainer>
           </LogoSection>
 
           <UserSection>
@@ -264,7 +326,7 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
             {menuItems.map((item) => (
               <MenuItem 
                 key={item.id} 
-                active={window.location.pathname === item.path}
+                active={isActive(item.path)}
                 onClick={() => handleMenuClick(item.path)}
               >
                   <MenuIcon><img src={item.icon} alt={item.text} /></MenuIcon>

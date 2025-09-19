@@ -64,11 +64,19 @@ export default function AppRoutes({ login, setLogin, user }) {
   const location = useLocation();
   const isDashboard = location.pathname === '/dashboard';
 
+  // 로그인이 필요한 페이지들
+  const protectedRoutes = ['/','/main', '/dashboard', '/study', '/question', '/review', '/game', '/book', '/analyze', '/status'];
+  const isProtectedRoute = protectedRoutes.some(route => location.pathname.startsWith(route));
+
+  // 로그인하지 않은 상태에서 보호된 페이지에 접근하면 로그인 페이지로 리다이렉트
+  if (!login && isProtectedRoute) {
+    return <Login login={login} setLogin={setLogin} user={user} />;
+  }
+
   return (
     <>
-      {!isDashboard && <GlobalStyles />}
+      <GlobalStyles />
       <Routes location={location} key={location.pathname}> 
-        {/* 로그인 체크 제거 - 자유롭게 페이지 이동 가능 */}
         <Route
           path="/"
           element={<Main login={login} setLogin={setLogin} user={user} />}

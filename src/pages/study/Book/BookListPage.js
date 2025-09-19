@@ -4,27 +4,32 @@ import styled from 'styled-components';
 import '../Book/BookPage.css';
 import Header from '../../../components/Header';
 import lock from '../../../assets/lock.png';
+import Sidebar from '../../../components/Sidebar';
 
 
 const Wrapper = styled.div`
-  background-color: #F0F4FC;
-  min-height: 100vh;
-  width: 100vw;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow-y: auto;
+  background-color: #ffffff;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: row;
+
 `;
 
 const MainWrapper = styled.div` 
-  width: 100%;
-  min-height: 100vh;
+  flex: 1;
+  min-height: calc(100vh - var(--header-height, 70px));
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: calc(var(--header-height, 70px) + 20px) 20px 20px 20px;
+  justify-content: center;
+  padding: 2rem 0;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+
 `;
 
 const ContentContainer = styled.div`
@@ -456,7 +461,7 @@ function BookListPage({ user, login, setLogin }) {
 
   if (error) return (
     <Wrapper>
-        <Header user={user} login={login} setLogin={setLogin} pageInfo={pageInfo} />
+      <Sidebar user={user} login={login} setLogin={setLogin} />
       <MainWrapper>
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
           <div style={{ fontSize: '16px', color: '#e74c3c' }}>{error}</div>
@@ -467,7 +472,7 @@ function BookListPage({ user, login, setLogin }) {
 
   return (
     <Wrapper>
-        <Header user={user} login={login} setLogin={setLogin} pageInfo={pageInfo} />
+      <Sidebar user={user} login={login} setLogin={setLogin} />
       <MainWrapper>
         <ContentContainer>
           <BackButtonWrapper>
