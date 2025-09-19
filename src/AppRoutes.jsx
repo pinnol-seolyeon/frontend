@@ -75,7 +75,7 @@ export default function AppRoutes({ login, setLogin, user }) {
 
   return (
     <>
-      {!isDashboard && <GlobalStyles />}
+      <GlobalStyles />
       <Routes location={location} key={location.pathname}> 
         <Route
           path="/"

@@ -23,13 +23,13 @@ const Wrapper = styled.div`
   padding: 1rem 1.5rem;
   flex-shrink: 0;
   
-  /* 태블릿 크기에서 조정 */
-  @media (max-width: 1024px) {
-    width: 18vw;
-    min-width: 14rem;
-    max-width: 18rem;
-    padding: 1rem 1.2rem;
-  }
+  // /* 태블릿 크기에서 조정 */
+  // @media (max-width: 1024px) {
+  //   width: 18vw;
+  //   min-width: 14rem;
+  //   max-width: 18rem;
+  //   padding: 1rem 1.2rem;
+  // }
   
   /* 모바일에서 숨김 */
   @media (max-width: 768px) {
