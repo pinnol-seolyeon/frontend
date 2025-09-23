@@ -1,7 +1,6 @@
 import styled from "styled-components";
 import logo from '../../assets/finnol-logo.png';
 import kakaologin from "../../assets/kakaologin.png";
-import login from "../../assets/login.png";
 import hopin from "../../assets/hopin.svg";
 
 const Wrapper=styled.div`
@@ -12,7 +11,12 @@ const Wrapper=styled.div`
     flex-direction:row;
     align-items:center;
     justify-content:center;
-
+    overflow:hidden;
+    
+    /* 모바일에서는 세로 레이아웃 */
+    @media (max-width: 480px) {
+        flex-direction: column;
+    }
 `;
 
 const LeftSection = styled.div`
@@ -23,6 +27,22 @@ const LeftSection = styled.div`
   height: 100vh;
   padding: 2rem;
   position: relative;
+  
+  /* 반응형 디자인 */
+  @media (max-width: 1200px) {
+    padding: 1.5rem;
+  }
+  
+  @media (max-width: 768px) {
+    width: 50%;
+    padding: 1rem;
+  }
+  
+  @media (max-width: 480px) {
+    width: 100%;
+    height: 50vh;
+    padding: 1rem;
+  }
 `
 
 const RightSection = styled.div`
@@ -33,6 +53,16 @@ const RightSection = styled.div`
   width: 60%;
   height: 100vh;
   background-color: rgba(255, 255, 255, 0.6);
+  
+  /* 반응형 디자인 */
+  @media (max-width: 768px) {
+    width: 50%;
+  }
+  
+  @media (max-width: 480px) {
+    width: 100%;
+    height: 50vh;
+  }
 `
 
 const HopinImg = styled.img`
@@ -50,6 +80,16 @@ const Image=styled.img`
     width: 8rem; 
     height: auto;
     object-fit: contain;
+    margin-top: 0;
+
+    
+    @media (max-width: 768px) {
+        width: 3rem;
+    }
+    
+    @media (max-width: 480px) {
+        width: 2.5rem;
+    }
 `
 
 
@@ -67,35 +107,27 @@ const KakaoLoginImg=styled.img`
 
 const Logo = styled.div`
   position: absolute;
-  top: 2rem;
+  top: 4rem;
   left: 2rem;
   z-index: 10;
+  
+  /* 반응형 디자인 */
+  @media (max-width: 1200px) {
+    top: 3rem;
+    left: 1.5rem;
+  }
+  
+  @media (max-width: 768px) {
+    top: 2.5rem;
+    left: 1rem;
+  }
+  
+  @media (max-width: 480px) {
+    top: 2rem;
+    left: 1rem;
+  }
 `
 
-const LogoContainer = styled.div`
-  width: 6rem;
-  height: 6rem;
-  background-color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-`
-
-const Title = styled.div`
-  font-size: 50px;
-  font-weight: 700;
-  color: #4A91FE;
-  margin-bottom: 0.5rem;
-`
-
-const Content = styled.div`
-  font-size: 24px;
-  font-weight: 400;
-  color: #333333;
-  margin-bottom: 2rem;
-`
 
 const LoginWrapper = styled.div`
   display: flex;
@@ -124,12 +156,6 @@ const LoginContent = styled.div`
   white-space: pre-line;
   margin-bottom: 2rem;
 `
-const Footer = styled.div`
-  font-size: 16px;
-  font-weight: 400;
-  color: #333333;
-  margin-top: 2rem;
-`
 
 function Login(){
   console.log(process.env.REACT_APP_API_BASE_URL);
@@ -154,26 +180,6 @@ function Login(){
       window.location.href = kakaoURL;
   };
 
-  const getData = () => {
-    fetch(`${process.env.REACT_APP_API_BASE_URL}/api/my`, {
-        method: "GET",
-        credentials: "include"
-    })
-    .then((res) => {
-        if (!res.ok) {
-            throw new Error("로그인되지 않았습니다.");
-        }
-        return res.json(); // .json() 추가!
-    })
-    .then((data) => {
-        console.log('🔍 API Response:', data); // 디버깅용
-        alert(`✅ 로그인 성공! 닉네임: ${data.userName || data.name || data.nickname || "Unknown"}`);
-    })
-    .catch((error) => {
-        alert("❌ 로그인 상태가 아닙니다. 다시 로그인해주세요.");
-        console.error(error);
-    });
-};
       
 
     return(

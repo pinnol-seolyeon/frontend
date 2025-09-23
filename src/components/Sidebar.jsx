@@ -61,6 +61,13 @@ const LogoImage = styled.img`
   }
 `;
 
+const SidebarButton = styled.img`
+  width: 1.2rem;
+  height: 1.2rem;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+`;
+
 const Tooltip = styled.div`
   position: absolute;
   top: 50%;
@@ -298,6 +305,7 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
                 alt="FINNOL" 
                 onClick={handleLogoClick}
               />
+              <SidebarButton></SidebarButton>
               <Tooltip>핀놀 메인화면으로 돌아갑니다</Tooltip>
             </LogoContainer>
           </LogoSection>
