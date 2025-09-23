@@ -30,9 +30,9 @@ const Wrapper = styled.div`
   
   /* 모바일에서는 기본적으로 접힌 상태 */
   @media (max-width: 768px) {
-    width: ${props => props.collapsed ? '4rem' : '100vw'};
-    min-width: ${props => props.collapsed ? '4rem' : '100vw'};
-    max-width: ${props => props.collapsed ? '4rem' : '100vw'};
+    width: ${props => props.collapsed ? '4rem' : '80vw'};
+    min-width: ${props => props.collapsed ? '4rem' : '80vw'};
+    max-width: ${props => props.collapsed ? '4rem' : '80vw'};
     padding: ${props => props.collapsed ? '1rem 0.5rem' : '1rem 1.5rem'};
     position: ${props => props.collapsed ? 'relative' : 'fixed'};
     z-index: 1000;
@@ -63,13 +63,25 @@ const LogoSection = styled.div`
 `;
 
 const LogoImage = styled.img`
-  width: ${props => props.collapsed ? '2rem' : '6rem'};
+  width: ${props => props.collapsed ? '0rem' : '6rem'};
+  opacity: ${props => props.collapsed ? '0' : '1'};
+  visibility: ${props => props.collapsed ? 'hidden' : 'visible'};
   cursor: pointer;
   transition: all 0.3s ease;
   
   &:hover {
-    opacity: 0.8;
+    opacity: ${props => props.collapsed ? '0' : '0.8'};
   }
+`;
+
+const SidebarButtonArea = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  background-color: #ffffff;
+  border-radius: 10px;
 `;
 
 const SidebarButton = styled.img`
@@ -352,12 +364,15 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
                 onClick={handleLogoClick}
                 collapsed={collapsed}
               />
-              <SidebarButton 
-                src={collapsed ? sidebarOpened : sidebarClosed} 
-                alt={collapsed ? "사이드바 펼치기" : "사이드바 접기"}
-                onClick={toggleSidebar}
-                collapsed={collapsed}
-              />
+              <SidebarButtonArea>
+                <SidebarButton 
+                  src={collapsed ? sidebarOpened : sidebarClosed} 
+                  alt={collapsed ? "사이드바 펼치기" : "사이드바 접기"}
+                  onClick={toggleSidebar}
+                  collapsed={collapsed}
+                />
+              </SidebarButtonArea>
+
               <Tooltip>핀놀 메인화면으로 돌아갑니다</Tooltip>
             </LogoContainer>
           </LogoSection>
