@@ -1,6 +1,7 @@
 import styled from 'styled-components';
 import finnolLogo from '../assets/finnol-logo.png';
 import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import userimg from '../assets/user.svg';
 import point from '../assets/point_img.svg';
 import logoutimg from '../assets/logout.svg';
@@ -9,6 +10,8 @@ import studyimg from '../assets/study.svg';
 import analyzeimg from '../assets/analysis.svg';
 import reviewimg from '../assets/review.svg';
 import statusimg from '../assets/status.svg';
+import sidebarOpened from '../assets/sidebar_opened.svg';
+import sidebarClosed from '../assets/sidebar_closed.svg';
 
 const Wrapper = styled.div`
   display: flex;
@@ -17,23 +20,29 @@ const Wrapper = styled.div`
   justify-content: space-between;
   background: #F0F4FC;
   min-height: 100vh;
-  width: 20vw;
-  min-width: 15rem;
-  max-width: 20rem;
-  padding: 1rem 1.5rem;
+  width: ${props => props.collapsed ? '4rem' : '20vw'};
+  min-width: ${props => props.collapsed ? '4rem' : '15rem'};
+  max-width: ${props => props.collapsed ? '4rem' : '20rem'};
+  padding: ${props => props.collapsed ? '1rem 0.5rem' : '1rem 1.5rem'};
   flex-shrink: 0;
+  transition: all 0.3s ease;
+  position: relative;
   
-  // /* 태블릿 크기에서 조정 */
-  // @media (max-width: 1024px) {
-  //   width: 18vw;
-  //   min-width: 14rem;
-  //   max-width: 18rem;
-  //   padding: 1rem 1.2rem;
-  // }
-  
-  /* 모바일에서 숨김 */
+  /* 모바일에서는 기본적으로 접힌 상태 */
   @media (max-width: 768px) {
-    display: none;
+    width: ${props => props.collapsed ? '4rem' : '100vw'};
+    min-width: ${props => props.collapsed ? '4rem' : '100vw'};
+    max-width: ${props => props.collapsed ? '4rem' : '100vw'};
+    padding: ${props => props.collapsed ? '1rem 0.5rem' : '1rem 1.5rem'};
+    position: ${props => props.collapsed ? 'relative' : 'fixed'};
+    z-index: 1000;
+  }
+  
+  /* 웹에서는 기본적으로 펼친 상태 */
+  @media (min-width: 769px) {
+    width: ${props => props.collapsed ? '4rem' : '20vw'};
+    min-width: ${props => props.collapsed ? '4rem' : '15rem'};
+    max-width: ${props => props.collapsed ? '4rem' : '20rem'};
   }
 `;
 
@@ -46,15 +55,17 @@ const TopSection = styled.div`
 const LogoSection = styled.div`
   display: flex;
   align-items: center;
+  justify-content: ${props => props.collapsed ? 'center' : 'flex-start'};
   gap: 0.75rem;
   margin-bottom: 2rem;
   position: relative;
+  width: 100%;
 `;
 
 const LogoImage = styled.img`
-  width: 6rem;
+  width: ${props => props.collapsed ? '2rem' : '6rem'};
   cursor: pointer;
-  transition: opacity 0.2s ease;
+  transition: all 0.3s ease;
   
   &:hover {
     opacity: 0.8;
@@ -65,7 +76,14 @@ const SidebarButton = styled.img`
   width: 1.2rem;
   height: 1.2rem;
   cursor: pointer;
-  transition: opacity 0.2s ease;
+  transition: all 0.3s ease;
+  position: ${props => props.collapsed ? 'absolute' : 'static'};
+  right: ${props => props.collapsed ? '0.5rem' : 'auto'};
+  top: ${props => props.collapsed ? '0.5rem' : 'auto'};
+  
+  &:hover {
+    opacity: 0.8;
+  }
 `;
 
 const Tooltip = styled.div`
@@ -106,7 +124,7 @@ const LogoContainer = styled.div`
 
 
 const UserSection = styled.div`
-  display: flex;
+  display: ${props => props.collapsed ? 'none' : 'flex'};
   flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 2rem;
@@ -147,7 +165,7 @@ const UserParent = styled.div`
 `;
 
 const PointSection = styled.div`
-  display: flex;
+  display: ${props => props.collapsed ? 'none' : 'flex'};
   align-items: center;
   background-color: #ffffff;
   border-radius: 25px;
@@ -204,8 +222,9 @@ const MenuIcon = styled.div`
 const MenuItem = styled.div`
   display: flex;
   align-items: center;
+  justify-content: ${props => props.collapsed ? 'center' : 'flex-start'};
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  padding: ${props => props.collapsed ? '0.75rem 0' : '0.75rem 1rem'};
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -231,6 +250,7 @@ const MenuItem = styled.div`
 const MenuText = styled.div`
   font-size: 16px;
   font-weight: 500;
+  display: ${props => props.collapsed ? 'none' : 'block'};
 `;
 
 const BottomSection = styled.div`
@@ -240,8 +260,9 @@ const BottomSection = styled.div`
 const LogoutButton = styled.div`
   display: flex;
   align-items: center;
+  justify-content: ${props => props.collapsed ? 'center' : 'flex-start'};
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  padding: ${props => props.collapsed ? '0.75rem 0' : '0.75rem 1rem'};
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -260,11 +281,36 @@ const LogoutIcon = styled.img`
 const LogoutText = styled.div`
   font-size: 16px;
   font-weight: 300;
+  display: ${props => props.collapsed ? 'none' : 'block'};
 `;
 
 
 function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
     const navigate = useNavigate();
+    const [collapsed, setCollapsed] = useState(false);
+
+    // 화면 크기에 따라 기본 상태 설정
+    useEffect(() => {
+      const handleResize = () => {
+        if (window.innerWidth <= 768) {
+          setCollapsed(true); // 모바일에서는 기본적으로 접힌 상태
+        } else {
+          setCollapsed(false); // 웹에서는 기본적으로 펼친 상태
+        }
+      };
+
+      // 초기 설정
+      handleResize();
+      
+      // 리사이즈 이벤트 리스너 추가
+      window.addEventListener('resize', handleResize);
+      
+      return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const toggleSidebar = () => {
+      setCollapsed(!collapsed);
+    };
 
     const logout = () => {
       setLogin(false);
@@ -296,21 +342,27 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
     };
   
     return (
-      <Wrapper>
+      <Wrapper collapsed={collapsed}>
         <TopSection>
-          <LogoSection>
+          <LogoSection collapsed={collapsed}>
             <LogoContainer>
               <LogoImage 
                 src={finnolLogo} 
                 alt="FINNOL" 
                 onClick={handleLogoClick}
+                collapsed={collapsed}
               />
-              <SidebarButton></SidebarButton>
+              <SidebarButton 
+                src={collapsed ? sidebarOpened : sidebarClosed} 
+                alt={collapsed ? "사이드바 펼치기" : "사이드바 접기"}
+                onClick={toggleSidebar}
+                collapsed={collapsed}
+              />
               <Tooltip>핀놀 메인화면으로 돌아갑니다</Tooltip>
             </LogoContainer>
           </LogoSection>
 
-          <UserSection>
+          <UserSection collapsed={collapsed}>
             <UserProfile>
               <UserAvatar>
                 <img src={userimg} alt="userimg" style={{ width: '24px', height: '24px' }} />
@@ -322,7 +374,7 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
             </UserProfile>
           </UserSection>
 
-          <PointSection>
+          <PointSection collapsed={collapsed}>
             <PointTextWrapper>
               <PointIcon src={point} alt="Points" />
               <PointText>포인트</PointText>
@@ -336,18 +388,19 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
                 key={item.id} 
                 active={isActive(item.path)}
                 onClick={() => handleMenuClick(item.path)}
+                collapsed={collapsed}
               >
                   <MenuIcon><img src={item.icon} alt={item.text} /></MenuIcon>
-                <MenuText>{item.text}</MenuText>
+                <MenuText collapsed={collapsed}>{item.text}</MenuText>
               </MenuItem>
             ))}
           </NavigationMenu>
         </TopSection>
 
         <BottomSection>
-          <LogoutButton onClick={logout}>
+          <LogoutButton onClick={logout} collapsed={collapsed}>
             <LogoutIcon src={logoutimg} alt="Logout" />
-            <LogoutText>로그아웃</LogoutText>
+            <LogoutText collapsed={collapsed}>로그아웃</LogoutText>
           </LogoutButton>
         </BottomSection>
       </Wrapper>
