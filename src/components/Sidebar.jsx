@@ -55,7 +55,7 @@ const TopSection = styled.div`
 const LogoSection = styled.div`
   display: flex;
   align-items: center;
-  justify-content: ${props => props.collapsed ? 'center' : 'flex-start'};
+  justify-content: ${props => props.collapsed ? 'flex-start' : 'space-between'};
   gap: 0.75rem;
   margin-bottom: 2rem;
   position: relative;
@@ -364,17 +364,18 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
                 onClick={handleLogoClick}
                 collapsed={collapsed}
               />
-              <SidebarButtonArea>
+              <Tooltip>핀놀 메인화면으로 돌아갑니다</Tooltip>
+            </LogoContainer>
+
+            <SidebarButtonArea>
                 <SidebarButton 
-                  src={collapsed ? sidebarOpened : sidebarClosed} 
+                  src={collapsed ? sidebarClosed : sidebarOpened} 
                   alt={collapsed ? "사이드바 펼치기" : "사이드바 접기"}
                   onClick={toggleSidebar}
                   collapsed={collapsed}
                 />
-              </SidebarButtonArea>
+            </SidebarButtonArea>
 
-              <Tooltip>핀놀 메인화면으로 돌아갑니다</Tooltip>
-            </LogoContainer>
           </LogoSection>
 
           <UserSection collapsed={collapsed}>
@@ -394,7 +395,7 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
               <PointIcon src={point} alt="Points" />
               <PointText>포인트</PointText>
             </PointTextWrapper>
-            <PointValue>{(user?.coin || 12500).toLocaleString()}</PointValue>
+            <PointValue>{(user?.coin).toLocaleString()}</PointValue>
           </PointSection>
 
           <NavigationMenu>

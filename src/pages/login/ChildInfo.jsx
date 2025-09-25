@@ -54,17 +54,17 @@ function ChildInfo(){
         .then((res) => {
             if (!res.ok) throw new Error("요청 실패");
             return res.json();
-          })
-          .then((data) => {
+        })
+        .then((data) => {
             alert("✅ 자녀 정보가 성공적으로 저장되었습니다!");
             console.log(data);
             navigate("/");
-          })
-          .catch((err) => {
+        })
+        .catch((err) => {
             console.error(err);
             alert("❌ 저장 중 오류가 발생했습니다.");
-          });
-      };
+        });
+    };
 
     return(
         <Wrapper>
