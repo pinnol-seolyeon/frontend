@@ -55,11 +55,12 @@ const TopSection = styled.div`
 const LogoSection = styled.div`
   display: flex;
   align-items: center;
-  justify-content: ${props => props.collapsed ? 'flex-start' : 'space-between'};
+  justify-content: ${props => props.collapsed ? 'flex-start' : 'flex-start'};
   gap: 0.75rem;
   margin-bottom: 2rem;
   position: relative;
   width: 100%;
+  min-height: 3rem;
 `;
 
 const LogoImage = styled.img`
@@ -75,13 +76,19 @@ const LogoImage = styled.img`
 `;
 
 const SidebarButtonArea = styled.div`
-  width: 100%;
+  position: absolute;
+  top: 1rem;
+  right: ${props => props.collapsed ? 'auto' : '0'};
+  left: ${props => props.collapsed ? '0' : 'auto'};
+  width: 2.5rem;
+  height: 2.5rem;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   background-color: #ffffff;
   border-radius: 10px;
+  z-index: 10;
 `;
 
 const SidebarButton = styled.img`
@@ -89,9 +96,6 @@ const SidebarButton = styled.img`
   height: 1.2rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  position: ${props => props.collapsed ? 'absolute' : 'static'};
-  right: ${props => props.collapsed ? '0.5rem' : 'auto'};
-  top: ${props => props.collapsed ? '0.5rem' : 'auto'};
   
   &:hover {
     opacity: 0.8;
@@ -367,12 +371,11 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
               <Tooltip>핀놀 메인화면으로 돌아갑니다</Tooltip>
             </LogoContainer>
 
-            <SidebarButtonArea>
+            <SidebarButtonArea collapsed={collapsed}>
                 <SidebarButton 
                   src={collapsed ? sidebarClosed : sidebarOpened} 
                   alt={collapsed ? "사이드바 펼치기" : "사이드바 접기"}
                   onClick={toggleSidebar}
-                  collapsed={collapsed}
                 />
             </SidebarButtonArea>
 
