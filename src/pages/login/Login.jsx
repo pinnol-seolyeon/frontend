@@ -174,9 +174,11 @@ function Login(){
       console.log('🔍 API_BASE_URL:', process.env.REACT_APP_API_BASE_URL);
       console.log('🔍 REDIRECT_URI:', process.env.REACT_APP_KAKAO_REDIRECT_URI);
       
-      const kakaoURL = `${process.env.REACT_APP_API_BASE_URL}/oauth2/authorization/kakao?redirect_uri=${encodeURIComponent(process.env.REACT_APP_KAKAO_REDIRECT_URI)}`;
+      // const kakaoURL = `${process.env.REACT_APP_API_BASE_URL}/oauth2/authorization/kakao?redirect_uri=${encodeURIComponent(process.env.REACT_APP_KAKAO_REDIRECT_URI)}`;
+      // const kakaoURL = `${process.env.REACT_APP_KAKAO_REDIRECT_URI}/oauth2/authorization/kakao?redirect_uri=${encodeURIComponent(process.env.REACT_APP_KAKAO_REDIRECT_URI)}`;
+      const kakaoURL = `${process.env.REACT_APP_API_BASE_URL}/oauth2/authorization/kakao`;
+
       console.log('🔍 Full Kakao URL:', kakaoURL);
-      
       window.location.href = kakaoURL;
   };
 

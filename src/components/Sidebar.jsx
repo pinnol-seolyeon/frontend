@@ -77,7 +77,6 @@ const LogoImage = styled.img`
 
 const SidebarButtonArea = styled.div`
   position: absolute;
-  top: 1rem;
   right: ${props => props.collapsed ? 'auto' : '0'};
   left: ${props => props.collapsed ? '0' : 'auto'};
   width: 2.5rem;
@@ -87,8 +86,10 @@ const SidebarButtonArea = styled.div`
   align-items: center;
   cursor: pointer;
   background-color: #ffffff;
-  border-radius: 10px;
+  border-radius: ${props => props.collapsed ? '0 10px 10px 0' : '10px 0 0 10px'};
   z-index: 10;
+  margin-right: ${props => props.collapsed ? '0' : '-2rem'};
+  margin-left: ${props => props.collapsed ? '-0.5rem' : '0'};
 `;
 
 const SidebarButton = styled.img`
@@ -104,9 +105,10 @@ const SidebarButton = styled.img`
 
 const Tooltip = styled.div`
   position: absolute;
-  top: 50%;
-  left: 7rem;
-  transform: translateY(-50%);
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 20%;
   background-color: #333;
   color: white;
   padding: 0.5rem 0.75rem;
@@ -121,11 +123,11 @@ const Tooltip = styled.div`
   &::before {
     content: '';
     position: absolute;
-    top: 50%;
-    left: -4px;
-    transform: translateY(-50%);
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
     border: 4px solid transparent;
-    border-right-color: #333;
+    border-bottom-color: #333;
   }
 `;
 
