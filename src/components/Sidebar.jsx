@@ -57,7 +57,7 @@ const LogoSection = styled.div`
   align-items: center;
   justify-content: ${props => props.collapsed ? 'flex-start' : 'flex-start'};
   gap: 0.75rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   position: relative;
   width: 100%;
   min-height: 3rem;
@@ -105,8 +105,8 @@ const SidebarButton = styled.img`
 
 const Tooltip = styled.div`
   position: absolute;
-  top: 100%;
-  left: 50%;
+  top: 70%;
+  left: 90%;
   transform: translateX(-50%);
   margin-top: 20%;
   background-color: #333;
@@ -140,9 +140,26 @@ const LogoContainer = styled.div`
   }
 `;
 
+const LinebarSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: ${props => props.collapsed? 'calc(100% + 2rem)' : 'calc(100% + 3rem)'}; /* padding 좌우 1.5rem씩 총 3rem을 추가 */
+  height: 1px;
+  background-color: #D6EAFF;
+  margin: 0 -1.5rem 2rem -1.5rem; 
+`;
+
+const BottomLinebarSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: ${props => props.collapsed? 'calc(100% + 2rem)' : 'calc(100% + 3rem)'}; /* padding 좌우 1.5rem씩 총 3rem을 추가 */
+  height: 1px;
+  background-color: #D6EAFF;
+  margin: 0 -1.5rem 0.5rem -1.5rem; /* margin-bottom 제거 */
+`;
 
 const UserSection = styled.div`
-  display: ${props => props.collapsed ? 'none' : 'flex'};
+  display: flex;
   flex-direction: column;
   gap: 0.5rem;
   margin-bottom: 2rem;
@@ -162,10 +179,13 @@ const UserAvatar = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  color: #2D7BED;
+  font-size: 20px;
+  font-weight: 700;
 `;
 
 const UserInfo = styled.div`
-  display: flex;
+  display: ${props => props.collapsed ? 'none' : 'flex'};
   flex-direction: column;
   gap: 0.2rem;
 `;
@@ -183,7 +203,7 @@ const UserParent = styled.div`
 `;
 
 const PointSection = styled.div`
-  display: ${props => props.collapsed ? 'none' : 'flex'};
+  display: flex;
   align-items: center;
   background-color: #ffffff;
   border-radius: 25px;
@@ -207,6 +227,7 @@ const PointText = styled.div`
   font-size: 16px;
   font-weight: 500;
   color: #478CEE;
+  display: ${props => props.collapsed ? 'none' : 'block'};
 `;
 
 const PointValue = styled.div`
@@ -214,6 +235,7 @@ const PointValue = styled.div`
   font-weight: 700;
   color: #478CEE;
   align-items: flex-end;
+  display: ${props => props.collapsed ? 'none' : 'block'};
 `;
 
 const NavigationMenu = styled.div`
@@ -383,25 +405,27 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
 
           </LogoSection>
 
+          <LinebarSection collapsed={collapsed}></LinebarSection>
+
           <UserSection collapsed={collapsed}>
             <UserProfile>
               <UserAvatar>
-                <img src={userimg} alt="userimg" style={{ width: '24px', height: '24px' }} />
+                {user?.childName[0]}
               </UserAvatar>
-              <UserInfo>
+              <UserInfo collapsed={collapsed}>
                 <UserName>{user?.childName || '홍길동'}</UserName>
                 <UserParent>부모님: 김엄마</UserParent>
               </UserInfo>
             </UserProfile>
           </UserSection>
 
-          <PointSection collapsed={collapsed}>
-            <PointTextWrapper>
-              <PointIcon src={point} alt="Points" />
-              <PointText>포인트</PointText>
-            </PointTextWrapper>
-            <PointValue>{(user?.coin).toLocaleString()}</PointValue>
-          </PointSection>
+            <PointSection collapsed={collapsed}>
+              <PointTextWrapper>
+                <PointIcon src={point} alt="Points" />
+                <PointText collapsed={collapsed}>포인트</PointText>
+              </PointTextWrapper>
+              <PointValue collapsed={collapsed}>{(user?.coin).toLocaleString()}</PointValue>
+            </PointSection>
 
           <NavigationMenu>
             {menuItems.map((item) => (
@@ -418,8 +442,10 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
           </NavigationMenu>
         </TopSection>
 
-        <BottomSection>
-          <LogoutButton onClick={logout} collapsed={collapsed}>
+          <BottomSection>
+            <BottomLinebarSection collapsed={collapsed}></BottomLinebarSection>
+
+            <LogoutButton onClick={logout} collapsed={collapsed}>
             <LogoutIcon src={logoutimg} alt="Logout" />
             <LogoutText collapsed={collapsed}>로그아웃</LogoutText>
           </LogoutButton>
