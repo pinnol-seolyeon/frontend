@@ -88,7 +88,7 @@ const SidebarButtonArea = styled.div`
   background-color: #ffffff;
   border-radius: ${props => props.collapsed ? '0 10px 10px 0' : '10px 0 0 10px'};
   z-index: 10;
-  margin-right: ${props => props.collapsed ? '0' : '-2rem'};
+  margin-right: ${props => props.collapsed ? '0' : '-1.5rem'};
   margin-left: ${props => props.collapsed ? '-0.5rem' : '0'};
 `;
 
