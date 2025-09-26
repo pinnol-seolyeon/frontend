@@ -15,6 +15,7 @@ export async function fetchStudyStats() {
     }
 
     const data = await res.json();
+    console.log('✅ 학습 통계 데이터:', data);
     return data;
   } catch (error) {
     console.error('❌ fetchStudyStats 실패:', error);
@@ -39,6 +40,7 @@ export async function fetchStudyTimeStats() {
     }
 
     const data = await res.json();
+    console.log('✅ 선호 학습 시간대 데이터:', data);
     return data;
   } catch (error) {
     console.error('❌ fetchStudyTimeStats 실패:', error);
@@ -48,11 +50,27 @@ export async function fetchStudyTimeStats() {
 
 // 방사형 그래프 데이터
 export async function fetchRadarScore() {
-  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/analysis/radar-score/compare`, {
-    credentials: "include"
-  });
-  if (!res.ok) throw new Error("Radar score fetch failed");
-  return await res.json();
+  try {
+    const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/analysis/radar-score/compare`, {
+      method: 'GET',
+      credentials: "include",
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`HTTP ${res.status}: ${text}`);
+    }
+    
+    const data = await res.json();
+    console.log('✅ 방사형 그래프 데이터:', data);
+    return data;
+  } catch (error) {
+    console.error('❌ fetchRadarScore 실패:', error);
+    throw error;
+  }
 }
 
 

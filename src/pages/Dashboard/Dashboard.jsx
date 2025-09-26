@@ -1,12 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import Header from '../../components/Header';
-import StudyStatsBox from '../../components/analyze/StudyStatsBox';
 import StudyTimeStats from '../../components/analyze/StudyTimeStats';
 import RadarGraph from '../../components/analyze/RadarChart';
 import QnAViewer from '../../components/analyze/QnAViewer';
 import { fetchStudyStats, fetchRadarScore } from '../../api/analyze/analytics';
-import { useNavigate } from 'react-router-dom';
 import Sidebar from '../../components/Sidebar';
 
 const Wrapper = styled.div`
@@ -139,35 +136,6 @@ const CircleWrapper = styled.div`
   box-sizing: border-box;
 `;
 
-const TopBoxes = styled.div`
-  display: flex;
-  gap: 2rem;
-  justify-content: center;
-  border-radius: 20px;
-  background-color: white;
-  padding: 2rem;
-`;
-
-const TopWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-`;
-
-const ProgressWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  background-color: #4A91FE;
-  border-radius: 10px;
-  padding: 0.3rem 1.3rem;
-`;
-
-const ProgressValue = styled.div`
-  font-size: 16px;
-  font-weight: 500;
-  color: #fff;
-`;
 
 const CircularProgress = styled.div`
   width: 8rem;
@@ -193,73 +161,58 @@ const CircleText = styled.div`
 `;
 
 
-const BottomBoxes = styled.div`
-  display: flex;
-  gap: 2rem;
-  justify-content: center;
-`;
-
-const SquareBox = styled.div`
-  background: white;
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  flex: 1;
-`;
-
-const RadarChartBox = styled.div`
-  background: white;
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  min-height: 400px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-`;
-
 const ChartBox = styled.div`
   display: flex;
-  gap: 2rem;
-  justify-content: space-between;
-`;
-
-const LoadingText = styled.p`
-  text-align: center;
-  padding: 60px 0;
-  color: #666;
-  font-size: 1.1rem;
+  gap: 0.8rem;
+  width: 100%;
+  align-items: stretch;
 `;
 
 export default function Dashboard({ user, login, setLogin }) {
   const [studyStats, setStudyStats] = useState({ totalCompleted: 0, weeklyCompleted: 0 });
   const [thisWeek, setThisWeek] = useState({});
   const [lastWeek, setLastWeek] = useState({});
-  const navigate = useNavigate();
   const [progress, setProgress] = useState(80);
-
-  // useEffect(() => {
-  //   setProgress(studyStats.totalCompleted / 100);
-  // }, [studyStats]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchStudyStats()
-    .then(setStudyStats)
-    .catch(err => {
-      console.error("❌ 통계 불러오기 실패:", err);
-      setStudyStats(null);
-    });
-    fetchRadarScore().then(score => {
-      setThisWeek(score.thisWeek);
-      setLastWeek(score.lastWeek);
-    });
-  }, []);
+    if (studyStats && studyStats.totalCompleted !== undefined) {
+      // Assuming max progress is 100, adjust as needed
+      const calculatedProgress = Math.min((studyStats.totalCompleted / 10) * 100, 100);
+      setProgress(Math.round(calculatedProgress));
+      console.log('📊 진행률 계산:', {
+        totalCompleted: studyStats.totalCompleted,
+        calculatedProgress,
+        finalProgress: Math.round(calculatedProgress)
+      });
+    }
+  }, [studyStats]);
 
-  // 페이지 정보 설정
-  const pageInfo = {
-    title: "Lv.01",
-    subtitle: "돈이란 무엇일까?"
-  };
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const [statsData, radarData] = await Promise.all([
+          fetchStudyStats(),
+          fetchRadarScore()
+        ]);
+        
+        setStudyStats(statsData);
+        setThisWeek(radarData.thisWeek);
+        setLastWeek(radarData.lastWeek);
+      } catch (err) {
+        console.error("❌ 데이터 불러오기 실패:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   return (
     <Wrapper>
@@ -270,15 +223,29 @@ export default function Dashboard({ user, login, setLogin }) {
             <TitleWrapper>
               <TitleText>학습 분석</TitleText>
               <SubTitleText>학습 분석을 통해 학습 현황을 확인할 수 있습니다.</SubTitleText>
-            </TitleWrapper>         
+            </TitleWrapper>
+            
+            {loading && (
+              <div style={{ textAlign: 'center', padding: '2rem' }}>
+                <p>데이터를 불러오는 중입니다...</p>
+              </div>
+            )}
+            
+            {error && (
+              <div style={{ textAlign: 'center', padding: '2rem', color: 'red' }}>
+                <p>데이터를 불러오는데 실패했습니다: {error}</p>
+              </div>
+            )}
+            
+            {!loading && !error && (
             <ContentBox>
             {/* 위쪽 수평 두 개 */}
             <TopBox>
               <ProgressContainer>
                 <ContainerWrapper>
                   <ContainerTitle>전체 진행률</ContainerTitle>
-                  <PlusContainer>+20%</PlusContainer>
-                  <ContainerText>{`지난주 보다 20% 상승했어요!
+                  <PlusContainer>+{studyStats?.weeklyCompleted || 0}</PlusContainer>
+                  <ContainerText>{`이번 주에 ${studyStats?.weeklyCompleted || 0}개의 단원을 완료했어요!
   앞으로도 지금처럼 열심해 해봐요!`}</ContainerText>
                 </ContainerWrapper>
                 <CircularProgress>
@@ -312,11 +279,11 @@ export default function Dashboard({ user, login, setLogin }) {
               <ProgressContainer>
               <ContainerWrapper>
                   <ContainerTitle>학습 완료한 단원 수</ContainerTitle>
-                  <ContainerText>{`지금까지 2개의 레벨을 학습 완료했어요!
+                  <ContainerText>{`지금까지 ${studyStats?.totalCompleted || 0}개의 레벨을 학습 완료했어요!
   앞으로도 열심히 해봐요!`}</ContainerText>
                 </ContainerWrapper>
                 <CircleWrapper>
-                  <CircleText>2</CircleText>
+                  <CircleText>{studyStats?.totalCompleted || 0}</CircleText>
                 </CircleWrapper>
               </ProgressContainer>
               <ProgressContainer>
@@ -358,6 +325,7 @@ export default function Dashboard({ user, login, setLogin }) {
 
             <QnAViewer />
             </ContentBox>
+            )}
           </ContentContainer>
         </MainWrapper>
 

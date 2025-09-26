@@ -116,12 +116,6 @@ const BubbleButton = styled.button`
   }
 `;
 
-
-
-
-
-
-
 function StudyPage(){
 
     const navigate=useNavigate();

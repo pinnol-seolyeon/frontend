@@ -11,43 +11,49 @@ import {
 
 const TimeCard = styled.div`
   background: white;
-  border-radius: 16px;
+  border-radius: 5px;
   padding: 2rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 500px;
+  border : 1px solid #DADADA;
+  flex : 0.7;
+  display: flex;
+  flex-direction: column;
 `;
 
 const CardHeader = styled.div`
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 1.5rem;
 `;
 
-const HeaderLeft = styled.div``;
+const HeaderLeft = styled.div`
+  margin-bottom: 1rem;
+`;
 
 const CardTitle = styled.h3`
   font-size: 24px;
   font-weight: 700;
-  color: #333;
-  margin: 0 0 0.5rem 0;
+  color: #191919;
+  margin: 0 0 0.8rem 0;
 `;
 
 const CardSubtitle = styled.p`
-  font-size: 1rem;
-  color: #333;
+  font-size: 14px;
+  color: #454545;
   margin: 0;
+  font-weight: 300;
+  white-space: pre-line;
 `;
 
 const TypeButton = styled.button`
-  background: #4A91FE;
+  background: #191919;
   color: white;
   border: none;
   border-radius: 10px;
-  padding: 0.5rem 1rem;
-  font-size: 16px;
-  font-weight: 700;
+  padding: 0.25rem 1.1rem;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
 `;
@@ -76,143 +82,183 @@ const LegendColor = styled.div`
 
 const ChartContainer = styled.div`
   width: 100%;
-  height: 250px;
   background: white;
   border-radius: 8px;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   margin-bottom: 1rem;
   // border: 1px solid #f0f0f0;
+
+  & > div {
+    display: flex !important;
+    justify-content: flex-start !important;
+  }
+
 `;
 
 
-const ButtonContainer = styled.div`
+
+const TypeContainer = styled.div`
   display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  margin-top: 1rem;
   gap: 1rem;
-  justify-content: flex-end;
-  align-self: flex-end;
 `;
 
-const PeriodButton = styled.button`
-  padding: 0.3rem 1.3rem;
-  border-radius: 30px;
-  font-size: 16px;
-  font-weight: 400;
-  cursor: pointer;
-  border: ${props => props.active ? 'none' : '1px solid #4A91FE'};
-  background: ${props => props.active ? '#4A91FE' : 'white'};
-  color: ${props => props.active ? 'white' : '#4A91FE'};
+
+const TypeText = styled.div`
+  font-size: 14px;
+  color: #454545;
+  font-weight: 300;
+  white-space: pre-line;
+`;
+
+const ContentWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: center;
+  flex: 1;
 `;
 
 export default function StudyTimeStats() {
   const [preferredType, setPreferredType] = useState('');
-  const [weeklyData, setWeeklyData] = useState([]);
+  const [weeklyStats, setWeeklyStats] = useState({});
   const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchStudyTimeStats()
-      .then(data => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setError(false);
+        
+        const data = await fetchStudyTimeStats();
+        
         if (!data) {
           setError(true);
           return;
         }
+        
         setPreferredType(data.preferredType || '');
-        setWeeklyData(data.weeklyData || []);
-      })
-      .catch(err => {
+        setWeeklyStats(data.weeklyStats || {});
+        
+        console.log('📊 StudyTimeStats 데이터 처리:', {
+          preferredType: data.preferredType,
+          weeklyStats: data.weeklyStats
+        });
+      } catch (err) {
         console.error("❌ 공부 시간 데이터 요청 실패:", err);
         setError(true);
-      });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
   }, []);
 
-  // 버튼 active 상태 관리
-  const [activePeriod, setActivePeriod] = useState('weekly');
 
-  const handlePeriodClick = (period) => {
-    setActivePeriod(period);
+  // API 데이터를 차트 형식으로 변환하는 함수
+  const transformWeeklyStatsToChartData = (weeklyStats) => {
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    
+    return dayNames.map(day => {
+      const dayData = weeklyStats[day] || {};
+      return {
+        day,
+        morning: dayData.morning || 0,
+        afternoon: dayData.afternoon || 0,
+        evening: dayData.evening || 0,
+        night: dayData.night || 0,
+      };
+    });
   };
 
-  // API 데이터가 있으면 사용, 없으면 하드코딩된 데이터 사용
-  const data = weeklyData.length > 0 ? weeklyData : [
-    { day: '일', morning: 2, afternoon: 4, evening: 6, night: 1 },
-    { day: '월', morning: 3, afternoon: 5, evening: 4, night: 0 },
-    { day: '화', morning: 4, afternoon: 3, evening: 5, night: 1 },
-    { day: '수', morning: 2, afternoon: 6, evening: 3, night: 2 },
-    { day: '목', morning: 5, afternoon: 2, evening: 4, night: 0 },
-    { day: '금', morning: 3, afternoon: 4, evening: 5, night: 1 },
-    { day: '토', morning: 1, afternoon: 3, evening: 7, night: 2 },
-  ];
+  // API 데이터 변환 - 데이터가 없어도 빈 차트 표시
+  const data = Object.keys(weeklyStats).length > 0 
+    ? transformWeeklyStatsToChartData(weeklyStats)
+    : transformWeeklyStatsToChartData({});
 
   return (
     <TimeCard>
       <CardHeader>
         <HeaderLeft>
-          <CardTitle>선호 학습 시간대</CardTitle>
-          <CardSubtitle>선호 학습시간대를 알아보아요!</CardSubtitle>
+          <CardTitle>주간 학습 패턴</CardTitle>
+          <CardSubtitle>선호 학습시간대를 알아보고 분석해보아요!</CardSubtitle>
         </HeaderLeft>
-        <TypeButton>{preferredType || '언제든지 좋아형'}</TypeButton>
+        <LegendContainer>
+            <LegendItem>
+              <LegendColor color="#BFDBFF" />
+              <span>오전</span>
+            </LegendItem>
+            <LegendItem>
+              <LegendColor color="#FFDD8F" />
+              <span>낮</span>
+            </LegendItem>
+            <LegendItem>
+              <LegendColor color="#EAD4FF" />
+              <span>저녁</span>
+            </LegendItem>
+            <LegendItem>
+              <LegendColor color="#C5F8B5" />
+              <span>새벽</span>
+            </LegendItem>
+          </LegendContainer>
       </CardHeader>
 
-      <LegendContainer>
-        <LegendItem>
-          <LegendColor color="#BFDBFF" />
-          <span>오전 (5~12시)</span>
-        </LegendItem>
-        <LegendItem>
-          <LegendColor color="#FFDD8F" />
-          <span>낮 (12~18시)</span>
-        </LegendItem>
-      </LegendContainer>
-      <LegendContainer>
-        <LegendItem>
-          <LegendColor color="#EAD4FF" />
-          <span>저녁 (18-23시)</span>
-        </LegendItem>
-        <LegendItem>
-          <LegendColor color="#C5F8B5" />
-          <span>새벽 (23~5시)</span>
-        </LegendItem>
-      </LegendContainer>
+      {loading && (
+        <div style={{ textAlign: 'center', padding: '2rem' }}>
+          <p>데이터를 불러오는 중입니다...</p>
+        </div>
+      )}
 
-      <ChartContainer>
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-            <XAxis 
-                dataKey="day" 
-                fontSize={10} 
-                tick={{ fill: '#B8B8B8' }}
-                axisLine={{ stroke: '#EAEAEA', strokeWidth: 1 }}
-                tickLine={false}
-              />
-            <YAxis 
-              fontSize={9} 
-              tick={{ fill: '#B8B8B8' }}
-              axisLine={{ stroke: '#EAEAEA', strokeWidth: 1 }}
-              tickLine={{ stroke: '#EAEAEA' }}
-            />
-            <Bar dataKey="morning" stackId="a" fill="#BFDBFF" name="오전" />
-            <Bar dataKey="afternoon" stackId="a" fill="#FFDD8F" name="낮" />
-            <Bar dataKey="evening" stackId="a" fill="#EAD4FF" name="저녁" />
-            <Bar dataKey="night" stackId="a" fill="#C5F8B5" name="새벽" />
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartContainer>
+      {error && (
+        <div style={{ textAlign: 'center', padding: '2rem', color: 'red' }}>
+          <p>데이터를 불러오는데 실패했습니다.</p>
+        </div>
+      )}
 
-      <ButtonContainer>
-        <PeriodButton 
-          active={activePeriod === 'weekly'}
-          onClick={() => handlePeriodClick('weekly')}
-        >
-          주간
-        </PeriodButton>
-        <PeriodButton 
-          active={activePeriod === 'monthly'}
-          onClick={() => handlePeriodClick('monthly')}
-        >
-          월간
-        </PeriodButton>
-      </ButtonContainer>
+      {!loading && !error && (
+        <ContentWrapper>
+          <ChartContainer>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={data} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                <XAxis 
+                    dataKey="day" 
+                    fontSize={10} 
+                    tick={{ fill: '#B8B8B8' }}
+                    axisLine={{ stroke: '#EAEAEA', strokeWidth: 1 }}
+                    tickLine={false}
+                  />
+                <YAxis 
+                  fontSize={9} 
+                  tick={{ fill: '#B8B8B8' }}
+                  axisLine={{ stroke: '#EAEAEA', strokeWidth: 1 }}
+                  tickLine={{ stroke: '#EAEAEA' }}
+                />
+                <Bar dataKey="morning" stackId="a" fill="#BFDBFF" name="오전" />
+                <Bar dataKey="afternoon" stackId="a" fill="#FFDD8F" name="낮" />
+                <Bar dataKey="evening" stackId="a" fill="#EAD4FF" name="저녁" />
+                <Bar dataKey="night" stackId="a" fill="#C5F8B5" name="새벽" />
+              </BarChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+
+          <TypeContainer>
+            <TypeButton>
+              {preferredType || '언제든지 좋아형'}
+            </TypeButton>
+            <TypeText>
+              {preferredType || '언제든지 좋아형'}으로 오전~오후 상관없이 언제나 열심히 학습을 하고 있는 유형입니다!
+            </TypeText>
+          </TypeContainer>
+
+        </ContentWrapper>
+      )}
     </TimeCard>
   );
 }
