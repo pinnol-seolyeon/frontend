@@ -56,7 +56,7 @@ function AppContent() {
       .finally(() => {
         setIsLoading(false);
       });
-  }, [navigate]); // navigate 제거
+  }, [navigate]);
 
   // ✅ navigate는 Hook 안에서만 실행되도록
   useEffect(() => {

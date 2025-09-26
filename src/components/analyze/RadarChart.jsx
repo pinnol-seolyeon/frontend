@@ -2,18 +2,17 @@ import React from 'react';
 import styled from 'styled-components';
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
-  Radar, ResponsiveContainer, Legend
+  Radar, ResponsiveContainer
 } from 'recharts';
 
 // import styles from './RadarGraph.module.css'; // 스타일 분리
 
 const AnalysisCard = styled.div`
   background: white;
-  border-radius: 16px;
+  border-radius: 5px;
   padding: 2rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 500px;
+  border : 1px solid #DADADA;
+  flex : 0.3;
 `;
 
 const CardHeader = styled.div`
@@ -23,14 +22,16 @@ const CardHeader = styled.div`
 const CardTitle = styled.h3`
   font-size: 24px;
   font-weight: 700;
-  color: #333;
-  margin: 0 0 0.5rem 0;
+  color: #191919;
+  margin: 0 0 0.8rem 0;
 `;
 
 const CardSubtitle = styled.p`
-  font-size: 1rem;
-  color: #333;
+  font-size: 14px;
+  color: #454545;
   margin: 0;
+  white-space: pre-line;
+  font-weight: 300;
 `;
 
 const LegendContainer = styled.div`
@@ -66,62 +67,75 @@ const ChartContainer = styled.div`
   // border: 1px solid #e9ecef;
 `;
 
-const ChartPlaceholder = styled.div`
-  text-align: center;
-  color: #666;
-  font-size: 0.9rem;
+
+const SummaryMessage = styled.div`
+  display: flex;
+  font-size: 14px;
+  color: #454545;
+  font-weight: 300;
+  justify-content: flex-start;
+  align-items: center;
+  text-align: flex-start;
+  margin: 0;
+  white-space: pre-line;
 `;
 
-const SummaryMessage = styled.p`
-  font-size: 1rem;
-  color: #2F2F2F;
+const KeywordMessage = styled.div`
+  display: flex;
+  background-color: #191919;
+  width: fit-content;
+  font-size: 14px;
+  color: #ffffff;
   font-weight: 500;
+  padding: 0.25rem 1.1rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
   justify-content: center;
   align-items: center;
   text-align: center;
-  margin: 0;
 `;
 
-export default function RadarGraph({ thisWeek, lastWeek }) {
-  //api
-  // const getSummaryText = () => {
-  //   const avg = (thisWeek.engagement + thisWeek.focus + thisWeek.understanding + thisWeek.expression) / 4;
-  //   if (avg >= 0.8) return "학습 태도가 매우 우수합니다! 👍";
-  //   if (avg >= 0.6) return "양호한 학습 태도입니다. 약간의 개선 여지는 있지만 좋은 흐름이에요.";
-  //   if (avg >= 0.4) return "노력이 필요해요. 열심히 하면 못할 건 없어요!";
-  //   return "학습 활동이 부족해요. 충분한 학습이 필요합니다.";
-  // };
 
 
-  // API 데이터 주석처리 - 하드코딩된 데이터로 디자인 작업
-  // const data = [
-  //   { subject: "참여도", thisWeek: thisWeek.engagement * 100, lastWeek: lastWeek.engagement * 100 },
-  //   { subject: "집중도", thisWeek: thisWeek.focus * 100, lastWeek: lastWeek.focus * 100 },
-  //   { subject: "이해도", thisWeek: thisWeek.understanding * 100, lastWeek: lastWeek.understanding * 100 },
-  //   { subject: "표현력", thisWeek: thisWeek.expression * 100, lastWeek: lastWeek.expression * 100 },
-  // ];
 
-  // 하드코딩된 데이터로 차트 표시
+  export default function RadarGraph({ thisWeek, lastWeek }) {
+  // API 데이터가 없거나 빈 객체인 경우 기본값 설정
+  const safeThisWeek = thisWeek || { engagement: 0, focus: 0, understanding: 0, expression: 0 };
+  const safeLastWeek = lastWeek || { engagement: 0, focus: 0, understanding: 0, expression: 0 };
+
+  // API 데이터를 사용하여 차트 데이터 생성
   const data = [
-    { subject: "참여도", thisWeek: 85, lastWeek: 70 },
-    { subject: "집중도", thisWeek: 90, lastWeek: 75 },
-    { subject: "이해도", thisWeek: 80, lastWeek: 65 },
-    { subject: "표현력", thisWeek: 75, lastWeek: 60 },
+    { subject: "참여도", thisWeek: safeThisWeek.engagement * 100, lastWeek: safeLastWeek.engagement * 100 },
+    { subject: "집중도", thisWeek: safeThisWeek.focus * 100, lastWeek: safeLastWeek.focus * 100 },
+    { subject: "이해도", thisWeek: safeThisWeek.understanding * 100, lastWeek: safeLastWeek.understanding * 100 },
+    { subject: "표현력", thisWeek: safeThisWeek.expression * 100, lastWeek: safeLastWeek.expression * 100 },
   ];
 
   const getSummaryText = () => {
-    const avg = (85 + 90 + 80 + 75) / 4;
+    const avg = (safeThisWeek.engagement + safeThisWeek.focus + safeThisWeek.understanding + safeThisWeek.expression) / 4 * 100;
     if (avg >= 80) return "학습 태도가 매우 우수합니다! 👍";
-    if (avg >= 60) return "양호한 학습 태도입니다. 약간의 개선 여지는 있지만 좋은 흐름이에요.";
-    if (avg >= 40) return "노력이 필요해요. 열심히 하면 못할 건 없어요!";
-    return "학습 활동이 부족해요. 충분한 학습이 필요합니다.";
+    if (avg >= 60) return "양호한 학습 태도입니다.\n약간의 개선 여지는 있지만 좋은 흐름이에요.";
+    // if (avg >= 40) return "노력이 필요해요. 열심히 하면 못할 건 없어요!";
+    return "노력이 필요해요.\n열심히 하면 못할 건 없어요!";
+
+    // return "학습 활동이 부족해요. 충분한 학습이 필요합니다.";
   };
+
+  const getKeywordText = () => {
+    const avg = (safeThisWeek.engagement + safeThisWeek.focus + safeThisWeek.understanding + safeThisWeek.expression) / 4 * 100;
+    if (avg >= 80) return "학습 태도가 매우 우수해요!";
+    if (avg >= 60) return "양호한 학습 태도에요!";
+    return "노력이 필요해요!";
+  };
+
+  console.log('📊 RadarGraph 데이터:', { thisWeek: safeThisWeek, lastWeek: safeLastWeek, data });
 
   return (
     <AnalysisCard>
       <CardHeader>
         <CardTitle>이해도 분석</CardTitle>
-        <CardSubtitle>이번 주와 지난 주의 학습 성과를 항목별로 비교해보세요!</CardSubtitle>
+        <CardSubtitle>{`이번 주와 지난 주의 학습 성과를
+        항목별로 비교해보세요!`}</CardSubtitle>
       </CardHeader>
 
       <LegendContainer>
@@ -151,6 +165,10 @@ export default function RadarGraph({ thisWeek, lastWeek }) {
           </RadarChart>
         </ResponsiveContainer>
       </ChartContainer>
+        <KeywordMessage>
+          {getKeywordText()}
+        </KeywordMessage>
+
 
       <SummaryMessage>
         {getSummaryText()}
