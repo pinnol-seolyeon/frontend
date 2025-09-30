@@ -176,11 +176,8 @@ function Login(){
       
       // const kakaoURL = `${process.env.REACT_APP_API_BASE_URL}/oauth2/authorization/kakao?redirect_uri=${encodeURIComponent(process.env.REACT_APP_KAKAO_REDIRECT_URI)}`;
       // const kakaoURL = `${process.env.REACT_APP_KAKAO_REDIRECT_URI}/oauth2/authorization/kakao?redirect_uri=${encodeURIComponent(process.env.REACT_APP_KAKAO_REDIRECT_URI)}`;
-      const kakaoURL = `${process.env.REACT_APP_API_BASE_URL}/oauth2/authorization/kakao?redirect_uri=${encodeURIComponent(process.env.REACT_APP_KAKAO_REDIRECT_URI)}`;
-
-      alert('생성된 URL: ' + kakaoURL);
-    
-
+      const kakaoURL = `${process.env.REACT_APP_API_BASE_URL}/oauth2/authorization/kakao`;
+      
       console.log('🔍 Full Kakao URL:', kakaoURL);
       window.location.href = kakaoURL;
   };
