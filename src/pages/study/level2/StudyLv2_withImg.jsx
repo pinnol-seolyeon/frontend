@@ -6,65 +6,84 @@ import testImage from "../../../assets/testImage.png";
 import MiniHeader from "../../../components/study/MiniHeader";
 import Button from "../../../components/Button";
 import nextButton from "../../../assets/nextButton.png";
+import Sidebar from "../../../components/Sidebar";
 import { useChapter } from "../../../context/ChapterContext";
 
 import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect, useRef } from "react";
 import TtsPlayer from "../../../components/TtsPlayer";
+import background from "../../../assets/study_background.png";
+import hoppin from "../../../assets/hopin.svg";
+import questionIcon from "../../../assets/question_icon.svg";
 
 /*학습하기2단계 - 학습목표+이미지 제시하며 질문..*/
 
 
 const Wrapper=styled.div`
     width:100%;
-    // height:100vh;
     min-height:100vh;
-    height:auto; //높이 제한 없음
-
+    height:auto;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    position: relative;
+`;
 
+const ContentWrapper = styled.div`
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+`;
+
+const MainWrapper = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  margin-left: 0;
+  background-image: url(${background});
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 `;
 
 const ImageWrapper=styled.div`
     position:relative;
     display:flex;
-    align-items:flex-start;
-    // gap:12px;
-    gap:10%;
+    align-items:center;
+    justify-content:center;
+    gap: 2rem;
 `
 
 
 
 const Image=styled.img`
-    // width:80%; 
+    display:flex;
     height:auto;
     object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    width: clamp(100px,40vw,250px); //최소 150px, 최대 250px, 화면 너비 40%까지 가능
+    width: 30%;
     display:block;
-
     
      /*가로 중앙 정렬, 세로 원하는 위치에 자유롭게 배치*/
-    // align-self:center;/*가로 중앙 정렬*/
-    margin-top:10rem;
-    margin-bottom:0px;
-
+    align-self:center;/*가로 중앙 정렬*/
+    // margin-bottom:0px;
 `;
 
 const ObjectiveImage = styled.img`
-  width: clamp(0px,70vw,350px); //최소 150px, 최대 250px, 화면 너비 40%까지 가능
-  height: auto;
-  object-fit: contain;
-  // margin:20px;       // px로 명확한 spacing (또는 rem 사용 가능)
-  margin-top:8rem;
-
-  // @media (max-width: 768px) {
-  //   width: 40%;             // 💡 모바일 대응
-  //   margin-top: 16px;
-  //   margin-right: 10px;
-  // }
+  display:flex;
+  height:auto;
+  object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
+  width: 30%;
+  display:block;
+  margin-bottom: 1rem;
 `;
 
 const ImageWithSpeechWrapper = styled.div`
@@ -79,25 +98,16 @@ const ImageWithSpeechWrapper = styled.div`
 
 const SpeechBubble=styled.div`
     display:flex;
-    width:80%;
-    // height:100%;
-    // min-height:100px;
-    max-height:150px;
-    padding:20px;
-    
-    background-color:#FEF3E1;
-
-    border-radius:0px 50px 50px 0px;
-    border:0.2px solid black;
-    // margin-bottom:20px;
-
+    width:100%;
+    height: fit-content;
+    padding: 2rem;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    justify-content: center; /* 수평 중앙 */
+    align-items: center;     /* 수직 중앙 */
+    flex-direction: column;
+    gap: 1rem;
     position:relative;
-    box-sizing:border-box; /*패딩 포함*/
-
-    justify-content: center;
-  align-items: center;
-  text-align: center;
-
 `;
 
 const TextBox = styled.div`
@@ -105,17 +115,15 @@ const TextBox = styled.div`
   justify-content: center;
   align-items: center;
   text-align: center;
+  white-space: pre-line;
 
   width: 80%;
   margin: 0 auto;
-  padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
+  padding: 0 clamp(4vw, 6vw, 90px); 
 
-  font-size: clamp(16px, 2vw, 24px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
-  line-height: 1.6; /* ✅ 줄 간격을 여유 있게 */
-  letter-spacing: 0.02em; /* ✅ 글자 간격 미세 조정 */
-  font-weight: 400; /* ✅ 가독성 좋은 중간 두께 */
-  font-family: "Noto Sans KR", sans-serif; /* ✅ 국문에 적합한 서체 */
-  color: #333;
+  font-size: 20px;
+  font-weight: 500;
+  color: #454545;
 `;
 
 
@@ -135,26 +143,38 @@ const SpeechWrapper=styled.div`
 const AnswerInputBox = styled.div`
   display: flex;
   flex-direction: row;
-  width:50rem;
-  padding: 20px;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   gap: 12px;
+  width: 100%;
+  max-width: 600px;
+  align-items: center;
 `;
 
 
 
 const Input = styled.input`
-  width: 80%;
-  max-width: 600px;
+  flex: 1;
+  min-width: 300px;
   padding: 12px 16px;
-  border: 1px solid #ccc;
+  border: 2px solid #E0E0E0;
   border-radius: 12px;
   font-size: 16px;
-  margin-bottom: 16px;
+  font-family: "Noto Sans KR", sans-serif;
+  color: #333;
+  background-color: #FAFAFA;
+  transition: all 0.3s ease;
   box-sizing: border-box;
+  
+  &:focus {
+    outline: none;
+    border-color: #478CEE;
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(71, 140, 238, 0.1);
+  }
+  
+  &::placeholder {
+    color: #999;
+    font-style: italic;
+  }
 `;
 
 const SubmitButton = styled.button`
@@ -210,19 +230,84 @@ const AnswerButtonWrapper = styled.div`
 
 const AnswerButton = styled.button`
   padding: 12px 16px;
-  background-color: #2774B2;
+  background-color: #478CEE;
   color: white;
   border: none;
-  border-radius: 30px;
+  border-radius: 10px;
   cursor: pointer;
   font-size: 16px;
   white-space: nowrap;
 
   transition: background-color 0.3s;
   &:hover {
-    background-color: #1b5c91;
+    background-color: #104EA7;
   }
 `;
+
+const QuestionButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1.5rem;
+  background-color: #F0F4FC;
+  color: #79B0FF;
+  border: 1px solid #79B0FF;
+  border-radius: 10px;
+  cursor: pointer;
+  outline: none;
+  font-size: 18px;
+  font-weight: 500;
+  transition: all 0.3s;
+  margin: 1rem 0; /* 이미지와 스피치 버블 사이 간격 */
+  align-self: flex-end; /* 오른쪽 정렬 */
+  gap: 0.5rem;
+  &:hover {
+    background-color: #F5F5F5;
+    border-color: #B8B8B8;
+  }
+  &:active {
+    outline: none;
+  }
+`;
+
+const QuestionIconImg = styled.img`
+  width: 1rem;
+  height: 1rem;
+`;
+
+const SendButton = styled.button`
+  padding: 12px 24px;
+  background-color: #478CEE;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: "Noto Sans KR", sans-serif;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  min-width: 80px;
+  
+  &:hover {
+    background-color: #104EA7;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(71, 140, 238, 0.3);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(71, 140, 238, 0.2);
+  }
+  
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+`;
+
 
 
 const NextStepButton = styled(Button)`
@@ -259,7 +344,7 @@ const NextStepButton = styled(Button)`
 
 
 //물어보고 대답하면 그에 따른 반응을 해줘야함.. 그러려면 AI와 연결할필요있음.. 
-function StudyLv2_withImg(props){
+function StudyLv2_withImg({ user, login, setLogin }){
 
     const navigate=useNavigate();
     const {chapterData}=useChapter();
@@ -278,7 +363,10 @@ function StudyLv2_withImg(props){
     // 다음 문장(문맥)
     const nextContext = sentences[currentIndex + 1] || "다음 학습 내용 없음";
     
-    const [preloadDone, setPreloadDone] = useState(false)
+    const [preloadDone, setPreloadDone] = useState(false);
+    const [isRecording, setIsRecording] = useState(false);
+    const [recognizedText, setRecognizedText] = useState("");
+    const [isVoiceRecognitionComplete, setIsVoiceRecognitionComplete] = useState(false);
 
     useEffect(()=>{
         console.log("📦 현재 저장된 chapterData:", chapterData);
@@ -317,7 +405,8 @@ function StudyLv2_withImg(props){
       if(currentIndex<answers.length-1){
         setCurrentIndex(currentIndex+1);
       }else{
-        alert("✅다음 단계로 넘어가볼까요?");
+        // 답변을 맞추는 화면이 아니면 다음 단계로 이동
+        navigate('/study/level3');
       }
     }
    };
@@ -345,14 +434,72 @@ function StudyLv2_withImg(props){
         setCurrentIndex(0);
         setIsAnswering(false);
         setPreloadDone(false);
-      
+        setIsVoiceRecognitionComplete(false);
+        setRecognizedText("");
+        setUserAnswer("");
+    };
+
+    // 음성인식 시작/종료 함수
+    const handleVoiceRecognition = () => {
+        if (!isRecording) {
+            startVoiceRecognition();
+        } else {
+            stopVoiceRecognition();
+        }
+    };
+
+    // 음성인식 시작
+    const startVoiceRecognition = () => {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            
+            recognition.lang = 'ko-KR';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            
+            recognition.onstart = () => {
+                setIsRecording(true);
+                console.log('음성인식 시작');
+            };
+            
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                setRecognizedText(transcript);
+                setUserAnswer(transcript);
+                console.log('인식된 텍스트:', transcript);
+            };
+            
+            recognition.onend = () => {
+                setIsRecording(false);
+                setIsVoiceRecognitionComplete(true);
+                console.log('음성인식 종료');
+            };
+            
+            recognition.onerror = (event) => {
+                console.error('음성인식 오류:', event.error);
+                setIsRecording(false);
+                alert('음성인식에 실패했습니다. 다시 시도해주세요.');
+            };
+            
+            recognition.start();
+        } else {
+            alert('이 브라우저는 음성인식을 지원하지 않습니다.');
+        }
+    };
+
+    // 음성인식 종료
+    const stopVoiceRecognition = () => {
+        setIsRecording(false);
+        setIsVoiceRecognitionComplete(true);
     };
     
     return(
-    <>
         <Wrapper>
-            <Box>
-                <MiniHeader
+            <ContentWrapper>
+                <Sidebar user={user} login={login} setLogin={setLogin} defaultCollapsed={true} />
+                <MainWrapper>
+                        {/* <MiniHeader
                     left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
                     right={<NextStepButton
                         disabled={!aiResponse} //aiResponse 없으면 비활성화
@@ -366,17 +513,20 @@ function StudyLv2_withImg(props){
                     }
                 >
                 2/6 : 학습 자료
-                </MiniHeader>
+                        </MiniHeader> */}
             <ImageWithSpeechWrapper>
               <ImageWrapper>
-                <Image src={tiger} alt="샘플" />
+                    <Image src={hoppin} alt="샘플" />
                 <ObjectiveImage 
                     src={image} 
                     alt="학습 이미지" 
                     onError={(e)=>e.target.src=testImage} //기본 이미지로 fallback
                 />
-                {/* <QuestionButton>질문</QuestionButton> */}
               </ImageWrapper>
+                <QuestionButton onClick={()=>navigate('/question')}>
+                   <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
+                   질문하기
+                </QuestionButton>
 
               <TtsPlayer
                 sentences={sentences}
@@ -401,53 +551,40 @@ function StudyLv2_withImg(props){
                             sentences.length>0?sentences[currentIndex]:"질문이 없습니다."
                           )}
                         </TextBox>
-                            {!aiResponse&&( //aiResponse가 아닐 때
-                                <ImageButton
-                                    src={nextButton}
-                                    alt="버튼"
-                                    onClick={handleAnswer}
-                                />
-                            )}
-
-
-                            {aiResponse&&isAnsweringPhase&&(
-                                 <ImageButton
-                                    src={nextButton}
-                                    alt="버튼"
-                                    onClick={handleAnswer}
-                                />
-                            )}
+                        {!aiResponse ? (
+                            !isVoiceRecognitionComplete ? (
+                                <AnswerButton onClick={handleVoiceRecognition}>
+                                    {isRecording ? "음성인식 중..." : "대답하기"}
+                                </AnswerButton>
+                            ) : (
+                                <AnswerInputBox>
+                                    <Input
+                                    type="text"
+                                    value={userAnswer}
+                                    onChange={(e) => setUserAnswer(e.target.value)}
+                                        placeholder="인식된 답변을 확인하고 수정하세요"
+                                    />
+                                    <SendButton onClick={handleUserSubmit}>보내기</SendButton>
+                                </AnswerInputBox>
+                            )
+                        ) : (
+                            <AnswerButton onClick={handleAnswer} style={{marginTop: '1rem'}}>
+                                다음 단계로
+                            </AnswerButton>
+                        )}
                     </SpeechBubble>
-
-                            {isQuestionFinished && !aiResponse&&(
-                                <AnswerButtonWrapper>
-                                    <AnswerButton onClick={() => setIsAnswering(true)}>대답하기 🎙️</AnswerButton>
-                                </AnswerButtonWrapper>
-                            )}
-
-                            
                             </> 
                         ) : ( //isAnswering이 True일때
                             <>
-                            <AnswerInputBox>
-                                <Input
-                                type="text"
-                                value={userAnswer}
-                                onChange={(e) => setUserAnswer(e.target.value)}
-                                placeholder="너의 생각을 입력해봐 🐯"
-                                />
-                                <SubmitButton onClick={handleUserSubmit}>제출</SubmitButton>
-                                {aiResponse && <AiResponseBox>{aiResponse}</AiResponseBox>}
-                                {/* {nextResponse && <AiResponseBox>{nextResponse}</AiResponseBox>} */}
-                            </AnswerInputBox>
+                            {aiResponse && <AiResponseBox>{aiResponse}</AiResponseBox>}
                             </>
                         )}
                   </SpeechWrapper>
                 )}
                </ImageWithSpeechWrapper>
-            </Box>
+                </MainWrapper>
+            </ContentWrapper>
         </Wrapper>
-    </>
     );
 }
 
