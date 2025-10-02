@@ -243,7 +243,7 @@ export default function Dashboard({ user, login, setLogin }) {
             <TopBox>
               <ProgressContainer>
                 <ContainerWrapper>
-                  <ContainerTitle>전체 진행률</ContainerTitle>
+                  <ContainerTitle>지난주 대비 진행률</ContainerTitle>
                   <PlusContainer>+{studyStats?.weeklyCompleted || 0}</PlusContainer>
                   <ContainerText>{`이번 주에 ${studyStats?.weeklyCompleted || 0}개의 단원을 완료했어요!
   앞으로도 지금처럼 열심해 해봐요!`}</ContainerText>
@@ -288,12 +288,12 @@ export default function Dashboard({ user, login, setLogin }) {
               </ProgressContainer>
               <ProgressContainer>
               <ContainerWrapper>
-                  <ContainerTitle>현재 단원 레벨</ContainerTitle>
-                  <ContainerText>{`현재 학습 단원은 Lv.3
+                  <ContainerTitle>현재 교재 레벨</ContainerTitle>
+                  <ContainerText>{`현재 학습 단원은 Lv.${(studyStats?.level || 0) + 1}
   돈의 여러가지 모습을 학습하고 있어요!`}</ContainerText>
                 </ContainerWrapper>
                 <CircleWrapper>
-                  <CircleText>Lv.3</CircleText>
+                  <CircleText>Lv.{(studyStats?.level || 0) + 1}</CircleText>
                 </CircleWrapper>
               </ProgressContainer> 
 

@@ -13,6 +13,17 @@ import statusimg from '../assets/status.svg';
 import sidebarOpened from '../assets/sidebar_opened.svg';
 import sidebarClosed from '../assets/sidebar_closed.svg';
 
+const Overlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 999;
+  display: ${props => props.show ? 'block' : 'none'};
+`;
+
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
@@ -26,7 +37,8 @@ const Wrapper = styled.div`
   padding: ${props => props.collapsed ? '1rem 0.5rem' : '1rem 1.5rem'};
   flex-shrink: 0;
   transition: all 0.3s ease;
-  position: relative;
+  position: ${props => props.isStudyPage && !props.collapsed ? 'fixed' : 'relative'};
+  z-index: ${props => props.isStudyPage && !props.collapsed ? '1000' : 'auto'};
   
   /* 모바일에서는 기본적으로 접힌 상태 */
   @media (max-width: 768px) {
@@ -325,17 +337,27 @@ const LogoutText = styled.div`
 `;
 
 
-function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
+function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultCollapsed = false }) {
     const navigate = useNavigate();
-    const [collapsed, setCollapsed] = useState(false);
+    const [collapsed, setCollapsed] = useState(defaultCollapsed);
+    
+    // 현재 페이지가 학습 페이지인지 확인
+    const isStudyPage = () => {
+      const currentPath = window.location.pathname;
+      return currentPath.includes('/study') || currentPath.includes('/book/chapter');
+    };
 
-    // 화면 크기에 따라 기본 상태 설정
+    // 화면 크기와 현재 페이지에 따라 기본 상태 설정
     useEffect(() => {
       const handleResize = () => {
+        const currentPath = window.location.pathname;
+        const isStudyPage = currentPath.includes('/study') || currentPath.includes('/book/chapter');
+        
         if (window.innerWidth <= 768) {
           setCollapsed(true); // 모바일에서는 기본적으로 접힌 상태
         } else {
-          setCollapsed(false); // 웹에서는 기본적으로 펼친 상태
+          // 웹에서는 학습하기 페이지면 접힌 상태, 다른 페이지면 펼친 상태
+          setCollapsed(isStudyPage);
         }
       };
 
@@ -348,6 +370,16 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
       return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    // 경로 변경 시 사이드바 상태 업데이트
+    useEffect(() => {
+      const currentPath = window.location.pathname;
+      const isStudyPage = currentPath.includes('/study') || currentPath.includes('/book/chapter');
+      
+      if (window.innerWidth > 768) {
+        setCollapsed(isStudyPage);
+      }
+    }, [window.location.pathname]);
+
     const toggleSidebar = () => {
       setCollapsed(!collapsed);
     };
@@ -359,14 +391,16 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
 
     const menuItems = [
       { id: 'home', icon: homeimg, text: '홈', path: '/main' },
-      { id: 'study', icon: studyimg, text: '학습하기', path: '/book' },
+      { id: 'study', icon: studyimg, text: '학습하기', path: ['/book', '/study'] },
       { id: 'analysis', icon: analyzeimg, text: '학습분석', path: '/dashboard' },
       { id: 'review', icon: reviewimg, text: '복습하기', path: '/review' },
       { id: 'status', icon: statusimg, text: '학습현황', path: '/status' }
     ];
 
     const handleMenuClick = (path) => {
-      navigate(path);
+      // path가 배열인 경우 첫 번째 경로로 이동
+      const targetPath = Array.isArray(path) ? path[0] : path;
+      navigate(targetPath);
     };
 
     const handleLogoClick = () => {
@@ -375,6 +409,22 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
 
     const isActive = (path) => {
       const currentPath = window.location.pathname;
+      
+      // path가 배열인 경우 (학습하기 메뉴)
+      if (Array.isArray(path)) {
+        return path.some(p => {
+          if (p === '/study') {
+            // /study로 시작하는 모든 경로를 학습하기로 인식
+            return currentPath.startsWith('/study');
+          }
+          if (p === '/book') {
+            return currentPath.startsWith('/book');
+          }
+          return currentPath === p;
+        });
+      }
+      
+      // 일반적인 경로 처리
       if (path === '/main') {
         return currentPath === '/main' || currentPath === '/';
       }
@@ -382,8 +432,16 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
     };
   
     return (
-      <Wrapper collapsed={collapsed}>
-        <TopSection>
+      <>
+        {/* 학습 페이지에서 사이드바가 열려있을 때만 오버레이 표시 */}
+        {isStudyPage() && !collapsed && (
+          <Overlay 
+            show={true} 
+            onClick={() => setCollapsed(true)} 
+          />
+        )}
+        <Wrapper collapsed={collapsed} isStudyPage={isStudyPage()}>
+          <TopSection>
           <LogoSection collapsed={collapsed}>
             <LogoContainer>
               <LogoImage 
@@ -450,7 +508,8 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo }) {
             <LogoutText collapsed={collapsed}>로그아웃</LogoutText>
           </LogoutButton>
         </BottomSection>
-      </Wrapper>
+        </Wrapper>
+      </>
     );
   }
   

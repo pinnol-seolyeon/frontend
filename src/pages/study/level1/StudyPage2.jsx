@@ -4,11 +4,14 @@ import Box from "../../../components/Box";
 import tigerPencil from "../../../assets/tiger-pencil.png";
 import Button from "../../../components/Button";
 import MiniHeader from "../../../components/study/MiniHeader";
+import Sidebar from "../../../components/Sidebar";
 
 import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect, useMemo } from "react";
 import { useChapter } from "../../../context/ChapterContext";
 import TtsPlayer from "../../../components/TtsPlayer";
+import background from "../../../assets/study_background.png";
+import hoppin from "../../../assets/hopin.svg";
 
 /*학습하기-1단계-2*/
 
@@ -26,30 +29,53 @@ import TtsPlayer from "../../../components/TtsPlayer";
 
 const Wrapper=styled.div`
     width:100%;
-    // height:100vh;
     min-height:100vh;
-    height:auto; //높이 제한 없음
-
+    height:auto;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
+    position: relative;
+`;
 
+const ContentWrapper = styled.div`
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+`;
+
+const MainWrapper = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  margin-left: 0;
+  background-image: url(${background});
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 `;
 
 
 const SpeechBubble=styled.div`
     display:flex;
-    width:90%;
-    flex-direction:column;
-    min-height:60%;
-    max-height:70%;
-    background-color:#FEF3E1;
-    // padding:2rem;
-    margin:2rem auto; //상하 좌우
+    width:100%;
+    height: fit-content;
+    padding: 2rem;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    justify-content: center; /* 수평 중앙 */
+    align-items: center;     /* 수직 중앙 */
+    flex-direction: column;
+    gap: 1rem;
+    position:relative;
 
-    border: 0.5px solid black;
-    border-radius: 24px;
 `;
 
 const TextBox = styled.div`
@@ -57,71 +83,94 @@ const TextBox = styled.div`
   justify-content: center;
   align-items: center;
   text-align: center;
+  white-space: pre-line;
 
+  width: 80%;
+  margin: 0 auto;
+  padding: 0 clamp(4vw, 6vw, 90px); 
 
-  width: 90%;
-  margin: auto;
-  padding: 40px; /* ✅ 오타 수정 및 공간 확보 */
-  
-
-  font-size: clamp(20px, 3vw, 24px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
-  line-height: 1.6; /* ✅ 줄 간격을 여유 있게 */
-  letter-spacing: 0.03em; /* ✅ 글자 간격 미세 조정 */
-  font-weight: 500; /* ✅ 가독성 좋은 중간 두께 */
-  font-family: "Noto Sans KR", sans-serif; /* ✅ 국문에 적합한 서체 */
-  color: #333;
+  font-size: 20px;
+  font-weight: 500;
+  color: #454545;
 `;
 
-
 const BubbleButton = styled.button`
-position:absolute;
-transform: translateX(-50%); // 👉 가로 정중앙에 고정
-left:50%;
-
- width:10%; 
- min-width:90px;
- height:10%;
- min-height:60px;
- max-height:80px;
-//  margin: auto;
-
-
-
-
-  background-color: #2774B2;
+  display:flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.6rem 5rem; 
+  background-color: #478CEE;
   color: white;
-  border-radius: 30px;
+  border: none;
+  border-radius: 10px;
   cursor: pointer;
-  border:0.2px solid black;
-
-  font-size:18px;
+  outline: none;
+  font-size:clamp(13px,1vw,20px);
 
   transition: background-color 0.3s;
   &:hover {
-    background-color: #1b5c91;
+    background-color: #104EA7;
+  }
+
+  &:active {
+    outline: none;
   }
 `;
 
-const Image=styled.img`
+const BackButton = styled.button`
+  display:flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.6rem 5rem; 
+  background-color: white;
+  color: #9E9E9E;
+  border: 1px solid #B8B8B8;
+  border-radius: 10px;
+  cursor: pointer;
+  outline: none;
+  font-size:clamp(13px,1vw,20px);
 
-    position:absolute;
-    top:0; // 이미지의 top을 SecondWrapper에 맞춤 //아래쪽으로만 커지도록
-    left:-10%;
+  transition: all 0.3s;
+  &:hover {
+    background-color: #F5F5F5;
+    border-color: #B8B8B8;
+  }
 
+  &:active {
+    outline: none;
+  }
+`;
 
-
+const ButtonWrapper=styled.div`
     display:flex;
-    
-    // width:100%; 
-    // max-width:300px;
-    // min-width:200px;
-    // height:auto;
-    height:200%;
-    width:auto;
-    object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    display:block;
+    justify-content: center;
+    align-items: center;
+    width:100%;
+    gap: 2rem;
+`;
 
-    // margin:-2em;
+const ImageWrapper=styled.div`
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+`
+
+
+
+const Image=styled.img`
+    display:flex;
+    width:100%; 
+    height:auto;
+    object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
+    width: 60%;
+    display:block;
+    
+     /*가로 중앙 정렬, 세로 원하는 위치에 자유롭게 배치*/
+    align-self:center;/*가로 중앙 정렬*/
+    // margin-bottom:0px;
 `;
 
 const SecondWrapper=styled.div`
@@ -141,13 +190,14 @@ const SecondWrapper=styled.div`
 
 
 
-function StudyPage(props){
+function StudyPage({ user, login, setLogin }){
 
     const navigate=useNavigate();
     const[objective,setObjective]=useState("");
     const {chapterData}=useChapter();
     const [loading,setLoading]=useState(true);
-    const [preloadDone, setPreloadDone] = useState(false)
+    const [preloadDone, setPreloadDone] = useState(false);
+    const [step, setStep] = useState(0);
 
 
 
@@ -190,54 +240,63 @@ function StudyPage(props){
 
 
     return(
-    <>
         <Wrapper>
-            <Box>
-                <MiniHeader
-                    left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
-                    right={<Button onClick={()=>navigate(`/study/level2-img`)}>다음 단계로</Button>}
-                >
-                1/6 : 학습 목표
-                </MiniHeader>
+            <ContentWrapper>
+                <Sidebar user={user} login={login} setLogin={setLogin} defaultCollapsed={true} />
+                <MainWrapper>
+                        {/* <MiniHeader
+                            left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
+                            right={<Button onClick={()=>navigate(`/study/level2-img`)}>다음 단계로</Button>}
+                        >
+                        1/6 : 학습 목표
+                        </MiniHeader> */}
+                        <ImageWrapper>
+                            <Image src={hoppin} alt="샘플" />
+                        </ImageWrapper>
+                        <TtsPlayer
+                            sentences={textToRead}
+                            answers={[]}
+                            isAnsweringPhase={false}
+                            currentIndex={0}
+                            autoPlay={true}
+                            style={{ display: "none" }}
+                            onPreloadDone={() => setPreloadDone(true)}
+                        />
+                        { !preloadDone ? (
+                            <TextBox>화면을 준비 중입니다...</TextBox>
+                        ) : (
+                        <SpeechBubble>
+                            <TextBox>
+                                {loading
+                                    ? "학습 목표 준비중.."
+                                    :<p>
+                                        먼저 이번 단원의 학습목표에 대해서 알아볼까?<br/> 이번 단원에서는 {" "}
+                                        <span style={{ fontWeight: "bold", color: "#2774B2" }}>
+                                        {objective}
+                                        </span><br/>
+                                        그럼 시작해볼까? 🐯
+                                    </p>
+                                    }
 
-                <TtsPlayer
-                    sentences={textToRead}
-                    answers={[]}
-                    isAnsweringPhase={false}
-                    currentIndex={0}
-                    autoPlay={true}
-                    style={{ display: "none" }}
-                    onPreloadDone={() => setPreloadDone(true)}
-                />
-                { !preloadDone ? (
-                    <TextBox>화면을 준비 중입니다...</TextBox>
-                ) : (
-                <SpeechBubble>
-                    <TextBox>
-                        {loading
-                            ? "학습 목표 준비중.."
-                            :<p>
-                                먼저 이번 단원의 학습목표에 대해서 알아볼까?<br/> 이번 단원에서는 {" "}
-                                <span style={{ fontWeight: "bold", color: "#2774B2" }}>
-                                {objective}
-                                </span><br/>
-                                그럼 시작해볼까? 🐯
-                            </p>
-                            }
-
-                    </TextBox>
-                    
-                    <SecondWrapper>
-                        <Image src={tigerPencil} alt="샘플" />
-                        <BubbleButton onClick={()=>navigate(`/study/level2-img`)}>좋아✅</BubbleButton>  
-                    </SecondWrapper>
-                    
-                </SpeechBubble>
-                )}
-      
-            </Box>
+                            </TextBox>
+                             <ButtonWrapper>
+                                 <BackButton onClick={() => navigate(-1)}>
+                                     뒤로
+                                 </BackButton>
+                                  <BubbleButton onClick={() => navigate(`/study/level2-img`)}>
+                                         다음
+                                  </BubbleButton>
+                             </ButtonWrapper>
+                            
+                            {/* <SecondWrapper>
+                                <BubbleButton onClick={()=>navigate(`/study/level2-img`)}>좋아✅</BubbleButton>  
+                            </SecondWrapper> */}
+                            
+                        </SpeechBubble>
+                        )}
+                </MainWrapper>
+            </ContentWrapper>
         </Wrapper>
-    </>
     );
 }
 

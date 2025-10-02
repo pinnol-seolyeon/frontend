@@ -76,27 +76,49 @@ export async function fetchRadarScore() {
 
 // 질문 보여주기
 export async function fetchQuestionDates() {
-  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/questions/dates`, {
-    credentials: 'include',
-  });
+  try {
+    const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/questions/dates`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`❌ 날짜 조회 실패: ${res.status} ${text}`);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`HTTP ${res.status}: ${text}`);
+    }
+
+    const data = await res.json();
+    console.log('✅ 질문 날짜 목록:', data);
+    return data;
+  } catch (error) {
+    console.error('❌ fetchQuestionDates 실패:', error);
+    throw error;
   }
-
-  return await res.json();
 }
 
 export async function fetchQuestionsByDate(dateStr) {
-  const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/questions/history?date=${dateStr}`, {
-    credentials: 'include',
-  });
+  try {
+    const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/questions/history?date=${dateStr}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`❌ 질문 내역 조회 실패: ${res.status} ${text}`);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`HTTP ${res.status}: ${text}`);
+    }
+
+    const data = await res.json();
+    console.log('✅ 질문 내역 데이터:', data);
+    return data;
+  } catch (error) {
+    console.error('❌ fetchQuestionsByDate 실패:', error);
+    throw error;
   }
-
-  return await res.json();
 }
