@@ -130,6 +130,35 @@ export default function StudyTimeStats() {
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // 학습 유형별 텍스트 배열
+  const typeTexts = [
+    {
+      type: '아침형',
+      period: '05:00 ~ 11:59',
+      text: '하루의 시작을 학습으로 여는 부지런함! 상쾌한 공기만큼 맑은 집중력으로 학습하는 유형입니다!'
+    },
+    {
+      type: '낮형',
+      period: '12:00 ~ 17:59',
+      text: '낮의 햇살처럼 따뜻하고 활기찬 에너지로 효율을 극대화하여 학습 성과를 만드는 유형입니다!'
+    },
+    {
+      type: '밤형',
+      period: '18:00 ~ 22:59',
+      text: '고요함 속에 집중하는 타입! 하루를 마무리하는 시간, 오직 학습에 몰입하여 깊이 있는 이해를 이루어나가는 유형입니다.'
+    },
+    {
+      type: '새벽형',
+      period: '23:00 ~ 04:59',
+      text: '누구에게도 방해받지 않는 시간, 모두가 잠든 시간에 잠재력을 보여주는 유형입니다!'
+    },
+    {
+      type: '언제든지좋아형',
+      period: '모든 시간대가 골고루 분포되어 있을 경우',
+      text: '언제나 학습을 생활화하는 꾸준함! 시간과 장소를 가리지 않고 성실하게 목표를 향해 나아가는 유형입니다.'
+    }
+  ];
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -182,6 +211,13 @@ export default function StudyTimeStats() {
   const data = Object.keys(weeklyStats).length > 0 
     ? transformWeeklyStatsToChartData(weeklyStats)
     : transformWeeklyStatsToChartData({});
+
+  // 현재 유형에 맞는 텍스트 찾기
+  const getCurrentTypeText = () => {
+    const currentType = preferredType || '언제든지좋아형';
+    const typeInfo = typeTexts.find(type => type.type === currentType);
+    return typeInfo ? typeInfo.text : typeTexts[4].text; // 기본값: 언제든지좋아형
+  };
 
   return (
     <TimeCard>
@@ -250,10 +286,10 @@ export default function StudyTimeStats() {
 
           <TypeContainer>
             <TypeButton>
-              {preferredType || '언제든지 좋아형'}
+              {preferredType || '언제든지좋아형'}
             </TypeButton>
             <TypeText>
-              {preferredType || '언제든지 좋아형'}으로 오전~오후 상관없이 언제나 열심히 학습을 하고 있는 유형입니다!
+              {getCurrentTypeText()}
             </TypeText>
           </TypeContainer>
 

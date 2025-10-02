@@ -10,19 +10,41 @@ import {useParams} from "react-router-dom";
 import MiniHeader from "../../../components/study/MiniHeader";
 import {useChapter} from "../../../context/ChapterContext";
 import TtsPlayer from "../../../components/TtsPlayer";
+import background from "../../../assets/study_background.png";
+import Sidebar from "../../../components/Sidebar";
+import hoppin from "../../../assets/hopin.svg";
 
 /*학습하기-1단계-1*/
 
 
-const Wrapper=styled.div`
-    width:100%;
-    height:100vh;
+const Wrapper = styled.div`
+  background-color: #ffffff;
+  margin: 0;
+  padding: 0;
+`;
 
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
+const ContentWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  background-image: url(${background});
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+`;
 
+const MainWrapper = styled.div` 
+  flex: 1;
+  min-height: calc(100vh - var(--header-height, 70px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 `;
 
 const ImageWrapper=styled.div`
@@ -30,39 +52,33 @@ const ImageWrapper=styled.div`
     display:flex;
     align-items:center;
     justify-content:center;
-
-    margin-top:6%;
-    // gap:12px;
 `
 
 
 
 const Image=styled.img`
     display:flex;
-    width:100%; 
     height:auto;
     object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    width: clamp(100px,40vw,250px); //최소 150px, 최대 250px, 화면 너비 40%까지 가능
+    width: 60%;
     display:block;
     
      /*가로 중앙 정렬, 세로 원하는 위치에 자유롭게 배치*/
     align-self:center;/*가로 중앙 정렬*/
-    margin-top:8vh;
     // margin-bottom:0px;
-
-    
-
 `;
 
 const SpeechBubble=styled.div`
     display:flex;
     width:100%;
-    height:20%;
-    background-color:#FEF3E1;
+    height: fit-content;
+    padding: 2rem;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
     justify-content: center; /* 수평 중앙 */
     align-items: center;     /* 수직 중앙 */
-    
-
+    flex-direction: column;
+    gap: 1rem;
     position:relative;
 
 `;
@@ -76,47 +92,71 @@ const TextBox = styled.div`
 
   width: 80%;
   margin: 0 auto;
-  padding: 40px clamp(4vw, 6vw, 90px) 40px clamp(4vw, 6vw, 90px); 
-  /* ⬆️ 좌우 여백은 반응형으로, 하단은 버튼 공간 확보 */
+  padding: 0 clamp(4vw, 6vw, 90px); 
 
-  font-size: clamp(20px, 2vw, 28px); /* ✅ 최대값을 줄여서 더 안정된 크기 */
-  line-height: 1.6; /* ✅ 줄 간격을 여유 있게 */
-  letter-spacing: 0.03em; /* ✅ 글자 간격 미세 조정 */
-  font-weight: 500; /* ✅ 가독성 좋은 중간 두께 */
-  font-family: "Noto Sans KR", sans-serif; /* ✅ 국문에 적합한 서체 */
-  color: #333;
+  font-size: 20px;
+  font-weight: 500;
+  color: #454545;
 `;
 
 const BubbleButton = styled.button`
-  position: absolute;
-  right: 20px;
-  bottom: 20px;
-
-  max-width:20%;
-
   display:flex;
   align-items: center;
+  justify-content: center;
   text-align: center;
-//   flex-basis:auto;
-
-  padding: 1% 3%; 
-
-  background-color: #2774B2;
+  padding: 0.6rem 5rem; 
+  background-color: #478CEE;
   color: white;
-  border-radius: 30px;
+  border: none;
+  border-radius: 10px;
   cursor: pointer;
-  border:0.2px solid black;
-
+  outline: none;
   font-size:clamp(13px,1vw,20px);
-//   white-space:nowrap; //줄바꿈방지
 
   transition: background-color 0.3s;
   &:hover {
-    background-color: #1b5c91;
+    background-color: #104EA7;
+  }
+
+  &:active {
+    outline: none;
   }
 `;
 
-function StudyPage(){
+const BackButton = styled.button`
+  display:flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.6rem 5rem; 
+  background-color: white;
+  color: #9E9E9E;
+  border: 1px solid #B8B8B8;
+  border-radius: 10px;
+  cursor: pointer;
+  outline: none;
+  font-size:clamp(13px,1vw,20px);
+
+  transition: all 0.3s;
+  &:hover {
+    background-color: #F5F5F5;
+    border-color: #B8B8B8;
+  }
+
+  &:active {
+    outline: none;
+  }
+`;
+
+const ButtonWrapper=styled.div`
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    width:100%;
+    gap: 2rem;
+`;
+
+function StudyPage({ user, login, setLogin }){
 
     const navigate=useNavigate();
     const {chapterId}=useParams();
@@ -186,8 +226,18 @@ function StudyPage(){
             setStep(1);
             setPreloadDone(false);
         }else{
-            alert("✅다음 단계로 넘어가볼까요? 다음 단계 버튼을 클릭해주세요!");
+            navigate(`/study/2`);
             setIsFinished(true);
+        }
+    }
+
+    const handleBack=()=>{
+        if (step===1){
+            setStep(0);
+            setPreloadDone(false);
+        }else{
+            // step이 0이면 이전 페이지로 이동
+            navigate(-1);
         }
     }
 
@@ -205,46 +255,57 @@ function StudyPage(){
     return(
     <>
         <Wrapper>
-            <Box>
-            <MiniHeader
-                    left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
-                    right={
-                    isFinished?(
-                        <Button onClick={()=>navigate(`/study/2`)}>다음 단계로</Button>
-                    ):<Button disabled>진행 중...</Button>
-                    }
-                >
-                1/6 선생님과 학습하기
-                </MiniHeader>
-            <ImageWrapper>
-                <Image src={tiger} alt="샘플" />
-            </ImageWrapper>
-            <TtsPlayer
-                sentences={textToRead}
-                answers={[]}
-                isAnsweringPhase={false}
-                currentIndex={0}
-                autoPlay={true}
-                style={{ display: "none" }}
-                onPreloadDone={() => setPreloadDone(true)}
-            />
-            { !preloadDone ? (
-                <TextBox>화면을 준비 중입니다...</TextBox>
-            ) : (
-                <SpeechBubble>
-                    <TextBox>
-                        {loading
-                            ? "단원을 준비 중이에요..."
-                            : step===0
-                                ? "안녕! 나는 호랑이 선생님이야"
-                                : `이번 단원을 소개할게.\n이번 단원은 ${titleText}이야`}
-                    </TextBox>
-                    <BubbleButton onClick={handleNext}>
-                            {step===0?"다음":"시작하기"}
-                    </BubbleButton>
-                </SpeechBubble>
-            )}
-            </Box>
+            <ContentWrapper>
+                <Sidebar user={user} login={login} setLogin={setLogin} defaultCollapsed={true} />
+                <MainWrapper>
+                    {/* <MiniHeader
+                            left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
+                            right={
+                            isFinished?(
+                                <Button onClick={()=>navigate(`/study/2`)}>다음 단계로</Button>
+                            ):<Button disabled>진행 중...</Button>
+                            }
+                        >
+                        1/6 선생님과 학습하기
+                        </MiniHeader> */}
+                    <ImageWrapper>
+                        <Image src={hoppin} alt="샘플" />
+                    </ImageWrapper>
+                    <TtsPlayer
+                        sentences={textToRead}
+                        answers={[]}
+                        isAnsweringPhase={false}
+                        currentIndex={0}
+                        autoPlay={true}
+                        style={{ display: "none" }}
+                        onPreloadDone={() => setPreloadDone(true)}
+                    />
+                    { !preloadDone ? (
+                        <TextBox>화면을 준비 중입니다...</TextBox>
+                    ) : (
+                        <SpeechBubble>
+                            <TextBox>
+                                {loading
+                                    ? "단원을 준비 중이에요..."
+                                    : step===0
+                                        ? "안녕! 나는 호랑이 선생님이야"
+                                        : `이번 단원을 소개할게.\n이번 단원은 ${titleText}이야`}
+                            </TextBox>
+                              <ButtonWrapper>
+                                 {step > 0 && (
+                                    <BackButton onClick={handleBack}>
+                                        뒤로
+                                    </BackButton>
+                                 )}
+                                 <BubbleButton onClick={handleNext}>
+                                          {step===0?"다음":"시작하기"}
+                                 </BubbleButton>
+                              </ButtonWrapper>
+
+                        </SpeechBubble>
+                    )}
+                </MainWrapper>
+            </ContentWrapper>
         </Wrapper>
     </>
     );

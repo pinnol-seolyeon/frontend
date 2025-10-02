@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import { fetchQuestionDates, fetchQuestionsByDate } from '../../api/analyze/analytics';
 
 const QnAContainer = styled.div`
   background: white;
@@ -93,14 +94,28 @@ const CalendarDay = styled.div`
     if (props.isSelected) return 'white';
     if (props.isWeekend && !props.isOtherMonth) return '#FF6B6B';
     if (props.isOtherMonth) return '#ccc';
+    if (props.isToday) return '#2D7BED';
     return '#9E9E9E';
   }};
   background: ${props => {
     if (props.isSelected) return '#4A91FE';
     if (props.isToday && !props.isOtherMonth) return '#f0f8ff';
+    if (props.hasQuestions && !props.isOtherMonth) return '#FFF3E0';
     return 'transparent';
   }};
   border: ${props => props.isSelected ? '2px solid #4A91FE' : 'none'};
+  position: relative;
+  
+  /* 질문이 있는 날짜에 점 표시 */
+  &::after {
+    content: ${props => props.hasQuestions && !props.isOtherMonth ? '"•"' : 'none'};
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #FF9800;
+    font-size: 12px;
+  }
   
   &:hover {
     background: ${props => {
@@ -179,14 +194,58 @@ const EmptyMessage = styled.div`
 
 export default function QnAViewer() {
   const [selectedDate, setSelectedDate] = useState(new Date());
-
+  const [questionDates, setQuestionDates] = useState([]); // 질문이 있는 날짜들
+  const [qnaData, setQnaData] = useState([]); // 선택된 날짜의 질문/답변 데이터
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // 현재 날짜 가져오기
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth() + 1); // 현재 월
   const [currentYear, setCurrentYear] = useState(today.getFullYear()); // 현재 년도
 
-  // 선택된 날짜의 전체 날짜 문자열 생성
+  // 질문이 있는 날짜 목록 로드
+  useEffect(() => {
+    const loadQuestionDates = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const dates = await fetchQuestionDates();
+        console.log('📅 질문 날짜 목록:', dates);
+        setQuestionDates(dates);
+        
+        // 현재 선택된 날짜의 질문 데이터도 로드
+        const dateStr = formatDateForAPI(selectedDate);
+        await loadQuestionsForDate(dateStr);
+        
+      } catch (err) {
+        console.error('❌ 질문 날짜 로드 실패:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadQuestionDates();
+  }, []);
+
+  // 특정 날짜의 질문 데이터 로드
+  const loadQuestionsForDate = async (dateStr) => {
+    try {
+      const data = await fetchQuestionsByDate(dateStr);
+      console.log('📝 질문 데이터:', data);
+      setQnaData(data || []);
+    } catch (err) {
+      console.error('❌ 질문 데이터 로드 실패:', err);
+      setQnaData([]);
+    }
+  };
+
+  // 날짜를 API 형식으로 변환 (YYYY-MM-DD)
+  const formatDateForAPI = (date) => {
+    return date.toISOString().split('T')[0];
+  };
 
   // 월 이동 함수
   const goToPreviousMonth = () => {
@@ -216,6 +275,10 @@ export default function QnAViewer() {
     const days = [];
     const totalDays = 42; // 6주 * 7일
     
+    // 오늘 날짜와 비교하기 위한 Date 객체
+    const today = new Date();
+    const todayString = today.toDateString();
+    
     for (let i = 0; i < totalDays; i++) {
       const currentDate = new Date(startDate);
       currentDate.setDate(startDate.getDate() + i);
@@ -223,12 +286,19 @@ export default function QnAViewer() {
       const day = currentDate.getDate();
       const isCurrentMonth = currentDate.getMonth() === month - 1;
       const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+      const isToday = currentDate.toDateString() === todayString;
+      
+      // 해당 날짜에 질문이 있는지 확인
+      const dateStr = formatDateForAPI(currentDate);
+      const hasQuestions = questionDates.includes(dateStr);
       
       days.push({
         day,
         isCurrentMonth,
         isWeekend,
         isOtherMonth: !isCurrentMonth,
+        isToday,
+        hasQuestions,
         date: currentDate
       });
     }
@@ -239,50 +309,27 @@ export default function QnAViewer() {
   const weekdays = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
   const calendarDays = generateCalendarDays(currentYear, currentMonth);
 
-  // 날짜별 Q&A 데이터 생성 함수
-  const generateQnAData = (date) => {
-    const day = date.getDate();
-    
-    // 날짜에 따라 다른 데이터 반환
-    if (day === 6) {
-      return [
-        {
-          type: 'question',
-          header: '오늘 어떤 것을 배웠나요?',
-          content: '오늘은 새로운 개념을 배우는 날이었어요. 학습은 우리의 지식을 넓혀주고 더 똑똑하게 만들어줍니다. 매일 조금씩 배우면 나중에 큰 도움이 될 거예요.'
-        },
-        {
-          type: 'question',
-          header: '가장 기억에 남는 것은?',
-          content: '오늘 배운 것 중에서 가장 기억에 남는 것이 있나요? 중요한 내용은 반복해서 복습하면 더 오래 기억할 수 있어요.'
-        }
-      ];
-    } else if (day === 15) {
-      return [
-        {
-          type: 'question',
-          header: '수학 공부는 어땠나요?',
-          content: '수학은 논리적 사고를 기르는 좋은 과목이에요. 오늘 배운 내용을 잘 이해했는지 확인해보세요.'
-        },
-      ];
-    } else if (day === 22) {
-      return [
-        {
-          type: 'question',
-          header: '영어 단어는 몇 개 외웠나요?',
-          content: '영어는 꾸준한 학습이 중요한 언어예요. 매일 조금씩이라도 공부하면 큰 진전을 볼 수 있어요.'
-        },
-      ];
-    } else {
-      return []; // 다른 날짜는 빈 배열 반환
-    }
+  // API 데이터를 컴포넌트 형식으로 변환
+  const transformApiDataToQnA = (apiData) => {
+    return apiData.map(item => ({
+      id: item.id,
+      type: 'question',
+      header: '오늘의 학습 질문',
+      content: item.questions && item.questions.length > 0 ? item.questions.join('\n') : '질문이 없습니다.',
+      answers: item.answers || [],
+      date: item.date,
+      chapterId: item.chapterId
+    }));
   };
 
-  const qnaData = generateQnAData(new Date(currentYear, currentMonth - 1, selectedDate.getDate()));
-
-  const handleDateClick = (dayData) => {
+  const handleDateClick = async (dayData) => {
     if (dayData.isCurrentMonth) {
-      setSelectedDate(new Date(currentYear, currentMonth - 1, dayData.day));
+      const newDate = new Date(currentYear, currentMonth - 1, dayData.day);
+      setSelectedDate(newDate);
+      
+      // 해당 날짜의 질문 데이터 로드
+      const dateStr = formatDateForAPI(newDate);
+      await loadQuestionsForDate(dateStr);
     }
   };
 
@@ -311,6 +358,8 @@ export default function QnAViewer() {
                   isSelected={dayData.day === selectedDate.getDate() && dayData.isCurrentMonth}
                   isWeekend={dayData.isWeekend}
                   isOtherMonth={dayData.isOtherMonth}
+                  isToday={dayData.isToday}
+                  hasQuestions={dayData.hasQuestions}
                   onClick={() => handleDateClick(dayData)}
                 >
                   {dayData.day}
@@ -320,14 +369,28 @@ export default function QnAViewer() {
           </CalendarPanel>
         </CalendarWrapper>
         <ChatPanel>
-          {qnaData.length > 0 ? (
-            qnaData.map((item, index) => (
-              <QnACard key={index}>
+          {loading ? (
+            <EmptyMessage>
+              데이터를 불러오는 중입니다...
+            </EmptyMessage>
+          ) : error ? (
+            <EmptyMessage>
+              데이터를 불러오는데 실패했습니다: {error}
+            </EmptyMessage>
+          ) : qnaData.length > 0 ? (
+            transformApiDataToQnA(qnaData).map((item, index) => (
+              <QnACard key={item.id || index}>
                 <CardHeaderContainer>
                   <CardHeader>질문</CardHeader>
                   <CardHeaderContent>{item.header}</CardHeaderContent>
                 </CardHeaderContainer>
                 <CardContent>{item.content}</CardContent>
+                {item.answers && item.answers.length > 0 && (
+                  <CardContent style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #E0E0E0' }}>
+                    <strong>답변:</strong><br />
+                    {item.answers.join('\n')}
+                  </CardContent>
+                )}
               </QnACard>
             ))
           ) : (

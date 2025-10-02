@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import styled from 'styled-components';
 import '../Book/BookPage.css';
@@ -21,15 +21,14 @@ const MainWrapper = styled.div`
   min-height: calc(100vh - var(--header-height, 70px));
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 2rem 0;
+  padding: 2rem;
   
   /* 모바일 반응형 */
   @media (max-width: 768px) {
     padding: 1rem;
   }
-
 `;
 
 const ContentContainer = styled.div`
@@ -40,40 +39,13 @@ const ContentContainer = styled.div`
   align-items: center;
 `;
 
-const BackButtonWrapper = styled.div`
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  justify-content: flex-start;
-  margin-bottom: 2rem;
-`;
-
-const BackButton = styled.div`
-  display: flex;
-  border-radius: 8px;
-  padding: 0.6rem 1rem;
-  border: 1px solid #B8B8B8;
-  font-size: 0.8rem;
-  font-weight: 300;
-  color: #4C4C4C;
-  cursor: pointer;
-  background-color: white;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background-color: #f8f9fa;
-    border-color: #4A91FE;
-    color: #4A91FE;
-  }
-`;
-
 const BookPageContainer = styled.div`
   width: 100%;
   padding: 1rem;
 `;
 
 const PageHeader = styled.div`
-  text-align: center;
+  text-align: flex-start;
   margin-bottom: 3rem;
 `;
 
@@ -91,27 +63,22 @@ const PageSubtitle = styled.p`
 `;
 
 const BookGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 1.5rem;
-  max-width: 1000px;
+  width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
   
   @media (max-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
-  }
-  
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
   }
 `;
 
 const BookCard = styled.div`
-  background: white;
+  background: #ffffff;
   padding: 1.5rem;
   border-radius: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   text-align: center;
   transition: all 0.3s ease;
   position: relative;
@@ -119,46 +86,19 @@ const BookCard = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
-  }
-
-  ${props => props.status === 'locked' && `
-    opacity: 0.7;
-    cursor: not-allowed;
-  `}
-`;
-
-const LevelBadge = styled.div`
-  background: #fff;
-  color: #4C4C4C;
-  padding: 0.3rem 0.8rem;
-  border-radius: 10px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  display: inline-block;
-  margin-bottom: 1rem;
-  border: 1px solid #B8B8B8;
-`;
-
-const LockIcon = styled.div`
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  width: 32px;
-  height: 32px;
-  background-color: #999;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border: 1px solid #DADADA;
+  flex: 1;
+  min-width: 280px;
+  max-width: 350px;
   
-  img {
-    width: 16px;
-    height: 16px;
-    filter: brightness(0) invert(1);
+  @media (max-width: 768px) {
+    min-width: 200px;
+    max-width: 250px;
+  }
+  
+  @media (max-width: 480px) {
+    min-width: 100%;
+    max-width: 100%;
   }
 `;
 
@@ -171,96 +111,52 @@ const IconContainer = styled.div`
   justify-content: center;
   margin: 0 auto 1rem;
   font-size: 2.5rem;
-  
-  ${props => props.color && `
-    background-color: ${props.color};
-  `}
+  background-color: #F7F7F7;
 `;
 
 const BookTitle = styled.h3`
-  font-size: 1.3rem;
+  font-size: 20px;
   font-weight: 700;
-  color: #333;
+  color: #191919;
   margin-bottom: 0.5rem;
   line-height: 1.3;
 `;
 
 const BookDescription = styled.p`
-  font-size: 0.9rem;
-  color: #666;
+  font-size: 14px;
+  color: #9E9E9E;
+  font-weight: 300;
   margin-bottom: 1rem;
   line-height: 1.4;
-`;
-
-const ProgressSection = styled.div`
-  margin-bottom: 1rem;
-`;
-
-const ProgressLabel = styled.div`
-  font-size: 0.7rem;
-  color: #666;
-  margin-bottom: 0.5rem;
-  text-align: left;
-`;
-
-const ProgressBar = styled.div`
-  width: 100%;
-  height: 0.7rem;
-  background: #e9ecef;
-  border-radius: 30px;
-  overflow: hidden;
-`;
-
-const ProgressFill = styled.div`
-  height: 100%;
-  border-radius: 30px;
-  transition: width 0.3s ease;
-  width: ${props => props.progress}%;
-
-  ${props => props.variant === 'completed' && `
-    background: #4A91FE;
-  `}
-
-  ${props => props.variant === 'in_progress' && `
-    background: linear-gradient(to right, #4A91FE, #303AFF);
-  `}
+  white-space: pre-line;
 `;
 
 const ActionButton = styled.button`
   width: 100%;
-  padding: 0.8rem 1rem;
+  padding: 0.6rem;
   border: none;
   border-radius: 10px;
-  font-size: 1rem;
+  font-size: 18px;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  
-  ${props => props.variant === 'completed' && `
-    background: #4A91FE;
-    color: white;
-    font-weight: 500;
-  `}
+  background: #DADADA;
+  color: #9E9E9E;
+  font-weight: 500;
   
   ${props => props.variant === 'continue' && `
-    background: linear-gradient(to right, #4A91FE, #303AFF);
-    color: white;
-    font-weight: 700;
+    background: #2D7BED;
+    color: #ffffff;
+    font-weight: 500;
     
     &:hover {
-      background: linear-gradient(to right,rgb(55, 130, 243),rgb(30, 41, 239));
+      background: #104EA7;
     }
   `}
-  
-  ${props => props.variant === 'locked' && `
-    background: #B8B8B8;
-    color: #4C4C4C;
-    cursor: not-allowed;
-    font-weight: 500;
-  `}
+
 `;
 
 const ThumbIcon = styled.span`
@@ -272,7 +168,7 @@ const BookCardComponent = ({ book, onSelect }) => {
   const getButtonText = () => {
     if (book.status === 'locked') return '잠금';
     if (book.status === 'completed') return '학습완료';
-    return '계속하기';
+    return '학습시작';
   };
 
   const getButtonVariant = () => {
@@ -290,8 +186,8 @@ const BookCardComponent = ({ book, onSelect }) => {
   return (
     <BookCard status={book.status}>
       <div>
-        <LevelBadge>{book.level}</LevelBadge>
-        {book.status === 'locked' && <LockIcon><img src={lock} alt="lock" /></LockIcon>}
+        {/* <LevelBadge>{book.level}</LevelBadge> */}
+        {/* {book.status === 'locked' && <LockIcon><img src={lock} alt="lock" /></LockIcon>} */}
         
         <IconContainer color={book.iconColor}>
           {book.icon}
@@ -302,18 +198,6 @@ const BookCardComponent = ({ book, onSelect }) => {
       </div>
 
       <div>
-        {book.status !== 'locked' && (
-          <ProgressSection>
-            <ProgressLabel>진행률</ProgressLabel>
-            <ProgressBar>
-              <ProgressFill 
-                progress={getProgressPercentage()} 
-                variant={book.status}
-              />
-            </ProgressBar>
-          </ProgressSection>
-        )}
-
         <ActionButton 
           variant={getButtonVariant()}
           onClick={() => onSelect(book.path)}
@@ -335,6 +219,59 @@ function BookListPage({ user, login, setLogin }) {
   const { userProgress = { completedSteps: [] } } = outletContext;
 
   const [error, setError] = useState(null);
+
+  // 페이지 이탈 감지 이벤트 리스너
+  // useEffect(() => {
+  //   const handleBeforeUnload = (event) => {
+  //     // 사용자에게 페이지를 떠날 것인지 확인하는 메시지 표시
+  //     const message = '헬로';
+      
+  //     // 표준 beforeunload 확인 메시지 설정
+  //     event.preventDefault();
+  //     event.returnValue = message; // Chrome에서 필요
+  //     return message; // 일부 브라우저에서 필요
+  //   };
+
+  //   const handleVisibilityChange = () => {
+  //     if (document.hidden) {
+  //       console.log('👁️ 탭이 비활성화됨 (다른 탭으로 이동 또는 브라우저 최소화)');
+  //     } else {
+  //       console.log('👁️ 탭이 다시 활성화됨');
+  //     }
+  //   };
+
+  //   const handlePageHide = (event) => {
+  //     if (event.persisted) {
+  //       console.log('📄 페이지가 백/포워드 캐시로 이동');
+  //     } else {
+  //       console.log('📄 페이지가 완전히 언로드됨 (탭 닫기, 브라우저 종료, 또는 새로고침)');
+  //     }
+  //   };
+
+  //   const handleFocus = () => {
+  //     console.log('🎯 창이 다시 포커스를 받음');
+  //   };
+
+  //   const handleBlur = () => {
+  //     console.log('🎯 창이 포커스를 잃음');
+  //   };
+
+  //   // 이벤트 리스너 등록
+  //   window.addEventListener('beforeunload', handleBeforeUnload);
+  //   document.addEventListener('visibilitychange', handleVisibilityChange);
+  //   window.addEventListener('pagehide', handlePageHide);
+  //   window.addEventListener('focus', handleFocus);
+  //   window.addEventListener('blur', handleBlur);
+
+  //   // 클린업 함수
+  //   return () => {
+  //     window.removeEventListener('beforeunload', handleBeforeUnload);
+  //     document.removeEventListener('visibilitychange', handleVisibilityChange);
+  //     window.removeEventListener('pagehide', handlePageHide);
+  //     window.removeEventListener('focus', handleFocus);
+  //     window.removeEventListener('blur', handleBlur);
+  //   };
+  // }, []);
 
   // useMemo를 사용하여 completedStages를 계산
   const completedStages = useMemo(() => {
@@ -365,60 +302,48 @@ function BookListPage({ user, login, setLogin }) {
       level: "Lv.01",
       title: "돈이란 무엇일까?", 
       icon: "💰", 
-      iconColor: "#BFDBFF",
       path: "/book/chapter",
-      description: "돈의 기본 개념과 역할을 배워보며 금융의 첫걸음을 시작해요!",
-      totalProgress: 6
+      description: "돈의 기본 개념과 역할을 배워보며\n금융의 첫걸음을 시작해요!",
     },
     { 
       id: 2,
       level: "Lv.02",
       title: "돈은 왜 소중한가?", 
       icon: "💎", 
-      iconColor: "#E0F2F1",
       path: "/book/chapter",
-      description: "돈의 기본 개념과 역할을 배워보며 금융의 첫걸음을 시작해요!",
-      totalProgress: 6
+      description: "돈의 기본 개념과 역할을 배워보며\n금융의 첫걸음을 시작해요!",
     },
     { 
       id: 3,
       level: "Lv.03",
       title: "돈의 여러가지 모습", 
       icon: "🌍", 
-      iconColor: "#F3E5F5",
       path: "/book/chapter",
-      description: "돈의 기본 개념과 역할을 배워보며 금융의 첫걸음을 시작해요!",
-      totalProgress: 6
+      description: "돈의 기본 개념과 역할을 배워보며\n금융의 첫걸음을 시작해요!",
     },
     { 
       id: 4,
       level: "Lv.04",
       title: "돈은 이렇게 벌어!", 
       icon: "💼", 
-      iconColor: "#FFF3E0",
       path: "/book/chapter",
-      description: "돈의 기본 개념과 역할을 배워보며 금융의 첫걸음을 시작해요!",
-      totalProgress: 6
+      description: "돈의 기본 개념과 역할을 배워보며\n금융의 첫걸음을 시작해요!",
     },
     { 
       id: 5,
       level: "Lv.05",
       title: "돈은 왜 모을까?", 
       icon: "💵", 
-      iconColor: "#FCE4EC",
       path: "/book/chapter",
-      description: "돈의 기본 개념과 역할을 배워보며 금융의 첫걸음을 시작해요!",
-      totalProgress: 6
+      description: "돈의 기본 개념과 역할을 배워보며\n금융의 첫걸음을 시작해요!",
     },
     { 
       id: 6,
       level: "Lv.06",
       title: "은행이 하는 일", 
       icon: "🏦", 
-      iconColor: "#FFF8E1",
       path: "/book/chapter",
       description: "돈의 기본 개념과 역할을 배워보며 금융의 첫걸음을 시작해요!",
-      totalProgress: 6
     },
   ];
 
@@ -433,7 +358,6 @@ function BookListPage({ user, login, setLogin }) {
       currentProgress = book.totalProgress;
     } else if (isPreviousCompleted) {
       status = "in_progress";
-      currentProgress = Math.floor(Math.random() * (book.totalProgress - 1)) + 1; // 임시 진행률
     } else {
       status = "locked";
       currentProgress = 0;
@@ -441,8 +365,7 @@ function BookListPage({ user, login, setLogin }) {
 
     return {
       ...book,
-      status,
-      currentProgress
+      status
     };
   });
 
@@ -475,16 +398,10 @@ function BookListPage({ user, login, setLogin }) {
       <Sidebar user={user} login={login} setLogin={setLogin} />
       <MainWrapper>
         <ContentContainer>
-          <BackButtonWrapper>
-            <BackButton
-              onClick={() => navigate('/main')}
-            >{'<'} 이전 페이지로 돌아가기</BackButton>
-          </BackButtonWrapper>
-          
           <BookPageContainer>
             <PageHeader>
               {/* <PageTitle>{user?.childName}의 멋진 학습 여정🚀</PageTitle> */}
-              <PageTitle>{user?.childName ? user.childName.slice(1) : "친구"}의 멋진 학습 여정🚀</PageTitle>
+              <PageTitle>{user?.childName ? user.childName.slice(1) : "친구"}의 멋진 학습 여정</PageTitle>
               <PageSubtitle>벌써 {bookList.filter(book => book.status === 'completed').length}개 레벨을 완료했구나! 지금 열심히 배우고 있어!</PageSubtitle>
             </PageHeader>
 
