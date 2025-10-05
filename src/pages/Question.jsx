@@ -5,36 +5,38 @@ import styled,{keyframes} from "styled-components";
 import axios from 'axios';
 
 import Header from "../components/Header";
+import Sidebar from "../components/Sidebar";
 import mic from "../assets/mic_img.svg";
 import background from "../assets/background_question.png";
-import hopin from "../assets/hopin_face.svg";
+import hopin from "../assets/hopin_face.png";
 
 /*질문 버튼 눌렀을 때*/
 
 
-const Wrapper=styled.div`
-    width: 100vw;
-    height: 100vh;
-    background-color: #ffffff;
-    background-image: url(${background});
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    overflow-y: auto;
+const Wrapper = styled.div`
+  background-color: #ffffff;
+  margin: 0;
+  padding: 0;
+`;
+
+const ContentWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
 `;
 
 const MainWrapper = styled.div` 
-    width: 100%;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: calc(var(--header-height, 70px) + 20px) 20px 20px 20px;
+  flex: 1;
+  min-height: calc(100vh - var(--header-height, 70px));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  
+  /* 모바일 반응형 */
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 `;
 
 const ContentContainer = styled.div`
@@ -47,9 +49,10 @@ const ContentContainer = styled.div`
 
 const BackButtonWrapper = styled.div`
     width: 100%;
-    max-width: 1200px;
+    max-width: 1000px;
     display: flex;
     justify-content: flex-start;
+    align-self: center;
 `;
 
 const BackButton = styled.div`
@@ -71,7 +74,7 @@ const BackButton = styled.div`
 `;
 
 const QuestionArea = styled.div`
-    width: 90%;
+    width: 100%;
     max-width: 1000px;
     height: 80vh;
     display: flex;
@@ -79,32 +82,34 @@ const QuestionArea = styled.div`
     align-self: center;
     overflow: hidden;
     position: relative;
+    margin-top: 1rem;
 `;
 
 const ChatContainer = styled.div`
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 20px;
+    padding: 1.3rem;
     overflow-y: auto;
+    margin-top: 1rem;
+    background-color: #F0F4FC;
 `;
 
 const InputArea = styled.div`
-    padding: 0 2rem;
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-bottom: 1rem;
+    margin: 1rem 0;
 `;
 
 const TextInput = styled.input`
     flex: 1;
-    background: #EAEAEA;
+    background: #ffffff;
     padding: 0.8rem 1rem;
     border-radius: 10px;
-    font-size: 14px;
+    font-size: 15px;
     outline: none;
-    border: none;
+    border: 1px solid #DADADA;
     
     &::placeholder {
         color: #9E9E9E;
@@ -119,17 +124,17 @@ const MicButton = styled.button`
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 50%;
-    background: #ffffff;
+    background-color: #ffffff;
     border: none;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 3px solid #4A91FE;
+    border: 1px solid #478CEE;
     transition: all 0.3s ease;
     
     &:hover {
-        border: 3px solid #3367D6;
+        border: 1px solid #3367D6;
     }
 
     &:active {
@@ -143,10 +148,9 @@ const SendButton = styled.button`
     color: white;
     border: none;
     border-radius: 10px;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 500;
     cursor: pointer;
-    box-shadow: 0 4px 8px rgba(153, 175, 203, 0.5);
     
     &:hover {
         background: #3367D6;
@@ -183,35 +187,24 @@ const MessageList=styled.div`
     display:flex;
     flex-direction:column;
     padding: 10px;
-    gap: 8px;
+    gap: 0.2rem;
 `;
 
 
 const TigerImg=styled.img`
-    width: 70%; 
-    height: auto;
-`;
-
-const MyImg=styled.img`
-    width:10%; 
-    height:auto;
-    object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    max-width:60px;
-    display:block;
-
-    align-self:flex-end;
-    margin-top:10px;
-    margin-right:10px;
-
+    width: 90%; 
+    height: 90%;
+    object-fit: contain;
+    object-position: bottom;
 `;
 
 const ProfileArea = styled.div`
     display:flex;
-    align-items:center;
+    align-items:flex-end;
     justify-content:center;
     border-radius: 50%;
-    width: 5rem;
-    height: 5rem;
+    width: 3.5rem;
+    height: 3.5rem;
     background: linear-gradient(to bottom, #EFF6FF, #AED2FF);
     overflow: hidden;
     flex-shrink: 0;
@@ -219,14 +212,13 @@ const ProfileArea = styled.div`
 
 const ReceiveMessage = styled.div`
     background-color: #ffffff;
-    border-radius: 30px;
-    padding: 1.2rem 1.5rem;
+    border-radius: 20px;
+    padding: 0.5rem 1.5rem;
     
-    font-size: 16px;
+    font-size: 14px;
     line-height: 1.4;
-    font-weight: 500;
-    color: #2F2F2F;
-    border: 1px solid #B8B8B8;
+    font-weight: 400;
+    color: #333333;
 
     
     max-width: 70%;
@@ -238,15 +230,14 @@ const ReceiveMessage = styled.div`
 `;
 
 const Message = styled.div`
-    background-color: #FFEFC1;
-    border-radius: 30px;
-    padding: 0.8rem 1rem;
-    border: 1px solid #B8B8B8;
+    background-color: #79B0FF;
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
     
-    font-size: 16px;
+    font-size: 14px;
     line-height: 1.4;
-    color: #2F2F2F;
-    font-weight: 500;
+    color: #ffffff;
+    font-weight: 400;
 
     margin-bottom: 0.5rem;
     margin-top: 0.5rem;
@@ -389,6 +380,8 @@ function Question({ user, login, setLogin }){
                 ...prevMessages,
                 {text:newMessage,type:'sent'} //보낸 메시지는 'sent'타입
             ]);
+            // 입력 필드 초기화
+            setTranscript('');
             try{
                 setLoading(true);
                 //메시지를 서버로 POST 요청 //await: 비동기 처리로 서버 응답 기다림
@@ -465,8 +458,9 @@ function Question({ user, login, setLogin }){
 
     return(
         <Wrapper>
-            <Header user={user} login={login} setLogin={setLogin} pageInfo={pageInfo} />
-            <MainWrapper>
+            <ContentWrapper>
+                <Sidebar user={user} login={login} setLogin={setLogin} defaultCollapsed={true} />
+                <MainWrapper>
                 <ContentContainer>
                     <BackButtonWrapper>
                         <BackButton
@@ -509,6 +503,7 @@ function Question({ user, login, setLogin }){
                     </QuestionArea>
                 </ContentContainer>
             </MainWrapper>
+            </ContentWrapper>
         </Wrapper>
     );
 }
