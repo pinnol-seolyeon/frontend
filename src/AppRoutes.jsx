@@ -22,6 +22,7 @@ import BookListPage from './pages/study/Book/BookListPage';
 import ChapterPage from './pages/study/Chapter/ChapterPage';
 import StudyLv2_withImg from './pages/study/level2/StudyLv2_withImg';
 import Callback from './pages/login/Callback';
+import Status from './pages/Status';
 
 
 const GlobalStyles = createGlobalStyle`
@@ -58,7 +59,8 @@ const routes = [
   { path: '/game', element: <Game/> },
   {path:'/book',element:<BookListPage/>},
   {path:'/book/chapter',element:<ChapterPage/>},
-  {path:'/study/level2-img',element:<StudyLv2_withImg/>}
+  {path:'/study/level2-img',element:<StudyLv2_withImg/>},
+  {path:'/status',element:<Status/>}
 ];
 
 export default function AppRoutes({ login, setLogin, user }) {
