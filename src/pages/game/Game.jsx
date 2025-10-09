@@ -1,18 +1,543 @@
 import React, { useEffect, useRef, useState } from 'react';
-import playerImg from '../../assets/player.png';
-import hurdle1Img from '../../assets/hurdle1.png';
-import hurdle2Img from '../../assets/hurdle2.png';
-import coinImg from '../../assets/coin.png';
-import quizBoxImg from '../../assets/quizpop.png';
-import backgroundImg from '../../assets/game-background1.png';
-import flagImg from '../../assets/flag.png';
-import playerEndImg from '../../assets/finish_player.png';
+import styled from 'styled-components';
+import playerImg from '../../assets/game_character_1.png';
+import hurdle1Img from '../../assets/game_trap.svg';
+// import hurdle2Img from '../../assets/hurdle2.png';
+import coinImg from '../../assets/game_coin.svg';
+import quizBoxImg from '../../assets/game_quiz.svg';
+import backgroundImg from '../../assets/game_background2.png';
+import flagImg from '../../assets/game_end.svg';
+import playerEndImg from '../../assets/game_character_2.png';
 import { saveCoinToDB } from '../../api/analyze/saveCoinToDB';
 import { useChapter } from "../../context/ChapterContext";
 import { fetchQuizByChapterId } from '../../api/study/fetchQuiz';
 import { useNavigate } from "react-router-dom";
 import bgmSrc from '../../assets/Tiki_Bar_Mixer.mp3';
 import { sendQuizResults } from '../../api/analyze/sendQuizResults';
+import gameStartTitle from '../../assets/game_startoverlay_title.svg';
+import gameStartCoin from '../../assets/game_coin_start.svg';
+import gameStartTrap from '../../assets/game_trap_start.svg';
+import gameStartQuiz from '../../assets/game_quiz_start.svg';
+import gameStartBtn from '../../assets/game_start_btn.svg';
+import gameQuizTitle from '../../assets/game_quizoverlay_title.svg';
+import gameEndTitle from '../../assets/game_endoverlay_title.svg';
+
+// 폰트 import
+const fontFace = `
+  @font-face {
+    font-family: 'DungeonFighterOnlineBeatBeat';
+    src: url('//cdn.df.nexon.com/img/common/font/DNFBitBit-Regular.woff'),
+         url('//cdn.df.nexon.com/img/common/font/DNFBitBit-Regular.woff2');
+    font-weight: 400;
+    font-display: swap;
+  }
+`;
+
+// 폰트 스타일을 DOM에 주입
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = fontFace;
+  document.head.appendChild(style);
+}
+
+const GameCanvas = styled.canvas`
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: auto;
+`;
+
+const LoadingOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 2rem;
+`;
+
+const QuizOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+`;
+
+const QuizModalBox = styled.div`
+  background-color: #FFF1C1;
+  padding: 0;
+  border-radius: 20px;
+  text-align: center;
+  width: 50%;
+  border: 10px solid #C0935B;
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+  margin-top: 40px;
+  pointer-events: auto; /* 모달 내부 클릭 이벤트 허용 */
+  
+  * {
+    font-family: 'DungeonFighterOnlineBeatBeat', "Noto Sans KR", sans-serif !important;
+  }
+`;
+
+const QuizTitleBanner = styled.div`
+  position: absolute;
+  top: -4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 100px;
+  background-image: url(${gameQuizTitle});
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  z-index: 2;
+`;
+
+const QuizContent = styled.div`
+  padding: 3rem 2rem 2rem 2rem;
+`;
+
+const QuizQuestion = styled.div`
+  font-size: 22px;
+  color: #333333;
+  font-weight: 400;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+`;
+
+const QuizButtonContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+`;
+
+
+
+const QuizButton = styled.button`
+  flex: 1;
+  padding: 1rem;
+  font-size: 20px;
+  font-weight: 400;
+  cursor: pointer;
+  border-radius: 30px;
+  background-color: ${props => props.isOdd ? '#FF6200' : '#FFAA00'};
+  color: #ffffff;
+  transition: all 0.2s;
+  max-width: 200px;
+  border: none;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  &:active {
+    transform: translateY(0);
+    outline: none;
+  }
+`;
+
+const Notification = styled.div`
+  font-family: 'DungeonFighterOnlineBeatBeat', "Noto Sans KR", sans-serif !important;
+  position: fixed;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1rem 2rem;
+  border-radius: 10px;
+  color: white;
+  font-size: 1.5rem;
+  z-index: 20;
+  border: solid 1px #ffffff;
+`;
+
+const CorrectNotification = styled(Notification)`
+  background-color: #478CEE;
+  text-shadow: 
+    -1px -1px 0 #104EA7,
+    1px -1px 0 #104EA7,
+    -1px 1px 0 #104EA7,
+    1px 1px 0 #104EA7;
+`;
+
+const WrongNotification = styled(Notification)`
+  background-color: #FF4444;
+  text-shadow: 
+    -1px -1px 0 #980000,
+    1px -1px 0 #980000,
+    -1px 1px 0 #980000,
+    1px 1px 0 #980000;
+`;
+
+const GainNotification = styled(Notification)`
+  background-color: #478CEE;
+  text-shadow: 
+    -1px -1px 0 #104EA7,
+    1px -1px 0 #104EA7,
+    -1px 1px 0 #104EA7,
+    1px 1px 0 #104EA7;
+`;
+
+const PenaltyNotification = styled(Notification)`
+  background-color: #FF4444;
+  text-shadow: 
+    -1px -1px 0 #980000,
+    1px -1px 0 #980000,
+    -1px 1px 0 #980000,
+    1px 1px 0 #980000;
+`;
+
+const EndNotification = styled.div`
+  font-family: 'DungeonFighterOnlineBeatBeat', "Noto Sans KR", sans-serif !important;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #00C171;
+  text-shadow: 
+    -1px -1px 0 #005738,
+    1px -1px 0 #005738,
+    -1px 1px 0 #005738,
+    1px 1px 0 #005738;
+  border: solid 1px #ffffff;
+  padding: 1rem 2rem;
+  border-radius: 10px;
+  color: white;
+  font-size: 3rem;
+  z-index: 20;
+`;
+
+const GameOverOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url(${backgroundImg});
+  background-size: cover;
+  background-position: center;
+  background-repeat: repeat-x;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+  padding: 2rem;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+  }
+`;
+
+const GameOverBox = styled.div`
+  background-color: #FFF1C1;
+  padding: 0;
+  border-radius: 20px;
+  text-align: center;
+  width: 50%;
+  border: 10px solid #C0935B;
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+  margin-top: 40px;
+  pointer-events: auto; /* 모달 내부 클릭 이벤트 허용 */
+`;
+
+const GameOverTitleBanner = styled.div`
+  position: absolute;
+  top: -4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 100px;
+  background-image: url(${gameEndTitle});
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  z-index: 2;
+`;
+
+const GameOverContent = styled.div`
+  padding: 3rem 2rem 2rem 2rem;
+`;
+
+const QuizResultsContainer = styled.div`
+  text-align: left;
+  margin-top: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+`;
+
+const QuizResultItem = styled.div`
+  margin-bottom: 1rem;
+  padding: 1rem;
+  font-size: 16px;
+  border-radius: 10px;
+  color: #454545;
+  background-color: #ffffff;
+
+  strong {
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+`;
+
+const QuizResultTitle = styled.div`
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #454545;
+`;
+
+const QuizResultAnswer = styled.div`
+  font-size: 16px;
+  font-weight: 300;
+  color: #454545;
+`;
+
+const QuizResultCorrect = styled.div`
+  width: fit-content;
+  padding: 0.3rem 0.5rem;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: ${props => props.isCorrect ? '#2D7BED' : '#FF4444'};
+  border-radius: 5px;
+`;
+
+const QuizResultAnswerContainer = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+`;
+
+const GameOverTitle = styled.div`
+  font-family: 'DungeonFighterOnlineBeatBeat', "Noto Sans KR", sans-serif !important;
+  font-size: 3rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  background: linear-gradient(to bottom, #FF6200, #FFAA00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(1px 1px 0px #333333) 
+          drop-shadow(-1px 1px 0px #333333) 
+          drop-shadow(1px -1px 0px #333333) 
+          drop-shadow(-1px -1px 0px #333333);
+`;
+
+
+const NextButton = styled.button`
+  margin-top: 1rem;
+  padding: 0.5rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  width: 70%;
+  border: none;
+  border-radius: 5px;
+  background-color: #2D7BED;
+  color: white;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #104EA7;
+  }
+`;
+
+const StartOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url(${backgroundImg});
+  background-size: cover;
+  background-position: center;
+  background-repeat: repeat-x;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  padding: 2rem;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+  }
+`;
+
+const StartModalBox = styled.div`
+  background-color: #FFF1C1;
+  padding: 0;
+  border-radius: 20px;
+  text-align: center;
+  width: 50%;
+  border: 10px solid #C0935B;
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+  margin-top: 40px;
+`;
+
+const TitleBanner = styled.div`
+  position: absolute;
+  top: -4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 100px;
+  background-image: url(${gameStartTitle});
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  z-index: 2;
+`;
+
+const ModalContent = styled.div`
+  padding: 3rem 2rem 2rem 2rem;
+`;
+
+const TutorialBox = styled.div`
+  margin-bottom: 1rem;
+  font-size: 16px;
+  color: #191919;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+`;
+
+const TutorialItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+  justify-content: center;
+  background-color: white;
+  padding: 0.8rem;
+  border: 3px solid #C0935B;
+  border-radius: 20px;
+  width: 65%;
+
+  img {
+    height: 30px;
+  }
+
+  span {
+    font-weight: 500;
+    color: #2F2F2F;
+  }
+`;
+
+const TutorialJump = styled.div`
+  text-align: center;
+  margin: 0;
+  color: #333333;
+  font-weight: 400;
+  font-size: 16px;
+`;
+
+const BgmCredit = styled.div`
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.7rem;
+  color: #666;
+`;
+
+const StartButton = styled.button`
+  background-image: url(${gameStartBtn});
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  width: 200px;
+  height: 60px;
+  margin-top: 1rem;
+  transition: all 0.2s;
+
+  &:hover {
+    transform: translateY(-2px) scale(1.05);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.98);
+  }
+`;
+
+const GameResultBox = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  flex: 1;
+`;
+
+const GameResultTitle = styled.div`
+  font-size: 20px;
+  font-weight: 500;
+`;
+
+const GameResultValue = styled.div`
+  font-size: 28px;
+  font-weight: 700;
+`;
+
+const GameResultItem1 = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  color: #FF6200;
+  background-color: #FFE37C;
+  border-radius: 10px;
+  padding: 1rem;
+  align-items: center;
+  justify-content: space-around;
+  flex: 1;
+`;
+
+const GameResultItem2 = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  background-color: #BCE4FF;
+  border-radius: 10px;
+  padding: 1rem;
+  color: #478CEE;
+  align-items: center;
+  justify-content: space-around;
+  flex: 1;
+`;
 
 export default function Game() {
   const { chapterData } = useChapter();
@@ -21,6 +546,9 @@ export default function Game() {
   const canvasRef = useRef(null);
   const animationIdRef = useRef(null);
   const updateRef = useRef(null);
+  
+  // 이미지 미리 로드
+  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   const frameRef = useRef(0);
   const gameSpeedRef = useRef(9);
@@ -101,8 +629,8 @@ export default function Game() {
       if (e.type === 'coin') newEntity.img = coinImageRef.current;
       else if (e.type === 'quiz') newEntity.img = quizBoxImageRef.current;
       else if (e.type === 'hurdle') {
-        if (e.width > e.height) newEntity.img = hurdleImagesRef.current[0];
-        else newEntity.img = hurdleImagesRef.current[1];
+        // hurdle 이미지 참조 복원 - 현재는 하나의 이미지만 사용
+        newEntity.img = hurdleImagesRef.current[0];
       }
       return newEntity;
     });
@@ -135,8 +663,11 @@ export default function Game() {
           const canvas = canvasRef.current; 
 
           const yBase = canvas.height - groundHeightRatioRef.current * canvas.height;
-          const flagHeight = canvas.height * 0.2;
-          const flagWidth = flagHeight * 0.5;
+          // 원본 이미지 비율 유지
+          const baseHeight = canvas.height * 0.2;
+          const aspectRatio = flagImageRef.current.naturalWidth / flagImageRef.current.naturalHeight;
+          const flagHeight = baseHeight;
+          const flagWidth = flagHeight * aspectRatio;
           entitiesRef.current.push({
             type: 'flag',
             x: canvas.width,
@@ -189,6 +720,43 @@ export default function Game() {
     setTimeout(() => setEndVisible(false), 800);
   }
 
+  // 이미지 미리 로드
+  useEffect(() => {
+    const loadImages = () => {
+      const images = [
+        { src: playerImg, ref: 'player' },
+        { src: hurdle1Img, ref: 'hurdle1' },
+        { src: coinImg, ref: 'coin' },
+        { src: quizBoxImg, ref: 'quiz' },
+        { src: flagImg, ref: 'flag' },
+        { src: playerEndImg, ref: 'playerEnd' },
+        { src: backgroundImg, ref: 'background' }
+      ];
+
+      let loadedCount = 0;
+      const totalImages = images.length;
+
+      images.forEach(({ src, ref }) => {
+        const img = new Image();
+        img.onload = () => {
+          loadedCount++;
+          if (loadedCount === totalImages) {
+            setImagesLoaded(true);
+          }
+        };
+        img.onerror = () => {
+          loadedCount++;
+          if (loadedCount === totalImages) {
+            setImagesLoaded(true);
+          }
+        };
+        img.src = src;
+      });
+    };
+
+    loadImages();
+  }, []);
+
   // 챕터 별 퀴즈 불러오기
   useEffect(() => {
     if (!chapterId) return;
@@ -209,8 +777,8 @@ export default function Game() {
   }, [chapterId]);
 
   useEffect(() => {
-    // 퀴즈가 로드되지 않았으면 게임 시작하지 않음
-    if (!quizLoaded || !isGameStarted) return;
+    // 퀴즈와 이미지가 모두 로드되지 않았으면 게임 시작하지 않음
+    if (!quizLoaded || !isGameStarted || !imagesLoaded) return;
     
     if (gameOver) {
         saveCoinToDB(scoreRef.current);
@@ -222,12 +790,17 @@ export default function Game() {
     scoreRef.current = score;
 
     const bgImg = new Image(); bgImg.src = backgroundImg;
-    const playerImage = new Image(); playerImage.src = playerImg;
+    const playerImage = new Image(); 
+    playerImage.onload = () => {
+      // 이미지 로드 완료 후 캐릭터 크기 재조정
+      resizeCanvas();
+    };
+    playerImage.src = playerImg;
     playerImageRef.current = playerImage;
 
     const hurdleImages = [new Image(), new Image()]; 
     hurdleImages[0].src = hurdle1Img;
-    hurdleImages[1].src = hurdle2Img;
+    // hurdleImages[1].src = hurdle2Img;
     hurdleImagesRef.current = hurdleImages;
     const coinImage = new Image(); coinImage.src = coinImg; coinImageRef.current = coinImage;
     const quizBoxImage = new Image(); quizBoxImage.src = quizBoxImg; quizBoxImageRef.current = quizBoxImage;
@@ -246,8 +819,17 @@ export default function Game() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       const player = playerRef.current;
-      player.width = canvas.width * 0.1;
-      player.height = canvas.height * 0.28;
+      // 원본 이미지 비율 유지 - 이미지가 로드되었을 때만
+      const baseHeight = canvas.height * 0.28;
+      if (playerImageRef.current && playerImageRef.current.naturalWidth > 0) {
+        const aspectRatio = playerImageRef.current.naturalWidth / playerImageRef.current.naturalHeight;
+        player.height = baseHeight;
+        player.width = player.height * aspectRatio;
+      } else {
+        // 이미지가 로드되지 않았을 때는 기본값 사용
+        player.height = baseHeight;
+        player.width = baseHeight * 0.6; // 임시 비율
+      }
       player.y = canvas.height - groundHeightRatio * canvas.height - player.height;
     }
 
@@ -321,9 +903,12 @@ export default function Game() {
         if (type === 'hurdle') {
           const idx = Math.floor(Math.random() * hurdleImagesRef.current.length);
           img = hurdleImagesRef.current[idx];
-          width = idx === 0 ? canvas.width * 0.1 : canvas.width * 0.08;
-          height = idx === 0 ? canvas.height * 0.15 : canvas.height * 0.08;
-          y = yBase - height;
+          // 원본 이미지 비율 유지하면서 크기 축소
+          const baseWidth = canvas.width * 0.04; // 기본 너비를 더 작게 (8% -> 4%)
+          const aspectRatio = img.naturalWidth / img.naturalHeight; // 원본 비율
+          width = baseWidth;
+          height = width / aspectRatio; // 비율에 맞춰 높이 계산
+          y = yBase - height - 30; // 허들을 잔디밭에서 20px 위에 떠있게
         } else if (type === 'coin') {
           img = coinImageRef.current;
           width = canvas.width * 0.04;
@@ -331,9 +916,12 @@ export default function Game() {
           y = yBase - height - player.height * 1.3;
         } else if (type === 'quiz') {
           img = quizBoxImageRef.current;
-          width = canvas.width * 0.15;
-          height = canvas.height * 0.25;
-          y = canvas.height * 0.7 - height / 2;
+          // 원본 이미지 비율 유지하면서 크기 축소
+          const baseWidth = canvas.width * 0.04; // 기본 너비를 더 작게 (15% -> 6%)
+          const aspectRatio = img.naturalWidth / img.naturalHeight; // 원본 비율
+          width = baseWidth;
+          height = width / aspectRatio; // 비율에 맞춰 높이 계산
+          y = yBase - height - player.height * 0.5; // 여우 머리 높이 정도에 위치
         }
 
         const isTooClose = entitiesRef.current.some(e => Math.abs(e.x - x) < width * 2);
@@ -351,9 +939,9 @@ export default function Game() {
       let backgroundX = backgroundXRef.current;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const scale = canvas.height / bgImg.height;
+      const scale = (canvas.height / bgImg.height); // 배경 크기를 70%로 축소
       const drawW = bgImg.width * scale;
-      const drawH = canvas.height;
+      const drawH = canvas.height; // 높이도 70%로 축소
       backgroundX -= gameSpeedRef.current;
       if (backgroundX <= -drawW) backgroundX = 0;
       for (let x = backgroundX; x < canvas.width; x += drawW) {
@@ -491,7 +1079,7 @@ export default function Game() {
 
     // return () => window.removeEventListener('resize', resizeCanvas);
     
-  }, [gameOver, quizLoaded, quizList, isGameStarted]); // quizLoaded와 quizList를 의존성에 추가
+  }, [gameOver, quizLoaded, quizList, isGameStarted, imagesLoaded]); // imagesLoaded를 의존성에 추가
 
   //모바일 환경 점프
   const triggerJump=()=>{
@@ -540,23 +1128,11 @@ export default function Game() {
 }, []);
 
   // 로딩 화면 표시
-  if (!quizLoaded) {
+  if (!quizLoaded || !imagesLoaded) {
     return (
-      <div style={{ 
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        width: '100vw', 
-        height: '100vh',
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        color: 'white',
-        fontSize: '2rem'
-      }}>
-        퀴즈 로딩 중...
-      </div>
+      <LoadingOverlay>
+        {!imagesLoaded ? '이미지 로딩 중...' : '퀴즈 로딩 중...'}
+      </LoadingOverlay>
     );
   }
 
@@ -564,171 +1140,155 @@ export default function Game() {
     <>
       {/*모바일 점프 추가*/}
       
-      <canvas ref={canvasRef} onClick={triggerJump} onTouchStart={triggerJump} style={{ display: 'block', position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',pointerEvents:'auto' }} /> 
+      <GameCanvas ref={canvasRef} onClick={triggerJump} onTouchStart={triggerJump} /> 
       <audio ref={bgmRef} src={bgmSrc} loop />
 
       {quiz && (
-        <div style={{ 
-          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-          backgroundColor: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(5px)',
-          zIndex: 10, display: 'flex', justifyContent: 'center', alignItems: 'center' 
-        }}>
-          <div style={{ backgroundColor: 'white', padding: '2rem', border: '2px solid #000', width: '400px', textAlign: 'center', borderRadius: '10px' }}>
-            <h3>{quiz.question}</h3>
+        <QuizOverlay>
+          <QuizModalBox>
+            <QuizTitleBanner />
+            
+            <QuizContent>
+              <QuizQuestion>{quiz.question}</QuizQuestion>
+              
+              <QuizButtonContainer>
             {quiz.options.map((opt, idx) => (
-              <button key={idx} onClick={() => handleQuizAnswer(opt)} style={{ margin: '0.5rem', padding: '0.5rem 1rem' }}>{opt}</button>
-            ))}
-          </div>
-        </div>
+                  <QuizButton 
+                    key={idx} 
+                    onClick={(e) => {
+                      e.stopPropagation(); // 이벤트 전파 방지
+                      handleQuizAnswer(opt);
+                    }}
+                    isOdd={idx % 2 === 0}
+                  >
+                    {opt}
+                  </QuizButton>
+                ))}
+              </QuizButtonContainer>
+            </QuizContent>
+          </QuizModalBox>
+        </QuizOverlay>
       )}
 
       {correctVisible && (
-        <div style={{ position: 'fixed', top: '10%', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(0, 200, 0, 0.8)', padding: '1rem 2rem', borderRadius: '10px', color: 'white', fontSize: '1.5rem', zIndex: 20 }}>
+        <CorrectNotification>
           정답입니다! +50점
-        </div>
+        </CorrectNotification>
       )}
 
       {wrongVisible && (
-        <div style={{ position: 'fixed', top: '10%', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(255, 0, 0, 0.8)', padding: '1rem 2rem', borderRadius: '10px', color: 'white', fontSize: '1.5rem', zIndex: 20 }}>
+        <WrongNotification>
           오답입니다! 점수 0으로
-        </div>
+        </WrongNotification>
       )}
 
       {gainVisible && (
-        <div style={{ position: 'fixed', top: '10%', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(255, 200, 0, 0.8)', padding: '1rem 2rem', borderRadius: '10px', color: 'white', fontSize: '1.5rem', zIndex: 20 }}>
+        <GainNotification>
           +5점!
-        </div>
+        </GainNotification>
       )}
 
       {penaltyVisible && (
-        <div style={{ position: 'fixed', top: '10%', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(255, 0, 0, 0.8)', padding: '1rem 2rem', borderRadius: '10px', color: 'white', fontSize: '1.5rem', zIndex: 20 }}>
+        <PenaltyNotification>
           -5점!
-        </div>
+        </PenaltyNotification>
       )}
 
       {endVisible && (
-        <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'rgba(0, 255, 102, 0.8)', padding: '1rem 2rem', borderRadius: '10px', color: 'white', fontSize: '3rem', zIndex: 20 }}>
+        <EndNotification>
           완주 완료!
-        </div>
+        </EndNotification>
       )}
 
       {gameOver && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          backgroundColor: 'rgba(0,0,0,0.6)',
-          backdropFilter: 'blur(5px)',
-          zIndex: 50,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          overflowY: 'auto',
-          padding: '2rem'
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '2rem',
-            borderRadius: '10px',
-            textAlign: 'center',
-            maxWidth: '600px',
-            width: '100%'
-          }}>
-            <h2>🎉 게임 종료!</h2>
-            <p>최종 코인: {scoreRef.current}</p>
+        <GameOverOverlay>
+          <GameOverBox>
+            <GameOverTitleBanner />
+            
+            <GameOverContent>
+              <GameOverTitle>완주완료!!</GameOverTitle>
 
             {/* 퀴즈 결과 요약 */}
-            <h3 style={{ marginTop: '1rem' }}>📊 퀴즈 결과</h3>
-            <p>
-              맞춘 개수: {
+              <GameResultBox>
+                <GameResultItem1>
+                  <GameResultTitle>퀴즈 결과</GameResultTitle>
+                  <GameResultValue>
+                    {
                 quizResultsRef.current.filter(r => r.isCorrect).length
-              } / {quizResultsRef.current.length}
-            </p>
+                    }/{quizResultsRef.current.length}
+                  </GameResultValue>
+                </GameResultItem1>
+                <GameResultItem2>
+                  <GameResultTitle>획득 코인</GameResultTitle>
+                  <GameResultValue>
+                    {scoreRef.current}P
+                  </GameResultValue>
+                </GameResultItem2>
+              </GameResultBox>
 
             {/* 퀴즈 상세 결과 */}
-            <div style={{ textAlign: 'left', marginTop: '1rem', maxHeight: '300px', overflowY: 'auto' }}>
+              <QuizResultsContainer>
               {quizResultsRef.current.map((result, index) => (
-                <div key={index} style={{
-                  marginBottom: '1rem',
-                  padding: '0.75rem',
-                  border: '1px solid #ccc',
-                  borderRadius: '8px',
-                  backgroundColor: result.isCorrect ? '#e6ffe6' : '#ffe6e6'
-                }}>
-                  <strong>Q{index + 1}. {result.question}</strong>
-                  <br />
-                  <span>📝 선택한 답: <strong>{result.userAnswer}</strong></span>
-                  <br />
-                  <span>✅ 정답: <strong>{result.correctAnswer}</strong></span>
-                  <br />
-                  <span>{result.isCorrect ? "🎯 정답입니다!" : "❌ 오답입니다."}</span>
-                </div>
-              ))}
-            </div>
+                  <QuizResultItem key={index} isCorrect={result.isCorrect}>
+                    <QuizResultTitle>Q{index + 1}. {result.question}</QuizResultTitle>
+                    <QuizResultAnswerContainer>
+                      <QuizResultAnswer>답 : {result.correctAnswer}</QuizResultAnswer>
+                      <QuizResultCorrect isCorrect={result.isCorrect}>{result.isCorrect ? "정답" : "오답"}</QuizResultCorrect>
+                    </QuizResultAnswerContainer>
+                  </QuizResultItem>
+                ))}
+              </QuizResultsContainer>
 
-            <button onClick={() => { navigate("/study/level6/summary"); }}
-              style={{
-                marginTop: '1.5rem',
-                padding: '0.5rem 1.5rem'
-              }}
-            >
-              다음으로
-            </button>
-          </div>
-        </div>
+              <NextButton onClick={(e) => { 
+                e.stopPropagation(); // 이벤트 전파 방지
+                navigate("/study/level6/summary"); 
+              }}>
+                다음단계로
+              </NextButton>
+            </GameOverContent>
+          </GameOverBox>
+        </GameOverOverlay>
       )}
 
       {!isGameStarted && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-          backgroundColor: 'rgba(0, 0, 0, 0.8)', display: 'flex',
-          justifyContent: 'center', alignItems: 'center', color: 'white',
-          zIndex: 100, flexDirection: 'column', textAlign: 'center', padding: '2rem'
-        }}>
-          <h1 style={{ marginBottom: '1.5rem', fontSize: '2.5rem'}}>게임을 시작하려면 클릭하세요!</h1>
-
+        <StartOverlay>
+          <StartModalBox>
+            <TitleBanner />
+            
+            <ModalContent>
           {/* 게임 설명 / 튜토리얼 */}
-          <div style={{ marginBottom: '2rem', fontSize: '1.1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-              <img src={coinImg} alt="코인" style={{ width: '40px', height: '40px' }} />
+              <TutorialBox>
+                <TutorialItem>
+                  <img src={gameStartCoin} alt="코인" />
               <span>코인을 먹으면 +5점</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-              <img src={hurdle1Img} alt="장애물" style={{ width: '40px', height: '40px' }} />
-              <span>장애물을 피하지 못하면 -5점</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <img src={quizBoxImg} alt="퀴즈박스" style={{ width: '40px', height: '40px' }} />
-              <span>퀴즈 박스를 만나면 퀴즈가 출제돼요!</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem', marginTop: '3rem' }}>
-              <span style={{ fontSize: '1.5rem' }}></span>
-              <span>스페이스 바로 점프!</span>
-            </div>
-          </div>
-          <div style={{
-            position: 'absolute',
-            bottom: '1rem',
-            left: 0,
-            width: '100%',
-            textAlign: 'center',
-            fontSize: '0.75rem',
-            color: 'rgba(255,255,255,0.7)',
-            pointerEvents: 'none'
-          }}>
-            BGM “ Tiki_Bar_Mixer.mp3 ” by Kevin MacLeod (incompetech.com) — CC BY 3.0
-          </div>
+                </TutorialItem>
+                <TutorialItem>
+                  <img src={gameStartTrap} alt="장애물" />
+                  <span>장애물은 -5점</span>
+                </TutorialItem>
+                <TutorialItem>
+                  <img src={gameStartQuiz} alt="퀴즈박스" />
+                  <span>퀴즈 박스를 만나면 퀴즈가 나와요!</span>
+                </TutorialItem>
+              </TutorialBox>
+
+              <TutorialJump>
+                마우스를 클릭하거나 화면을 터치하여 점프하세요!
+              </TutorialJump>
 
           {/* 시작 버튼 */}
-          <button onClick={() => {
+              <StartButton onClick={(e) => {
+                e.stopPropagation(); // 이벤트 전파 방지
             bgmRef.current?.play();
             setIsGameStarted(true);
-          }} style={{ fontSize: '1.5rem', padding: '1rem 2.5rem', cursor: 'pointer' }}>
-            ▶ 시작하기 ✨
-          </button>
-        </div>
+              }} />
+
+              <BgmCredit>
+                BGM " Tiki_Bar_Mixer.mp3 " by Kevin MacLeod (incompetech.com) — CC BY 3.0
+              </BgmCredit>
+            </ModalContent>
+          </StartModalBox>
+        </StartOverlay>
       )}
 
     </>
