@@ -91,6 +91,8 @@ const QuizModalBox = styled.div`
   overflow: visible;
   margin-top: 40px;
   pointer-events: auto; /* 모달 내부 클릭 이벤트 허용 */
+  word-break: keep-all;
+  white-space: pre-wrap;
   
   * {
     font-family: 'DungeonFighterOnlineBeatBeat', "Noto Sans KR", sans-serif !important;
