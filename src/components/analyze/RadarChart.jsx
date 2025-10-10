@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
+import Info from "../../assets/info_icon.svg";
+
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   Radar, ResponsiveContainer
@@ -19,11 +21,70 @@ const CardHeader = styled.div`
   margin-bottom: 1.5rem;
 `;
 
+const CardTitleWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+`;
+
+const CardInfo = styled.div`
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  img {
+    width: 20px;
+    height: 20px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+    
+    &:hover {
+      opacity: 1;
+    }
+  }
+`;
+
+const Tooltip = styled.div`
+  position: absolute;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgb(0,0,0,0.8);
+  color: white;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  white-space: pre;
+  line-height: 1.3;
+  z-index: 1000;
+  opacity: ${props => props.show ? 1 : 0};
+  visibility: ${props => props.show ? 'visible' : 'hidden'};
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: none;
+  
+  /* 툴팁 화살표 */
+  &::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 4px solid #333333;
+  }
+`;
+
 const CardTitle = styled.h3`
   font-size: 24px;
   font-weight: 700;
   color: #191919;
-  margin: 0 0 0.8rem 0;
 `;
 
 const CardSubtitle = styled.p`
@@ -99,6 +160,7 @@ const KeywordMessage = styled.div`
 
 
   export default function RadarGraph({ thisWeek, lastWeek }) {
+  const [showTooltip, setShowTooltip] = useState(false);
   // API 데이터가 없거나 빈 객체인 경우 기본값 설정
   const safeThisWeek = thisWeek || { engagement: 0, focus: 0, understanding: 0, expression: 0 };
   const safeLastWeek = lastWeek || { engagement: 0, focus: 0, understanding: 0, expression: 0 };
@@ -133,7 +195,18 @@ const KeywordMessage = styled.div`
   return (
     <AnalysisCard>
       <CardHeader>
-        <CardTitle>이해도 분석</CardTitle>
+        <CardTitleWrapper>
+          <CardTitle>이해도 분석</CardTitle>
+          <CardInfo 
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+          >
+            <img src={Info} alt="info" />
+            <Tooltip show={showTooltip}>
+               {`이해도 분석은 여러가지 점수 합산을\n통하여 통합 점수를 그래프로\n보여줍니다.`}
+            </Tooltip>
+          </CardInfo>
+        </CardTitleWrapper>
         <CardSubtitle>{`이번 주와 지난 주의 학습 성과를
         항목별로 비교해보세요!`}</CardSubtitle>
       </CardHeader>
