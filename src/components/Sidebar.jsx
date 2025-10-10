@@ -16,12 +16,17 @@ import sidebarClosed from '../assets/sidebar_closed.svg';
 const Overlay = styled.div`
   position: fixed;
   top: 0;
-  left: 0;
+  left: 20vw;
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.3);
   z-index: 999;
   display: ${props => props.show ? 'block' : 'none'};
+  
+  /* 모바일에서는 펼친 사이드바 너비부터 시작 */
+  @media (max-width: 768px) {
+    left: 80vw;
+  }
 `;
 
 const Wrapper = styled.div`
@@ -37,8 +42,11 @@ const Wrapper = styled.div`
   padding: ${props => props.collapsed ? '1rem 0.5rem' : '1rem 1.5rem'};
   flex-shrink: 0;
   transition: all 0.3s ease;
-  position: ${props => props.isStudyPage && !props.collapsed ? 'fixed' : 'relative'};
-  z-index: ${props => props.isStudyPage && !props.collapsed ? '1000' : 'auto'};
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   
   /* 모바일에서는 기본적으로 접힌 상태 */
   @media (max-width: 768px) {
@@ -46,8 +54,6 @@ const Wrapper = styled.div`
     min-width: ${props => props.collapsed ? '4rem' : '80vw'};
     max-width: ${props => props.collapsed ? '4rem' : '80vw'};
     padding: ${props => props.collapsed ? '1rem 0.5rem' : '1rem 1.5rem'};
-    position: ${props => props.collapsed ? 'relative' : 'fixed'};
-    z-index: 1000;
   }
   
   /* 웹에서는 기본적으로 펼친 상태 */
@@ -433,13 +439,6 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
   
     return (
       <>
-        {/* 학습 페이지에서 사이드바가 열려있을 때만 오버레이 표시 */}
-        {isStudyPage() && !collapsed && (
-          <Overlay 
-            show={true} 
-            onClick={() => setCollapsed(true)} 
-          />
-        )}
         <Wrapper collapsed={collapsed} isStudyPage={isStudyPage()}>
           <TopSection>
           <LogoSection collapsed={collapsed}>
@@ -453,11 +452,10 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
               <Tooltip>핀놀 메인화면으로 돌아갑니다</Tooltip>
             </LogoContainer>
 
-            <SidebarButtonArea collapsed={collapsed}>
+            <SidebarButtonArea collapsed={collapsed} onClick={toggleSidebar}>
                 <SidebarButton 
                   src={collapsed ? sidebarClosed : sidebarOpened} 
                   alt={collapsed ? "사이드바 펼치기" : "사이드바 접기"}
-                  onClick={toggleSidebar}
                 />
             </SidebarButtonArea>
 
