@@ -346,6 +346,7 @@ const LogoutText = styled.div`
 function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultCollapsed = false }) {
     const navigate = useNavigate();
     const [collapsed, setCollapsed] = useState(defaultCollapsed);
+    const isUserReady = !!user;
     
     // 현재 페이지가 학습 페이지인지 확인
     const isStudyPage = () => {
@@ -463,10 +464,11 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
 
           <LinebarSection collapsed={collapsed}></LinebarSection>
 
+          {isUserReady && (
           <UserSection collapsed={collapsed}>
             <UserProfile>
               <UserAvatar>
-                {user?.childName[0]}
+                {user?.childName?.[0] || ''}
               </UserAvatar>
               <UserInfo collapsed={collapsed}>
                 <UserName>{user?.childName || '홍길동'}</UserName>
@@ -474,14 +476,17 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
               </UserInfo>
             </UserProfile>
           </UserSection>
+          )}
 
+            {isUserReady && (
             <PointSection collapsed={collapsed}>
               <PointTextWrapper>
                 <PointIcon src={point} alt="Points" />
                 <PointText collapsed={collapsed}>포인트</PointText>
               </PointTextWrapper>
-              <PointValue collapsed={collapsed}>{(user?.coin).toLocaleString()}</PointValue>
+              <PointValue collapsed={collapsed}>{(user?.coin ?? 0).toLocaleString()}</PointValue>
             </PointSection>
+            )}
 
           <NavigationMenu>
             {menuItems.map((item) => (

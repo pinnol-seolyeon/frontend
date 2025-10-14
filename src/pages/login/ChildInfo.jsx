@@ -17,38 +17,44 @@ const Wrapper = styled.div`
 function ChildInfo(){
     const navigate = useNavigate();
 
-    const [childName, setChildName] = useState("");
-    const [childGrade, setChildGrade] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
-    const [gender, setGender] = useState("");
+    const [agreement,setAgreement]=useState(false);
 
-    const handleNameChange = (e) => {
-        setChildName(e.target.value);
-    };
-
-    const handleGradeChange = (value) => {
-        setChildGrade(value);
+    const formatKoreanPhoneNumber = (value) => {
+        const digitsOnly = value.replace(/[^0-9]/g, "");
+        const digits = digitsOnly.slice(0, 11); // enforce 11 digits max
+        if (digits.length <= 3) return digits;
+        if (digits.length <= 7) return `${digits.slice(0,3)}-${digits.slice(3)}`;
+        return `${digits.slice(0,3)}-${digits.slice(3,7)}-${digits.slice(7)}`; // 3-4-4
     };
 
     const handlePhoneNumberChange = (e) => {
-        setPhoneNumber(e.target.value);
+        const formatted = formatKoreanPhoneNumber(e.target.value);
+        setPhoneNumber(formatted);
     };
 
-    const handleGenderChange = (e) => {
-        setGender(e.target.value);
-    };
-
+    const handleAgreementChange=(e)=>{
+        setAgreement(e.target.checked);
+    }
+    
     const writeChildInfo = () => {
-        fetch(`${process.env.REACT_APP_API_BASE_URL}/api/user/child`,{
+        if (!phoneNumber.trim()) {
+            alert("전화번호를 입력해주세요.");
+            return;
+        }
+        if (!agreement) {
+            alert("개인정보 수집 및 이용에 동의해주세요.");
+            return;
+        }
+        fetch(`${process.env.REACT_APP_API_BASE_URL}/api/user/parents/phone-number`,{
             method:"PATCH",
             headers: {
                 "Content-Type": "application/json"
             },
             credentials:"include",
             body: JSON.stringify({
-                childName: childName,
-                childAge: Number(childGrade),
-                phoneNumber: phoneNumber
+                phoneNumber: phoneNumber,
+                agreement: agreement
             })
         })
         .then((res) => {
@@ -56,7 +62,7 @@ function ChildInfo(){
             return res.json();
         })
         .then((data) => {
-            alert("✅ 자녀 정보가 성공적으로 저장되었습니다!");
+            alert("✅ 정보가 성공적으로 저장되었습니다!");
             console.log(data);
             navigate("/");
         })
@@ -69,73 +75,35 @@ function ChildInfo(){
     return(
         <Wrapper>
             <Box 
-                title="자녀 정보 입력"
-                subtitle="맞춤형 금융교육을 위해 자녀의 정보를 입력해주세요"
+                title="개인정보 수집 및 이용 동의"
+                subtitle="부모님의 전화번호를 입력하고 동의해 주세요."
             >
-                <InputWrapper>
-                    <Label>이름</Label>
-                    <StyledInput 
-                        type="text" 
-                        value={childName} 
-                        onChange={handleNameChange}
-                        placeholder="이름을 입력해주세요"
-                    />
-                </InputWrapper>
-
-                <InputWrapper>
-                    <Label>학년</Label>
-                    <CustomSelect 
-                        value={childGrade} 
-                        onChange={handleGradeChange}
-                        placeholder="학년을 선택해주세요"
-                        options={[
-                            { value: "1", label: "1학년" },
-                            { value: "2", label: "2학년" },
-                            { value: "3", label: "3학년" },
-                            { value: "4", label: "4학년" },
-                            { value: "5", label: "5학년" },
-                            { value: "6", label: "6학년" }
-                        ]}
-                    />
-                </InputWrapper>
-
                 <InputWrapper>
                     <Label>번호</Label>
                     <StyledInput 
                         type="text" 
                         value={phoneNumber} 
                         onChange={handlePhoneNumberChange}
-                        placeholder="전화번호를 입력해주세요"
+                        inputMode="numeric"
+                        maxLength={13}
+                        placeholder="전화번호를 입력해주세요."
                     />
                 </InputWrapper>
 
                 <InputWrapper>
-                    <Label>성별</Label>
-                    <RadioGroup>
-                        <RadioOption>
-                            <input 
-                                type="radio" 
-                                name="gender" 
-                                value="male" 
-                                checked={gender === "male"}
-                                onChange={handleGenderChange}
-                            />
-                            남자아이
-                        </RadioOption>
-                        <RadioOption>
-                            <input 
-                                type="radio" 
-                                name="gender" 
-                                value="female" 
-                                checked={gender === "female"}
-                                onChange={handleGenderChange}
-                            />
-                            여자아이
-                        </RadioOption>
-                    </RadioGroup>
+                    <Label>개인정보 수집 및 이용 동의</Label>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <input 
+                            id="agreement"
+                            type="checkbox"
+                            checked={agreement}
+                            onChange={handleAgreementChange}
+                        />
+                        <label htmlFor="agreement">동의합니다</label>
+                    </div>
                 </InputWrapper>
 
-                <StyledButton onClick={writeChildInfo}>
+                <StyledButton onClick={writeChildInfo} disabled={!phoneNumber.trim() || !agreement}>
                     핀놀 시작하기
                 </StyledButton>
             </Box>
