@@ -58,7 +58,7 @@ const routes = [
   { path: '/review', element: <ReviewPage/> },
   { path: '/game', element: <Game/> },
   {path:'/book',element:<BookListPage/>},
-  {path:'/book/chapter',element:<ChapterPage/>},
+  {path:'/book/chapter/:bookId',element:<ChapterPage/>},
   {path:'/study/level2-img',element:<StudyLv2_withImg/>},
   {path:'/status',element:<Status/>}
 ];
