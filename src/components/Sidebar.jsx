@@ -12,6 +12,7 @@ import reviewimg from '../assets/review.svg';
 import statusimg from '../assets/status.svg';
 import sidebarOpened from '../assets/sidebar_opened.svg';
 import sidebarClosed from '../assets/sidebar_closed.svg';
+import { removeCookie } from '../utils/cookie';
 
 const Overlay = styled.div`
   position: fixed;
@@ -380,7 +381,7 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
     // 경로 변경 시 사이드바 상태 업데이트
     useEffect(() => {
       const currentPath = window.location.pathname;
-      const isStudyPage = currentPath.includes('/study') || currentPath.includes('/book/chapter');
+      const isStudyPage = currentPath.includes('/study');
       
       if (window.innerWidth > 768) {
         setCollapsed(isStudyPage);
@@ -391,9 +392,28 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
       setCollapsed(!collapsed);
     };
 
-    const logout = () => {
-      setLogin(false);
-      navigate('/login');
+    const logout = async () => {
+      try {
+        // 로그아웃 API 호출
+        const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/auth/logout`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          console.log('✅ 로그아웃 성공');
+        } else {
+          console.warn('⚠️ 로그아웃 API 응답 실패, 쿠키만 삭제합니다.');
+        }
+      } catch (error) {
+        console.error('❌ 로그아웃 API 호출 실패:', error);
+      } finally {
+        // API 호출 성공 여부와 관계없이 쿠키 삭제 및 로그인 상태 변경
+        removeCookie('accessToken');
+        removeCookie('refreshToken');
+        setLogin(false);
+        navigate('/login');
+      }
     };
 
     const menuItems = [
@@ -506,7 +526,7 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
           <BottomSection>
             <BottomLinebarSection collapsed={collapsed}></BottomLinebarSection>
 
-            <LogoutButton onClick={logout} collapsed={collapsed}>
+          <LogoutButton onClick={logout} collapsed={collapsed}>
             <LogoutIcon src={logoutimg} alt="Logout" />
             <LogoutText collapsed={collapsed}>로그아웃</LogoutText>
           </LogoutButton>

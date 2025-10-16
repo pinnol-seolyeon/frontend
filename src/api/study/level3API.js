@@ -13,7 +13,7 @@ export async function fetchChapterContents(chapterId){
 }
 
 export async function fetchChapters(bookId){
-    const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study?bookId=${bookId}`,{
+    const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/chapter-select?bookId=${bookId}`,{
         method:"GET",
         credentials:"include"
     });
