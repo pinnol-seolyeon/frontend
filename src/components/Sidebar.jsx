@@ -468,10 +468,10 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
           <UserSection collapsed={collapsed}>
             <UserProfile>
               <UserAvatar>
-                {user?.childName?.[0] || ''}
+                {user?.name?.[0] || ''}
               </UserAvatar>
               <UserInfo collapsed={collapsed}>
-                <UserName>{user?.childName || '홍길동'}</UserName>
+                <UserName>{user?.name || '홍길동'}</UserName>
                 <UserParent>부모님: 김엄마</UserParent>
               </UserInfo>
             </UserProfile>

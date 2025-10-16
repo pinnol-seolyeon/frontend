@@ -44,12 +44,24 @@ function AppContent() {
     return axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/user`, { withCredentials: true })
       .then(response => {
         console.log("✅ 로그인 확인", response.data);
-        setLogin(true);
-        setUser(response.data);
-        return true;
+        console.log("🔍 응답 상태:", response.status);
+        console.log("🔍 사용자 데이터:", response.data);
+        
+        // 응답 데이터가 유효한 사용자 정보인지 확인
+        if (response.data && response.data.username) {
+          setLogin(true);
+          setUser(response.data);
+          return true;
+        } else {
+          console.log("⚠️ 사용자 데이터가 유효하지 않습니다.");
+          setLogin(false);
+          setUser(false);
+          return false;
+        }
       })
-      .catch(() => {
+      .catch((error) => {
         console.log("✖️ 로그인되어 있지 않습니다.");
+        console.log("🔍 에러 상세:", error.response?.status, error.response?.data);
         setLogin(false);
         setUser(false);
         return false;

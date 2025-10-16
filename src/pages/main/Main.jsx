@@ -136,7 +136,7 @@ const Main = ({user, login, setLogin}) => {
           <ScreenWrapper>
             <TextWrapper>
               <TitleText>
-                {user?.childName ? user.childName.slice(1) : "친구"}, 오늘도 함께 배워볼까?
+                {user?.name ? user.name.slice(1) : "친구"}, 오늘도 함께 배워볼까?
               </TitleText>
               <SubTitleText>재미있는 금융 모험이 기다리고 있어!</SubTitleText>
             </TextWrapper>
