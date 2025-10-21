@@ -980,13 +980,22 @@ export default function Game() {
       let backgroundX = backgroundXRef.current;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const scale = (canvas.height / bgImg.height); // 배경 크기를 70%로 축소
-      const drawW = bgImg.width * scale;
-      const drawH = canvas.height; // 높이도 70%로 축소
-      backgroundX -= gameSpeedRef.current; // 고정 픽셀 단위
+      
+      // 이미지 스무딩 비활성화 (선명한 이미지)
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      
+      const scale = (canvas.height / bgImg.height);
+      // 정수로 반올림하여 픽셀 정렬 문제 방지
+      const drawW = Math.ceil(bgImg.width * scale);
+      const drawH = Math.ceil(canvas.height);
+      
+      backgroundX -= gameSpeedRef.current;
       if (backgroundX <= -drawW) backgroundX = 0;
-      for (let x = backgroundX; x < canvas.width; x += drawW) {
-        ctx.drawImage(bgImg, 0, 0, bgImg.width, bgImg.height, x, 0, drawW, drawH);
+      
+      // 1픽셀 오버랩으로 하얀 선 방지
+      for (let x = Math.floor(backgroundX); x < canvas.width + drawW; x += drawW) {
+        ctx.drawImage(bgImg, 0, 0, bgImg.width, bgImg.height, x, 0, drawW + 1, drawH);
       }
       backgroundXRef.current = backgroundX;
 
