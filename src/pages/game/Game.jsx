@@ -545,6 +545,15 @@ export default function Game() {
   const { chapterData } = useChapter();
   const chapterId = chapterData?.chapterId;
   const navigate = useNavigate();
+  
+  // chapterId가 없으면 메인 페이지로 리다이렉트
+  useEffect(() => {
+    if (!chapterId) {
+      alert("학습을 한 뒤, 게임을 시작해주세요.");
+      navigate('/');
+    }
+  }, [chapterId, navigate]);
+  
   const canvasRef = useRef(null);
   const animationIdRef = useRef(null);
   const updateRef = useRef(null);
@@ -553,7 +562,7 @@ export default function Game() {
   const [imagesLoaded, setImagesLoaded] = useState(false);
 
   const frameRef = useRef(0);
-  const gameSpeedRef = useRef(9);
+  const gameSpeedRef = useRef(6); // 속도 감소 (화면 크기와 무관)
   const backgroundXRef = useRef(0);
   const entitiesRef = useRef([]);
   const playerRef = useRef({});
@@ -761,8 +770,9 @@ export default function Game() {
 
   // 챕터 별 퀴즈 불러오기
   useEffect(() => {
+    // chapterId가 없으면 퀴즈 로딩 시도하지 않음 (리다이렉트됨)
     if (!chapterId) return;
-
+    
     async function loadQuiz() {
       try {
         const data = await fetchQuizByChapterId(chapterId);
@@ -771,12 +781,41 @@ export default function Game() {
         setQuizLoaded(true); // 퀴즈 로딩 완료 상태 설정
       } catch (err) {
         console.error("❌ 퀴즈 불러오기 실패:", err);
+        setQuizList([]); // 실패 시 빈 배열로 설정
         setQuizLoaded(true); // 실패해도 게임은 진행되도록
       }
     }
 
     loadQuiz();
   }, [chapterId]);
+
+  // 화면 크기 변경 감지 및 캐릭터 크기 조정
+  useEffect(() => {
+    const handleResize = () => {
+      if (canvasRef.current && playerImageRef.current) {
+        const canvas = canvasRef.current;
+        const player = playerRef.current;
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        // 캐릭터 크기 재조정
+        const baseHeight = canvas.height * 0.22;
+        if (playerImageRef.current && playerImageRef.current.naturalWidth > 0) {
+          const aspectRatio = playerImageRef.current.naturalWidth / playerImageRef.current.naturalHeight;
+          player.height = baseHeight;
+          player.width = player.height * aspectRatio;
+        } else {
+          player.height = baseHeight;
+          player.width = baseHeight * 0.6;
+        }
+        player.y = canvas.height - 0.15 * canvas.height - player.height;
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     // 퀴즈와 이미지가 모두 로드되지 않았으면 게임 시작하지 않음
@@ -822,7 +861,7 @@ export default function Game() {
       canvas.height = window.innerHeight;
       const player = playerRef.current;
       // 원본 이미지 비율 유지 - 이미지가 로드되었을 때만
-      const baseHeight = canvas.height * 0.28;
+      const baseHeight = canvas.height * 0.22;
       if (playerImageRef.current && playerImageRef.current.naturalWidth > 0) {
         const aspectRatio = playerImageRef.current.naturalWidth / playerImageRef.current.naturalHeight;
         player.height = baseHeight;
@@ -926,7 +965,7 @@ export default function Game() {
           y = yBase - height - player.height * 0.5; // 여우 머리 높이 정도에 위치
         }
 
-        const isTooClose = entitiesRef.current.some(e => Math.abs(e.x - x) < width * 2);
+        const isTooClose = entitiesRef.current.some(e => Math.abs(e.x - x) < width * 4);
         if (type === 'quiz' || !isTooClose) {
           entitiesRef.current.push({ type, x, y, width, height, img });
         }
@@ -941,13 +980,22 @@ export default function Game() {
       let backgroundX = backgroundXRef.current;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const scale = (canvas.height / bgImg.height); // 배경 크기를 70%로 축소
-      const drawW = bgImg.width * scale;
-      const drawH = canvas.height; // 높이도 70%로 축소
+      
+      // 이미지 스무딩 비활성화 (선명한 이미지)
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      
+      const scale = (canvas.height / bgImg.height);
+      // 정수로 반올림하여 픽셀 정렬 문제 방지
+      const drawW = Math.ceil(bgImg.width * scale);
+      const drawH = Math.ceil(canvas.height);
+      
       backgroundX -= gameSpeedRef.current;
       if (backgroundX <= -drawW) backgroundX = 0;
-      for (let x = backgroundX; x < canvas.width; x += drawW) {
-        ctx.drawImage(bgImg, 0, 0, bgImg.width, bgImg.height, x, 0, drawW, drawH);
+      
+      // 1픽셀 오버랩으로 하얀 선 방지
+      for (let x = Math.floor(backgroundX); x < canvas.width + drawW; x += drawW) {
+        ctx.drawImage(bgImg, 0, 0, bgImg.width, bgImg.height, x, 0, drawW + 1, drawH);
       }
       backgroundXRef.current = backgroundX;
 
@@ -1033,12 +1081,13 @@ export default function Game() {
 
       if (!isPaused) {
         frameRef.current++;
-        gameSpeedRef.current += 0;
+        // 게임 속도는 고정 픽셀 단위로 설정
+        // gameSpeedRef.current += 0.1; // 필요시 속도 증가 활성화
       }
       animationIdRef.current = requestAnimationFrame(updateRef.current);
 
       if (endingRef.current) {
-        player.x += 8;
+        player.x += 5; // 고정 픽셀 단위로 이동
         if (player.x > canvas.width) {
           setGameOver(true);
           cancelAnimationFrame(animationIdRef.current);
@@ -1129,7 +1178,7 @@ export default function Game() {
   };
 }, []);
 
-  // 로딩 화면 표시
+  // 로딩 화면 표시 (게임이 시작되지 않았을 때는 시작 화면을 보여줌)
   if (!quizLoaded || !imagesLoaded) {
     return (
       <LoadingOverlay>

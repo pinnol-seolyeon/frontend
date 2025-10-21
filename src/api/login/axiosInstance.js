@@ -14,6 +14,8 @@ let lastActivityTime = Date.now();
 api.interceptors.request.use(
     (config) => {
         lastActivityTime = Date.now();
+        console.log('🔍 API 요청:', config.method?.toUpperCase(), config.url);
+        console.log('🔍 withCredentials:', config.withCredentials);
         return config;
     },
     (error) => {
@@ -24,16 +26,28 @@ api.interceptors.request.use(
 // 응답 인터셉터: 401/403 에러 발생 시 로그인 페이지로 리다이렉트
 api.interceptors.response.use(
     (response) => {
+        console.log('✅ API 응답 성공:', response.config.url, response.status);
         return response;
     },
     (error) => {
+        console.log('❌ API 응답 에러:', error.config?.url, error.response?.status);
+        console.log('🔍 에러 상세:', error.response?.data);
+        
+        // skipAuthRedirect 플래그가 있으면 자동 리다이렉트 하지 않음
+        const skipAuthRedirect = error.config?.skipAuthRedirect;
+        
         if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-            console.log('🔒 인증 오류 발생 - 로그인 페이지로 이동합니다.');
-            
-            // 현재 페이지가 로그인 페이지가 아닐 때만 리다이렉트
-            if (!window.location.pathname.includes('/login')) {
-                alert('세션이 만료되었습니다. 다시 로그인해주세요.');
-                window.location.href = '/login';
+            if (skipAuthRedirect) {
+                console.log('🔕 인증 오류 발생 (백그라운드 작업 - 리다이렉트 스킵)');
+            } else {
+                console.log('🔒 인증 오류 발생 - 로그인 페이지로 이동합니다.');
+                console.log('🔍 현재 경로:', window.location.pathname);
+                
+                // 현재 페이지가 로그인 페이지가 아닐 때만 리다이렉트
+                if (!window.location.pathname.includes('/login')) {
+                    alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+                    window.location.href = '/login';
+                }
             }
         }
         return Promise.reject(error);

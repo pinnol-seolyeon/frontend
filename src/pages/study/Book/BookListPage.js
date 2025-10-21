@@ -5,6 +5,7 @@ import '../Book/BookPage.css';
 import Header from '../../../components/Header';
 import lock from '../../../assets/lock.png';
 import Sidebar from '../../../components/Sidebar';
+import axios from 'axios';
 
 
 const Wrapper = styled.div`
@@ -177,17 +178,10 @@ const BookCardComponent = ({ book, onSelect }) => {
     return 'continue';
   };
 
-  const getProgressPercentage = () => {
-    if (book.status === 'locked') return 0;
-    if (book.status === 'completed') return 100;
-    return (book.currentProgress / book.totalProgress) * 100;
-  };
-
   return (
     <BookCard status={book.status}>
       <div>
-        {/* <LevelBadge>{book.level}</LevelBadge> */}
-        {/* {book.status === 'locked' && <LockIcon><img src={lock} alt="lock" /></LockIcon>} */}
+        {book.level && <div style={{ fontSize: '12px', color: '#666', marginBottom: '0.5rem' }}>{book.level}</div>}
         
         <IconContainer color={book.iconColor}>
           {book.icon}
@@ -219,6 +213,24 @@ function BookListPage({ user, login, setLogin }) {
   const { userProgress = { completedSteps: [] } } = outletContext;
 
   const [error, setError] = useState(null);
+  const [apiBookList, setApiBookList] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/study/book-select`, { withCredentials: true })
+      .then(res => {
+        console.log("🔍 사용자 데이터:", res.data);
+        if (res.data && res.data.data && res.data.data.bookList) {
+          setApiBookList(res.data.data.bookList);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.log("❌ 사용자 데이터 조회 실패:", err);
+        setError("책 목록을 불러오는데 실패했습니다.");
+        setLoading(false);
+      });
+  }, []);
 
   // 페이지 이탈 감지 이벤트 리스너
   // useEffect(() => {
@@ -295,79 +307,26 @@ function BookListPage({ user, login, setLogin }) {
     }
   }, [userProgress?.completedSteps]);
 
-  // 책 목록 데이터 (API 데이터와 연결)
-  const baseBookList = [
-    { 
-      id: 1,
-      level: "Lv.01",
-      title: "돈이란 무엇일까?", 
-      icon: "💰", 
-      path: "/book/chapter",
-      description: "돈의 기본 개념과 역할을 배워보며\n금융의 첫걸음을 시작해요!",
-    },
-    { 
-      id: 2,
-      level: "Lv.02",
-      title: "돈은 왜 소중한가?", 
-      icon: "💎", 
-      path: "/book/chapter",
-      description: "돈의 기본 개념과 역할을 배워보며\n금융의 첫걸음을 시작해요!",
-    },
-    { 
-      id: 3,
-      level: "Lv.03",
-      title: "돈의 여러가지 모습", 
-      icon: "🌍", 
-      path: "/book/chapter",
-      description: "돈의 기본 개념과 역할을 배워보며\n금융의 첫걸음을 시작해요!",
-    },
-    { 
-      id: 4,
-      level: "Lv.04",
-      title: "돈은 이렇게 벌어!", 
-      icon: "💼", 
-      path: "/book/chapter",
-      description: "돈의 기본 개념과 역할을 배워보며\n금융의 첫걸음을 시작해요!",
-    },
-    { 
-      id: 5,
-      level: "Lv.05",
-      title: "돈은 왜 모을까?", 
-      icon: "💵", 
-      path: "/book/chapter",
-      description: "돈의 기본 개념과 역할을 배워보며\n금융의 첫걸음을 시작해요!",
-    },
-    { 
-      id: 6,
-      level: "Lv.06",
-      title: "은행이 하는 일", 
-      icon: "🏦", 
-      path: "/book/chapter",
-      description: "돈의 기본 개념과 역할을 배워보며 금융의 첫걸음을 시작해요!",
-    },
-  ];
-
-  // API 데이터와 연결하여 동적으로 상태 설정
-  const bookList = baseBookList.map(book => {
-    const isCompleted = completedStages.includes(book.id);
-    const isPreviousCompleted = book.id === 1 || completedStages.includes(book.id - 1);
-    
-    let status, currentProgress;
-    if (isCompleted) {
-      status = "completed";
-      currentProgress = book.totalProgress;
-    } else if (isPreviousCompleted) {
-      status = "in_progress";
-    } else {
-      status = "locked";
-      currentProgress = 0;
+  // API 데이터를 사용하여 책 목록 생성
+  const bookList = useMemo(() => {
+    if (!apiBookList || apiBookList.length === 0) {
+      return [];
     }
 
-    return {
-      ...book,
-      status
-    };
-  });
+    return apiBookList.map((book, index) => {
+      // API 데이터 구조에 맞게 매핑
+      const bookData = {
+        id: book.id,
+        title: book.title,
+        icon: "📚", // 기본 아이콘 설정
+        path: `/book/chapter/${book.id}`, // 책 ID를 포함한 경로
+        description: `${book.title}을 통해\n재미있게 학습해보세요!`,
+        status: "in_progress" // 기본적으로 학습 가능한 상태로 설정
+      };
+
+      return bookData;
+    });
+  }, [apiBookList]);
 
   // 최종 bookList 출력
   console.log('📚 최종 bookList:', bookList);
@@ -381,6 +340,17 @@ function BookListPage({ user, login, setLogin }) {
     subtitle: "호핀이와 함께 단계별로 학습해요"
   }
 
+
+  if (loading) return (
+    <Wrapper>
+      <Sidebar user={user} login={login} setLogin={setLogin} />
+      <MainWrapper>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+          <div style={{ fontSize: '16px', color: '#666' }}>책 목록을 불러오는 중...</div>
+        </div>
+      </MainWrapper>
+    </Wrapper>
+  );
 
   if (error) return (
     <Wrapper>
