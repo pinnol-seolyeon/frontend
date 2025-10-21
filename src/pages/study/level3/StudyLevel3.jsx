@@ -14,6 +14,7 @@ import background from "../../../assets/study_background.png";
 import hopin from "../../../assets/hopin.svg";
 import questionIcon from "../../../assets/question_icon.svg";
 import TtsPlayer from "../../../components/TtsPlayer";
+import api from "../../../api/login/axiosInstance";
 
 
 /*학습하기-3단계-1*/
@@ -463,6 +464,7 @@ function StudyPage({ user, login, setLogin }){
                     console.log("🔍 피드백 요청 시작 - 현재 인덱스:", currentIndex);
                     console.log("🔍 질문:", sentences[currentIndex]);
                     console.log("🔍 사용자 답변:", userAnswer);
+                    console.log("🔍 브라우저 쿠키:", document.cookie); // 쿠키 확인
                     
                     const requestBody = {
                         chapter: chapterData.content,
@@ -474,33 +476,22 @@ function StudyPage({ user, login, setLogin }){
                     
                     console.log("🔍 요청 본문:", requestBody);
                     
-                    const res=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/feedback`,{
-                        method:"POST",
-                        credentials:"include",
-                        headers:{
-                            "Content-Type":"application/json",
-                        },
-                        body:JSON.stringify(requestBody),
-                    });
+                    const res=await api.post('/api/study/feedback', requestBody);
 
                     console.log("📡 응답 상태:", res.status, res.statusText);
-                    
-                    if(!res.ok){
-                        if (res.status === 401) {
-                            console.error("🚨 401 Unauthorized - 로그인 필요");
-                            throw new Error("로그인이 필요합니다. 다시 로그인해주세요.");
-                        }
-                        const errorText = await res.text();
-                        console.error("❌ 서버 오류:", errorText);
-                        throw new Error(`❌피드백 불러오는 데 실패: ${res.status}`);
-                    }
-
-                    const data=await res.json();
-                    console.log("✅저장된 피드백:",data);
-                    return data;
+                    console.log("✅저장된 피드백:",res.data);
+                    return res.data;
                 }catch(e){
-                    console.log("❌피드백 요청 실패:",e);
-                    return{result:"😟오류 발생: " + e.message};
+                    console.error("❌피드백 요청 실패:", e);
+                    console.error("🔍 에러 응답:", e.response);
+                    console.error("🔍 에러 상태:", e.response?.status);
+                    console.error("🔍 에러 데이터:", e.response?.data);
+                    
+                    if (e.response?.status === 401) {
+                        console.error("🚨 401 Unauthorized - 로그인 필요");
+                        return{result:"😟오류 발생: 로그인이 필요합니다. 다시 로그인해주세요."};
+                    }
+                    return{result:"😟오류 발생: " + (e.response?.data?.message || e.message)};
                 }
             };
         
@@ -517,16 +508,7 @@ function StudyPage({ user, login, setLogin }){
 
         //여태까지 질문한 내용들을 DB에 저장하는 API
         try{
-            const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/question/saveAll?chapterId=${chapterData?.chapterId}`,{
-                method:'POST',
-                credentials:'include',
-            });
-
-            if(!response.ok){
-                const err=await response.text();
-                throw new Error(err);
-            }
-
+            const response=await api.post(`/api/question/saveAll?chapterId=${chapterData?.chapterId}`);
             console.log("🐯 질문/답변 저장 성공");
         }catch(e){
             console.log("❌ 저장 중 오류 발생",e);
@@ -539,15 +521,13 @@ function StudyPage({ user, login, setLogin }){
    };
 
    async function saveFeedbacks(chapterId){
-    const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/feedback/saveAll?chapterId=${chapterId}`,{
-        method:"POST",
-        credentials:"include"
-    });
-    if (!response.ok){
-        throw new Error("❌피드백들을 전부 저장하는 데 실패했어요.");
+    try{
+        const response=await api.post(`/api/study/feedback/saveAll?chapterId=${chapterId}`);
+        console.log("✅피드백 저장 성공:", response.data);
+    }catch(e){
+        console.error("❌피드백들을 전부 저장하는 데 실패했어요.", e);
+        throw e;
     }
-
-    console.log(("✅",response));
    }
     // 음성인식 시작/종료 함수
     const handleVoiceRecognition = () => {

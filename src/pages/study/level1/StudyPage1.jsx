@@ -13,6 +13,7 @@ import TtsPlayer from "../../../components/TtsPlayer";
 import background from "../../../assets/study_background.png";
 import Sidebar from "../../../components/Sidebar";
 import hoppin from "../../../assets/hopin.svg";
+import { useActivityTracker } from "../../../hooks/useActivityTracker";
 
 /*학습하기-1단계-1*/
 
@@ -167,6 +168,13 @@ function StudyPage({ user, login, setLogin }){
     const [step,setStep]=useState(0); //0이면 인사, 1이면 제목 출력
     const {chapterData}=useChapter();
     const [isFinished,setIsFinished]=useState(false);
+    
+    // 활동 감지 Hook 사용 (ACTIVE/INACTIVE만 감지)
+    useActivityTracker(
+        chapterData?.chapterId, 
+        1, // level 1
+        user?.username // userId (username 사용)
+    );
 
     const fullTitle="";
     const [preloadDone, setPreloadDone] = useState(false)
@@ -262,7 +270,7 @@ function StudyPage({ user, login, setLogin }){
                             left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
                             right={
                             isFinished?(
-                                <Button onClick={()=>navigate(`/study/2`)}>다음 단계로</Button>
+                                <Button onClick={() => navigate(`/study/2`)}>다음 단계로</Button>
                             ):<Button disabled>진행 중...</Button>
                             }
                         >

@@ -41,6 +41,9 @@ function AppContent() {
 
   // 로그인 체크 함수
   const checkLoginStatus = () => {
+    console.log("🔍 로그인 상태 체크 시작");
+    console.log("🔍 브라우저 쿠키:", document.cookie);
+    
     return axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/user`, { withCredentials: true })
       .then(response => {
         console.log("✅ 로그인 확인", response.data);
@@ -48,7 +51,8 @@ function AppContent() {
         console.log("🔍 사용자 데이터:", response.data);
         
         // 응답 데이터가 유효한 사용자 정보인지 확인
-        if (response.data && response.data.username) {
+        if (response.data && response.data.name) {
+          console.log("✅ 유효한 사용자 데이터 - 로그인 상태 설정");
           setLogin(true);
           setUser(response.data);
           return true;
