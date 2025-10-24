@@ -492,7 +492,6 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
               </UserAvatar>
               <UserInfo collapsed={collapsed}>
                 <UserName>{user?.name || '홍길동'}</UserName>
-                <UserParent>부모님: 김엄마</UserParent>
               </UserInfo>
             </UserProfile>
           </UserSection>
