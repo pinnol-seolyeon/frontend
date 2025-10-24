@@ -221,8 +221,7 @@ const ReceiveMessage = styled.div`
     color: #333333;
 
     
-    max-width: 50%;
-    min-width: fit-content;
+    max-width: 80%;
     word-wrap: break-word;
     white-space: pre-wrap;
     
