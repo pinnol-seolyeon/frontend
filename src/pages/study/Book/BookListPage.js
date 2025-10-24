@@ -317,7 +317,8 @@ function BookListPage({ user, login, setLogin }) {
       // API 데이터 구조에 맞게 매핑
       const bookData = {
         id: book.id,
-        title: book.title,
+        // title: book.title,
+        title: "레벨 1",
         icon: "📚", // 기본 아이콘 설정
         path: `/book/chapter/${book.id}`, // 책 ID를 포함한 경로
         description: `${book.title}을 통해\n재미있게 학습해보세요!`,

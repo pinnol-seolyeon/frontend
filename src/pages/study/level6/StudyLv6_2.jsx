@@ -4,204 +4,159 @@ import Box from "../../../components/Box";
 import tigerPencil from "../../../assets/tiger-pencil.png";
 import Button from "../../../components/Button";
 import MiniHeader from "../../../components/study/MiniHeader";
+import Sidebar from "../../../components/Sidebar";
 
 import { useNavigate } from "react-router-dom";
 import React,{useState,useEffect} from "react";
 import { useChapter } from "../../../context/ChapterContext";
+import background from "../../../assets/study_background.png";
+import hoppin from "../../../assets/hopin.svg";
 
 /*학습하기-6단계-2*/
 
-// const Wrapper=styled.div`
-//     width:100%;
-//     height:100vh;
-
-//     display:flex;
-//     flex-direction:column;
-//     align-items:center;
-//     justify-content:center;
-
-// `;
-
 const Wrapper=styled.div`
     width:100%;
-    // height:100vh;
     min-height:100vh;
-    height:auto; //높이 제한 없음
-
+    height:auto;
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
-
+    position: relative;
 `;
 
-
-const SpeechWrapper=styled.div`
-  position:relative;
-  display:flex;
-  margin-top:5%;
-  // flex-direction:column;
-
-  width:100%;
-  // height:50%;
-
-  align-itmes:center;
-  justify-content:center;
-  
-
+const ContentWrapper = styled.div`
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
 `;
 
-const Image = styled.img`
-  position: absolute;
-  left: 20px;
-  bottom: 20px;
-
-  // width: 20%;
-  min-width: 120px;
-  max-width: 300px;
-  height: auto;
-  object-fit: contain;
-
-  @media (max-width: 768px) {
-    width: 25%;
-    left: 5px;
-    bottom: 5px;
-  }
-
-  @media (max-width: 480px) {
-    width: 30%;
-  }
-`;
-
-
-
-
-const SpeechBubble = styled.div`
-  // position:relative;
+const MainWrapper = styled.div`
+  flex: 1;
   display: flex;
   flex-direction: column;
-  width: 80%;
-  height: auto;
-  // min-height: 300px;
-
-  background-color: #FEF3E1;
-
-
-  border: 0.5px solid black;
-  border-radius: 24px;
-  padding: 20px;
-  margin:auto;
-
-  // align-itmes:center;
-  // justify-content:center;
-
-  // margin-top:5%;
-  // margin-left:6%;
-  // margin-bottom:10%;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  margin-left: 0;
+  background-image: url(${background});
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
 `;
 
+const ImageWrapper=styled.div`
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+`;
+
+const Image=styled.img`
+    width:80%; 
+    height:auto;
+    object-fit:contain;
+    width: clamp(200px,50vw,350px);
+    align-self:center;
+`;
+
+const SpeechBubble=styled.div`
+    display:flex;
+    width:100%;
+    height: fit-content;
+    padding: 2rem;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 1rem;
+    position:relative;
+`;
 
 const TextBox = styled.div`
-  flex: 1; /* 남는 공간 꽉 채움 */
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   text-align: center;
 
-  padding: 30px;
-  margin: auto;
-
-  font-size: clamp(18px, 2.0vw, 24px);
-  line-height: 1.6;
-  letter-spacing: 0.02em;
-  font-weight: 500;
-  font-family: "Noto Sans KR", sans-serif;
-  color: #333;
-
-  word-break: keep-all;  /* 단어 기준 줄바꿈 */
-  white-space: pre-wrap; /* 줄바꿈 및 공백 유지 */
-  overflow-wrap: break-word;
+  width: 100%;
+  margin: 0 auto;
 `;
 
 
-
-const BubbleButton = styled.button`
-  // position: absolute;
-  // right: 20px;
-  // bottom: 20px;
-
-  width:20%;
-  height:20%;
-
-
-  padding: 20px;
-  background-color: #2774B2;
-  color: white;
-  border: none;
-  border-radius: 30px;
+const BackButton = styled.button`
+  display:flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.6rem 5rem; 
+  background-color: white;
+  color: #9E9E9E;
+  border: 1px solid #B8B8B8;
+  border-radius: 10px;
   cursor: pointer;
-  border:0.2px solid black;
+  outline: none;
+  font-size:clamp(13px,1vw,20px);
 
-  margin:auto; //정렬 가운데 
-
-  align-itmes:center;
-  justify-content:center;
- 
-
-  font-size:15px;
-
-  transition: background-color 0.3s;
+  transition: all 0.3s;
   &:hover {
-    background-color: #1b5c91;
+    background-color: #F5F5F5;
+    border-color: #B8B8B8;
+  }
+
+  &:active {
+    outline: none;
   }
 `;
 
-const Title=styled.div`
+const ButtonWrapper=styled.div`
     display:flex;
-    width:20%;
-    height:10%;
+    justify-content: center;
+    align-items: center;
+    width:100%;
+    gap: 2rem;
+`;
 
-    align-items:center;
-    justify-content:center;
-    margin:20px;
 
-    border-radius:30px;
-    border:0.2px solid black;
-    font-size: clamp(20px, 1.5vw, 25px);
-    font-weight: bold;
-
-    padding:10px;
-
-    background-color:#FEF3E1;
-`
+const ImageWithSpeechWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+  width: 100%;
+  margin: 1rem 0rem;
+`;
 
 const NextButton = styled.button`
-
-  width:20%;
-  min-width:350px;
-  height:7%;
-
-  background-color: #2774B2;
+  display:flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.8rem 3rem;
+  background-color: #478CEE;
   color: white;
-  border-radius: 30px;
+  border: none;
+  border-radius: 10px;
   cursor: pointer;
-  border: 0.2px solid black;
-  font-size: 20px;
-  padding:10px; //추가
-
-
-  margin:auto;
-  // padding-top:5px;
-  font-size:15px;
+  outline: none;
+  font-size: 18px;
+  font-weight: 500;
+  margin-top: 1rem;
 
   transition: background-color 0.3s;
   &:hover {
-    background-color: #1b5c91;
+    background-color: #104EA7;
   }
 
-  // position:absolute;
-  // bottom:20px;
-  // right:20px;
+  &:active {
+    outline: none;
+  }
 `;
 
 
@@ -262,17 +217,12 @@ export const Popup = styled.div`
 `;
 
 
-function StudyLevel6_2(props){
+function StudyLevel6_2({ user, login, setLogin }){
 
     const navigate=useNavigate();
-    const [showPopup,setShowPopup]=useState(false);
-    const [showFamilyButton,setShowFamilyButton]=useState(false);
     const {chapterData,clearChapterData}=useChapter();
     const [topic,setTopic]=useState();
-    const [currentIndex,setCurrentIndex]=useState(0);
     const [loading,setLoading]=useState(true);
-    const [sentences,setSentences]=useState([]);
-    const [fullTopic,setFullTopic]=useState();
 
       // ✅ useEffect 단순화
       useEffect(() => {
@@ -290,7 +240,6 @@ function StudyLevel6_2(props){
          try {
             console.log("📦 현재 저장된 chapterData:", chapterData);
 
-
             // ✅ 여기에 실제 완료 처리 API 호출
             const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/finish?chapterId=${chapterData?.chapterId}`, {
                 method: 'POST',
@@ -305,72 +254,62 @@ function StudyLevel6_2(props){
         const message=await response.text();
         console.log("✅학습완료 메시지:",message);
 
-         setShowPopup(true);
          clearChapterData(); //localstorage + 상태 모두 초기화
-
-         
-         setTimeout(()=>{
-          setShowPopup(false);
-          navigate('/');
-         },3000);
+         navigate('/study/level6/complete'); // 완료 페이지로 이동
          
         } catch(e){
             console.error('학습 완료 처리 중 오류',e);
         }
       };
     
-
-    const handleNextSentence = () => {
-      if (currentIndex < sentences.length - 1) {
-        setCurrentIndex((prev) => prev + 1);
-      } else {
-        alert("🎉 모든 문장을 다 봤어요!");
-      }
-    };
-
-    
-
-    
-
-    
     return(
     <>
         <Wrapper>
-            <Box>
-                <MiniHeader
-                    left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
-                    // right={<Button disabled>다음 단계로</Button>}
-                >
-                6/6 : 마무리
-                </MiniHeader>
-                <Title>토론해보자!</Title>
-                <SpeechWrapper>
-                  <SpeechBubble>
-                      
-                      {/* ✅ topic 전체를 출력 */}
-                      <TextBox>
-                      {loading ? (
-                        "토론 주제 생성 중.."
-                      ) : (
-                        <span style={{ fontWeight: "500", color: "#000000" }}>
-                          {topic}
-                        </span>
-                      )}
-                    </TextBox>
+            <ContentWrapper>
+                <Sidebar user={user} login={login} setLogin={setLogin} defaultCollapsed={true} />
+                <MainWrapper>
+                    <ImageWithSpeechWrapper>
+                        <ImageWrapper>
+                            <Image src={hoppin} alt="호핀" />
+                        </ImageWrapper>
+                        
+                        <SpeechBubble>
+                            <TextBox>
+                                <div style={{ 
+                                    fontSize: '28px', 
+                                    fontWeight: 'bold', 
+                                    marginBottom: '1rem', 
+                                    color: '#333',
+                                    textAlign: 'center'
+                                }}>
+                                    오늘의 토론 주제
+                                </div>
+                                {loading ? (
+                                    <div style={{ fontSize: '18px', color: '#666' }}>
+                                        토론 주제 생성 중...
+                                    </div>
+                                ) : (
+                                    <div style={{ 
+                                        fontSize: '20px', 
+                                        fontWeight: "400", 
+                                        color: "#333",
+                                        lineHeight: '1.3',
+                                        textAlign: 'center',
+                                        wordBreak: 'keep-all',
+                                        whiteSpace: 'pre-line'
+                                    }}>
+                                        {topic}
+                                    </div>
+                                )}
+                            </TextBox>
 
-                      <BubbleButton onClick={()=>setShowFamilyButton(true)}>꼭 해볼게✅</BubbleButton>
-                  
-                  </SpeechBubble>
-                  {/* <Image src={tigerPencil} alt="샘플" /> */}
-              </SpeechWrapper>
-              
-              {showFamilyButton&&
-                <NextButton onClick={handleComplete}>학습결과와 토론 주제 전송하기</NextButton>
-              }
-                {showPopup &&(
-                    <Popup>🐯 학습을 완료했어요! 🐯<br/> (카카오톡 전송 기능은 추후 업데이트 될 예정이예요)</Popup>
-                )}
-            </Box>
+                            <NextButton onClick={handleComplete}>
+                                다음단계로
+                            </NextButton>
+                        </SpeechBubble>
+                    </ImageWithSpeechWrapper>
+                </MainWrapper>
+            </ContentWrapper>
         </Wrapper>
     </>
     );

@@ -23,6 +23,7 @@ import ChapterPage from './pages/study/Chapter/ChapterPage';
 import StudyLv2_withImg from './pages/study/level2/StudyLv2_withImg';
 import Callback from './pages/login/Callback';
 import Status from './pages/Status';
+import StudyLevel6_complete from './pages/study/level6/StudyLeve6_complete';
 
 
 const GlobalStyles = createGlobalStyle`
@@ -60,7 +61,8 @@ const routes = [
   {path:'/book',element:<BookListPage/>},
   {path:'/book/chapter/:bookId',element:<ChapterPage/>},
   {path:'/study/level2-img',element:<StudyLv2_withImg/>},
-  {path:'/status',element:<Status/>}
+  {path:'/status',element:<Status/>},
+  {path:'/study/level6/complete',element:<StudyLevel6_complete/>}
 ];
 
 export default function AppRoutes({ login, setLogin, user }) {
