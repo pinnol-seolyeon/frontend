@@ -523,7 +523,9 @@ function StudyLv2_withImg({ user, login, setLogin }){
                     onError={(e)=>e.target.src=testImage} //기본 이미지로 fallback
                 />
               </ImageWrapper>
-                <QuestionButton onClick={()=>navigate('/question')}>
+                <QuestionButton onClick={()=>navigate('/question', {
+                    state: { from: '/study/level2-img' }
+                })}>
                    <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
                    질문하기
                 </QuestionButton>

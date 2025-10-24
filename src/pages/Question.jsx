@@ -311,8 +311,9 @@ function Question({ user, login, setLogin }){
     const[transcript,setTranscript]=useState(''); //음성 인식 결과
     const recognitionRef=useRef(null); //recognition 매번 호출 비효율 문제 해결
     const navigate=useNavigate();
-    const location=useLocation(); //closeButton 클릭 시 currentIndex 문장으로 되돌아가도록
+    const location=useLocation(); //이전 페이지 정보를 받기 위해
     const [returnToIndex,setReturnToIndex]=useState(0);
+    const [previousPage,setPreviousPage]=useState('/main'); // 기본값은 메인 페이지
 
 
     //컴포넌트가 처음 마운트될 때 한 번만 실행됨 
@@ -327,6 +328,11 @@ function Question({ user, login, setLogin }){
 
         if(location.state?.returnToIndex!==undefined){
             setReturnToIndex(location.state.returnToIndex);
+        }
+        
+        // 이전 페이지 정보 저장
+        if(location.state?.from){
+            setPreviousPage(location.state.from);
         }
 
         //사용자가 말하는 내용을 실시간으로 transcript에 저장 
@@ -440,14 +446,26 @@ function Question({ user, login, setLogin }){
         fetchDummyData();
     },[]);
     
-    //질문 닫기 -> currentIndex로 이동 
+    //질문 닫기 -> 이전 페이지로 이동 
     const handleClose=()=>{
         console.log("✅returnToIndex:",returnToIndex);
-        navigate("/study/level3",{
-            state:{
-                returnToIndex
-            },
-        });
+        console.log("✅previousPage:",previousPage);
+        
+        // 이전 페이지가 study 페이지인 경우 returnToIndex와 함께 이동
+        if(previousPage.includes('/study/level3')){
+            navigate("/study/level3",{
+                state:{
+                    returnToIndex
+                },
+            });
+        } else if(previousPage.includes('/study/level2-img')){
+            navigate("/study/level2-img");
+        } else if(previousPage.includes('/study/level6/summary')){
+            navigate("/study/level6/summary");
+        } else {
+            // 다른 페이지인 경우 그냥 이동
+            navigate(previousPage);
+        }
     };
 
     const pageInfo = {
@@ -464,7 +482,7 @@ function Question({ user, login, setLogin }){
                 <ContentContainer>
                     <BackButtonWrapper>
                         <BackButton
-                            onClick={() => navigate('/main')}
+                            onClick={handleClose}
                         >{'<'} 이전 페이지로 돌아가기</BackButton>
                     </BackButtonWrapper>
                     
