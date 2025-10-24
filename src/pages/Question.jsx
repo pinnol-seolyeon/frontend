@@ -221,7 +221,7 @@ const ReceiveMessage = styled.div`
     color: #333333;
 
     
-    max-width: 70%;
+    max-width: 50%;
     min-width: fit-content;
     word-wrap: break-word;
     white-space: pre-wrap;
@@ -300,6 +300,14 @@ const CloseButton=styled.button`
     color:black;
     }
 
+`;
+
+const MessageRow = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    width: 100%;
 `;
 
 function Question({ user, login, setLogin }){
@@ -493,12 +501,12 @@ function Question({ user, login, setLogin }){
                                 msg.type === 'sent' ? (
                                     <Message key={index}>{msg.text}</Message>
                                 ) : (
-                                    <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                    <MessageRow key={index}>
                                         <ProfileArea>
                                             <TigerImg src={hopin} alt="샘플" />
                                         </ProfileArea>
                                         <ReceiveMessage>{msg.text}</ReceiveMessage>
-                                    </div>
+                                    </MessageRow>
                                 )
                                 )}
                             <div ref={messageEndRef} />
