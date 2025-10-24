@@ -92,10 +92,10 @@ const SpeechWrapper = styled.div`
 `;
 
 const Image=styled.img`
-    width:100%; 
+    width:50%; 
     height:auto;
     object-fit:contain;
-    width: clamp(100px,40vw,250px); //최소 150px, 최대 250px, 화면 너비 40%까지 가능
+    // width: clamp(100px,40vw,250px); //최소 150px, 최대 250px, 화면 너비 40%까지 가능
     align-self:center;
 `;
 
@@ -358,7 +358,12 @@ function StudyPage({ user, login, setLogin }){
 
    const navigateToQuestion=()=>{
         console.log("🐛question에게 보내는 returnToIndex:",currentIndex)
-        navigate("/question",{state:{returnToIndex:currentIndex}});
+        navigate("/question",{
+            state:{
+                returnToIndex:currentIndex,
+                from: "/study/level3"
+            }
+        });
    }
 
    useEffect(() => {
@@ -376,7 +381,6 @@ function StudyPage({ user, login, setLogin }){
             
             //질문 감지 함수
             const isQuestion = (s) => s.includes("?");
-
 
             //긴 문장 분할 함수(질문 제외)
             const breakLongSentence = (sentence, max = 50) => {
@@ -425,14 +429,26 @@ function StudyPage({ user, login, setLogin }){
     //질문이 끝나면 답변 버튼이 생성되도록 함 
     const goToNextSentence=()=>{
     if (!preloadDone) return;
-    if (currentIndex<sentences.length-1){
+    
+    // 기존 코드: 모든 문장을 다 본 후에 완료
+    // if (currentIndex<sentences.length-1){
+    //     console.log("✅currentIndex:",currentIndex);
+    //     setCurrentIndex(currentIndex+1);
+    // }else{
+    //     setIsQuestionFinished(true);
+    //     setIsFinished(true);
+    //     alert("✅학습을 모두 완료했어요! 다음 단계로 이동해볼까요? 오른 쪽의 다음 단계로 버튼을 클릭해주세요 ")
+    // }
+
+    // 수정된 코드: 2-3개 문장만 보고 완료
+    if (currentIndex < 2) { // 0, 1 인덱스까지만
         console.log("✅currentIndex:",currentIndex);
         setCurrentIndex(currentIndex+1);
-        
-    }else{
+    } else {
         setIsQuestionFinished(true); //질문 끝났다는 상태
         setIsFinished(true);
-        alert("✅학습을 모두 완료했어요! 다음 단계로 이동해볼까요? 오른 쪽의 다음 단계로 버튼을 클릭해주세요 ")
+        alert("✅학습을 모두 완료했어요! 게임 단계로 이동해볼까요?")
+        navigate("/game")
     }
    };
 
@@ -487,10 +503,10 @@ function StudyPage({ user, login, setLogin }){
                     console.error("🔍 에러 상태:", e.response?.status);
                     console.error("🔍 에러 데이터:", e.response?.data);
                     
-                    if (e.response?.status === 401) {
-                        console.error("🚨 401 Unauthorized - 로그인 필요");
-                        return{result:"😟오류 발생: 로그인이 필요합니다. 다시 로그인해주세요."};
-                    }
+                    // if (e.response?.status === 401) {
+                    //     console.error("🚨 401 Unauthorized - 로그인 필요");
+                    //     return{result:"😟오류 발생: 로그인이 필요합니다. 다시 로그인해주세요."};
+                    // }
                     return{result:"😟오류 발생: " + (e.response?.data?.message || e.message)};
                 }
             };
@@ -501,11 +517,26 @@ function StudyPage({ user, login, setLogin }){
 
    //다음 문장으로 넘어가도록 함함
    const handleNext=async()=>{
-    if (currentIndex<sentences.length-1){
-        setCurrentIndex(currentIndex+1);
-    }else{
-       
+    // 기존 코드: 모든 문장을 다 본 후에 /game으로 이동
+    // if (currentIndex<sentences.length-1){
+    //     setCurrentIndex(currentIndex+1);
+    // }else{
+    //     //여태까지 질문한 내용들을 DB에 저장하는 API
+    //     try{
+    //         const response=await api.post(`/api/question/saveAll?chapterId=${chapterData?.chapterId}`);
+    //         console.log("🐯 질문/답변 저장 성공");
+    //     }catch(e){
+    //         console.log("❌ 저장 중 오류 발생",e);
+    //     }
+    //     //피드백 저장
+    //     await saveFeedbacks(chapterData?.chapterId);
+    //     navigate("/game")
+    // }
 
+    // 수정된 코드: 2-3개 문장만 보고 바로 /game으로 이동
+    if (currentIndex < 2) { // 0, 1 인덱스까지만 (즉, 처음 2-3개 문장)
+        setCurrentIndex(currentIndex + 1);
+    } else {
         //여태까지 질문한 내용들을 DB에 저장하는 API
         try{
             const response=await api.post(`/api/question/saveAll?chapterId=${chapterData?.chapterId}`);
@@ -516,7 +547,7 @@ function StudyPage({ user, login, setLogin }){
 
         //피드백 저장
         await saveFeedbacks(chapterData?.chapterId);
-        navigate("/game") //추후 `/game`으로 변경
+        navigate("/game")
     }
    };
 
@@ -609,7 +640,12 @@ const stopVoiceRecognition = () => {
               <ImageWrapper>
                     <Image src={hopin} alt="샘플" />
               </ImageWrapper>
-              <QuestionButton onClick={()=>navigate('/question')}>
+              <QuestionButton onClick={()=>navigate('/question', {
+                    state: { 
+                        returnToIndex: currentIndex,
+                        from: "/study/level3" 
+                    }
+                })}>
                     <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
                     질문하기
                 </QuestionButton>
