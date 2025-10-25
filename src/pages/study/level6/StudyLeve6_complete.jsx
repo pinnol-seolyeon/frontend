@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import React from "react";
 import { useChapter } from "../../../context/ChapterContext";
 import background from "../../../assets/study_background.png";
-import hoppin from "../../../assets/hopin.svg";
+import hoppin from "../../../assets/hoppin_hapyface.svg";
 
 /*학습하기-6단계-완료*/
 
