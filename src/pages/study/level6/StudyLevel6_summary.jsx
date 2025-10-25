@@ -13,7 +13,7 @@ import React,{useState,useEffect} from "react";
 import { useChapter } from "../../../context/ChapterContext";
 import TtsPlayer from "../../../components/TtsPlayer";
 import background from "../../../assets/study_background.png";
-import hoppin from "../../../assets/hopin.svg";
+import hoppin from "../../../assets/hoppin_normal.svg";
 import questionIcon from "../../../assets/question_icon.svg";
 
 /*학습하기-6단계-요약*/
@@ -53,24 +53,30 @@ const MainWrapper = styled.div`
   }
 `;
 
-const ImageWrapper=styled.div`
-    position:relative;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+const BottomImageWrapper = styled.div`
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
     gap: 2rem;
+    width: 100%;
+    position: relative;
 `;
 
-const Image=styled.img`
-    width:100%; 
-    height:auto;
-    object-fit:contain;
-    width: clamp(100px,40vw,250px);
-    align-self:center;
+const ImageContainer = styled.div`
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+`;
+
+const Image = styled.img`
+    width: clamp(100px, 30vw, 200px);
+    height: auto;
+    object-fit: contain;
 `;
 
 const SummaryImage = styled.img`
-  width: clamp(0px,40vw,250px);
+  width: clamp(250px, 35vw, 400px);
+  max-height: 380px; // 호핀과 비슷한 높이로 맞춤
   height: auto;
   object-fit: contain;
 `;
@@ -81,12 +87,15 @@ const SpeechBubble=styled.div`
     height: fit-content;
     padding: 2rem;
     background-color: rgba(255, 255, 255, 0.8);
+    max-width: 1200px; // ContentContainer와 동일한 max-width
+
     border-radius: 20px;
     justify-content: center;
     align-items: center;
     flex-direction: column;
     gap: 1rem;
     position:relative;
+    margin-top: 0;
 `;
 
 const TextBox = styled.div`
@@ -176,9 +185,9 @@ const QuestionButton = styled.button`
   font-size: 18px;
   font-weight: 500;
   transition: all 0.3s;
-  margin: 1rem 0;
   align-self: flex-end;
   gap: 0.5rem;
+  margin-bottom: 1rem;
   &:hover {
     background-color: #F5F5F5;
     border-color: #B8B8B8;
@@ -197,10 +206,42 @@ const ImageWithSpeechWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  
   width: 100%;
   margin: 1rem 0rem;
 `;
+
+const ContentContainer = styled.div`
+  display: flex;
+  align-items: flex-end;
+  gap: 2rem;
+  width: 100%;
+  max-width: 1200px;
+  justify-content: space-between;
+`;
+
+const LeftSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-left: 2rem;
+  gap: 0; // 호핀과 말풍선 사이 간격 제거
+`;
+
+const HoppinImage = styled.img`
+  width: clamp(200px, 25vw, 350px);
+  height: auto;
+  object-fit: contain;
+`;
+
+
+const RightSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  flex: 1;
+`;
+
 
 
 function StudyPage({ user, login, setLogin }){
@@ -284,16 +325,21 @@ function StudyPage({ user, login, setLogin }){
                 <Sidebar user={user} login={login} setLogin={setLogin} defaultCollapsed={true} />
                 <MainWrapper>
                     <ImageWithSpeechWrapper>
-                        <ImageWrapper>
-                            <Image src={hoppin} alt="호핀" />
-                            <SummaryImage src={image} alt="요약 이미지" />
-                        </ImageWrapper>
-                        <QuestionButton onClick={() => navigate('/question', {
-                            state: { from: '/study/level6/summary' }
-                        })}>
-                            <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
-                            질문하기
-                        </QuestionButton>
+                      <ContentContainer>
+                        <LeftSection>
+                          <HoppinImage src={hoppin} alt="호핀" />
+                        </LeftSection>
+
+                        <RightSection>
+                          <SummaryImage src={image} alt="요약 이미지" />
+                          <QuestionButton onClick={() => navigate('/question', {
+                                state: { from: '/study/level6/summary' }
+                            })}>
+                                <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
+                                질문하기
+                            </QuestionButton>
+                        </RightSection>
+                      </ContentContainer>
                         <TtsPlayer
                             sentences={sentences}
                             answers={[]}

@@ -245,7 +245,7 @@ const Status = ({user, login, setLogin}) => {
             <ContentContainer>
                 <TitleWrapper>
                     <TitleText>학습 현황</TitleText>
-                    <SubTitleText>{user?.childName}님의 학습 현황</SubTitleText>
+                    <SubTitleText>{user?.name}님의 학습 현황</SubTitleText>
                 </TitleWrapper>
                 <ProgressWrapper>
                     <CircularProgress>
