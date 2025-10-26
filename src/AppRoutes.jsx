@@ -24,6 +24,7 @@ import StudyLv2_withImg from './pages/study/level2/StudyLv2_withImg';
 import Callback from './pages/login/Callback';
 import Status from './pages/Status';
 import StudyLevel6_complete from './pages/study/level6/StudyLeve6_complete';
+import StatusDetail from './pages/Status_Detail';
 
 
 const GlobalStyles = createGlobalStyle`
@@ -62,7 +63,8 @@ const routes = [
   {path:'/book/chapter/:bookId',element:<ChapterPage/>},
   {path:'/study/level2-img',element:<StudyLv2_withImg/>},
   {path:'/status',element:<Status/>},
-  {path:'/study/level6/complete',element:<StudyLevel6_complete/>}
+  {path:'/study/level6/complete',element:<StudyLevel6_complete/>},
+  {path:'/status/detail',element:<StatusDetail/>}
 ];
 
 export default function AppRoutes({ login, setLogin, user }) {
