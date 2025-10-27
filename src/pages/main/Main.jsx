@@ -12,15 +12,12 @@ import Graph from "../../assets/graph.svg";
 import Pencil from "../../assets/pencil.svg";
 import CircleGraph from "../../assets/circle_graph.svg";
 
-// SVG 이미지 프리로딩
+// 이미지를 미리 로드하여 캐시에 저장
 const preloadImages = () => {
   const images = [Book, Graph, Pencil, CircleGraph];
   images.forEach(src => {
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'image';
-    link.href = src;
-    document.head.appendChild(link);
+    const img = new Image();
+    img.src = src;
   });
 };
 
@@ -141,10 +138,15 @@ const Main = ({user, login, setLogin}) => {
 
   const navigate = useNavigate();
   
-  // SVG 이미지 프리로딩
+  // SVG 이미지 프리로딩 - 컴포넌트가 마운트되기 전에 실행
   useEffect(() => {
     preloadImages();
   }, []);
+  
+  // 메인페이지에 처음 접근할 때도 프리로드
+  if (typeof window !== 'undefined') {
+    preloadImages();
+  }
   
   return (
     <Wrapper>

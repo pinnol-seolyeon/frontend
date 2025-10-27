@@ -6,6 +6,21 @@ import AppRoutes from './AppRoutes';
 import axios from 'axios';
 import { ChapterProvider } from './context/ChapterContext';
 
+// 메인페이지에서 사용되는 이미지들을 미리 로드
+import Book from './assets/book.svg';
+import Graph from './assets/graph.svg';
+import Pencil from './assets/pencil.svg';
+import CircleGraph from './assets/circle_graph.svg';
+
+// 이미지를 미리 로드하여 캐시에 저장
+const preloadMainImages = () => {
+  const images = [Book, Graph, Pencil, CircleGraph];
+  images.forEach(src => {
+    const img = new Image();
+    img.src = src;
+  });
+};
+
 const GlobalStyle = createGlobalStyle`
   * {
     font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -38,6 +53,11 @@ function AppContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+
+  // 앱 시작 시 이미지 프리로드
+  useEffect(() => {
+    preloadMainImages();
+  }, []);
 
   // 로그인 체크 함수
   const checkLoginStatus = () => {
