@@ -12,6 +12,7 @@ const StatusBoxWrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  cursor: ${props => props.status !== 'not_started' ? 'pointer' : 'not-allowed'};
   
   ${props => props.status !== 'not_started' && `
     &:hover {
@@ -266,8 +267,15 @@ const StatusBox = ({
   status = "not_started", 
   progress = 0,
   description = "돈에 대한 이해도가 높아요!",
-  stickers = []
+  stickers = [],
+  onClick
 }) => {
+  const handleClick = () => {
+    if (status !== 'not_started' && onClick) {
+      onClick({ title, status, progress, description, stickers });
+    }
+  };
+
   const renderBottomContent = () => {
     if (status === 'not_started') {
       return (
@@ -321,7 +329,7 @@ const StatusBox = ({
   };
 
   return (
-    <StatusBoxWrapper status={status}>
+    <StatusBoxWrapper status={status} onClick={handleClick}>
       {/* 빨간색 구분선 - 상단 섹션 */}
       <TopSection>
         {/* 노란색 구분선 - 아이콘 영역 (왼쪽) */}

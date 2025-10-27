@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 import finnolLogo from '../assets/finnol-logo.png';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import userimg from '../assets/user.svg';
 import point from '../assets/point_img.svg';
 import logoutimg from '../assets/logout.svg';
@@ -47,7 +47,7 @@ const Wrapper = styled.div`
   top: 0;
   height: 100vh;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: visible;
   
   /* 모바일에서는 기본적으로 접힌 상태 */
   @media (max-width: 768px) {
@@ -229,6 +229,8 @@ const PointSection = styled.div`
   padding: 0.8rem 1rem;
   margin-bottom: 2rem;
   justify-content: space-between;
+  position: relative;
+  overflow: visible;
 `;
 
 const PointTextWrapper = styled.div`
@@ -247,6 +249,44 @@ const PointText = styled.div`
   font-weight: 500;
   color: #478CEE;
   display: ${props => props.collapsed ? 'none' : 'block'};
+`;
+
+const PointIconContainer = styled.div`
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  
+  &:hover .point-tooltip {
+    opacity: 1;
+    visibility: visible;
+  }
+`;
+
+const PointTooltip = styled.div`
+  position: fixed;
+  background-color: #333;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 14px;
+  white-space: nowrap;
+  opacity: ${props => props.show ? 1 : 0};
+  visibility: ${props => props.show ? 'visible' : 'hidden'};
+  transition: all 0.2s ease;
+  z-index: 10000;
+  pointer-events: none;
+  left: ${props => props.position?.left +10|| 0}px;
+  top: ${props => props.position?.top + 5|| 0}px;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 6px solid transparent;
+    border-right-color: #333;
+  }
 `;
 
 const PointValue = styled.div`
@@ -347,6 +387,9 @@ const LogoutText = styled.div`
 function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultCollapsed = false }) {
     const navigate = useNavigate();
     const [collapsed, setCollapsed] = useState(defaultCollapsed);
+    const [showTooltip, setShowTooltip] = useState(false);
+    const [tooltipPosition, setTooltipPosition] = useState({ left: 0, top: 0 });
+    const pointIconRef = useRef(null);
     const isUserReady = !!user;
     
     // 현재 페이지가 학습 페이지인지 확인
@@ -392,6 +435,21 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
       setCollapsed(!collapsed);
     };
 
+    const handleMouseEnter = () => {
+      if (pointIconRef.current) {
+        const rect = pointIconRef.current.getBoundingClientRect();
+        setTooltipPosition({
+          left: rect.right + 8,
+          top: rect.top + rect.height / 2 - 20
+        });
+        setShowTooltip(true);
+      }
+    };
+
+    const handleMouseLeave = () => {
+      setShowTooltip(false);
+    };
+
     const logout = async () => {
       try {
         // 로그아웃 API 호출
@@ -421,7 +479,7 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
       { id: 'study', icon: studyimg, text: '학습하기', path: ['/book', '/study'] },
       { id: 'analysis', icon: analyzeimg, text: '학습분석', path: '/dashboard' },
       { id: 'review', icon: reviewimg, text: '복습하기', path: '/review' },
-      { id: 'status', icon: statusimg, text: '학습현황', path: '/status' }
+      { id: 'status', icon: statusimg, text: '학습현황', path: ['/status'] }
     ];
 
     const handleMenuClick = (path) => {
@@ -446,6 +504,9 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
           }
           if (p === '/book') {
             return currentPath.startsWith('/book');
+          }
+          if (p === '/status') {
+            return currentPath.startsWith('/status');
           }
           return currentPath === p;
         });
@@ -500,12 +561,23 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
             {isUserReady && (
             <PointSection collapsed={collapsed}>
               <PointTextWrapper>
-                <PointIcon src={point} alt="Points" />
-                <PointText collapsed={collapsed}>포인트</PointText>
+                <PointIconContainer 
+                  collapsed={collapsed}
+                  ref={pointIconRef}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  <PointIcon src={point} alt="Points" />
+                </PointIconContainer>
+                <PointText collapsed={collapsed}>피넛</PointText>
               </PointTextWrapper>
               <PointValue collapsed={collapsed}>{(user?.coin ?? 0).toLocaleString()}</PointValue>
             </PointSection>
             )}
+            
+            <PointTooltip show={showTooltip} position={tooltipPosition}>
+              포인트 {user?.coin ?? 0}P
+            </PointTooltip>
 
           <NavigationMenu>
             {menuItems.map((item) => (

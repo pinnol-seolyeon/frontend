@@ -55,44 +55,50 @@ const MainWrapper = styled.div`
   }
 `;
 
-const ImageWrapper=styled.div`
-    position:relative;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap: 2rem;
-`
+const ContentContainer = styled.div`
+  display: flex;
+  align-items: flex-end;
+  gap: 2rem;
+  width: 100%;
+  max-width: 1200px;
+  justify-content: space-between;
+`;
 
+const LeftSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-left: 2rem;
+  gap: 0;
+`;
 
+const HoppinImage = styled.img`
+  width: clamp(200px, 25vw, 350px);
+  height: auto;
+  object-fit: contain;
+`;
 
-const Image=styled.img`
-    display:flex;
-    height:auto;
-    object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    width: 30%;
-    display:block;
-    
-     /*가로 중앙 정렬, 세로 원하는 위치에 자유롭게 배치*/
-    align-self:center;/*가로 중앙 정렬*/
-    // margin-bottom:0px;
+const RightSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  flex: 1;
 `;
 
 const ObjectiveImage = styled.img`
-  display:flex;
-  height:auto;
-  object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-  width: 30%;
-  display:block;
-  margin-bottom: 1rem;
+  width: clamp(250px, 35vw, 400px);
+  max-height: 380px;
+  height: auto;
+  object-fit: contain;
 `;
 
 const ImageWithSpeechWrapper = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  
+  align-items: center;
   width: 100%;
-  margin:1rem 0rem;
+  margin: 1rem 0rem;
 `;
 
 
@@ -102,12 +108,14 @@ const SpeechBubble=styled.div`
     height: fit-content;
     padding: 2rem;
     background-color: rgba(255, 255, 255, 0.8);
+    max-width: 1200px;
     border-radius: 20px;
-    justify-content: center; /* 수평 중앙 */
-    align-items: center;     /* 수직 중앙 */
+    justify-content: center;
+    align-items: center;
     flex-direction: column;
     gap: 1rem;
     position:relative;
+    margin-top: 0;
 `;
 
 const TextBox = styled.div`
@@ -135,7 +143,8 @@ const SpeechWrapper=styled.div`
     display:flex;
     align-items:stretch;
     flex-direction: row;
-    gap:20px; /*형제 요소 사이의 간격*/
+    align-items: center;
+    justify-content: center;
 
 `;
 
@@ -258,9 +267,9 @@ const QuestionButton = styled.button`
   font-size: 18px;
   font-weight: 500;
   transition: all 0.3s;
-  margin: 1rem 0; /* 이미지와 스피치 버블 사이 간격 */
-  align-self: flex-end; /* 오른쪽 정렬 */
+  align-self: flex-end;
   gap: 0.5rem;
+  margin-bottom: 1rem;
   &:hover {
     background-color: #F5F5F5;
     border-color: #B8B8B8;
@@ -515,20 +524,25 @@ function StudyLv2_withImg({ user, login, setLogin }){
                 2/6 : 학습 자료
                         </MiniHeader> */}
             <ImageWithSpeechWrapper>
-              <ImageWrapper>
-                    <Image src={hoppin} alt="샘플" />
-                <ObjectiveImage 
-                    src={image} 
-                    alt="학습 이미지" 
-                    onError={(e)=>e.target.src=testImage} //기본 이미지로 fallback
-                />
-              </ImageWrapper>
-                <QuestionButton onClick={()=>navigate('/question', {
-                    state: { from: '/study/level2-img' }
-                })}>
-                   <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
-                   질문하기
-                </QuestionButton>
+              <ContentContainer>
+                <LeftSection>
+                  <HoppinImage src={hoppin} alt="호핀" />
+                </LeftSection>
+
+                <RightSection>
+                  <ObjectiveImage 
+                      src={image} 
+                      alt="학습 이미지" 
+                      onError={(e)=>e.target.src=testImage}
+                  />
+                  <QuestionButton onClick={()=>navigate('/question', {
+                      state: { from: '/study/level2-img' }
+                  })}>
+                     <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
+                     질문하기
+                  </QuestionButton>
+                </RightSection>
+              </ContentContainer>
 
               <TtsPlayer
                 sentences={sentences}

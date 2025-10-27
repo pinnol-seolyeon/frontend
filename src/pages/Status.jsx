@@ -237,6 +237,19 @@ const Status = ({user, login, setLogin}) => {
       console.error('StatusBoxes 데이터 로드 실패:', error);
     }
   };
+
+  const handleStatusBoxClick = (data) => {
+    navigate('/status/detail', { 
+      state: { 
+        title: data.title,
+        status: data.status,
+        progress: data.progress,
+        description: data.description,
+        stickers: data.stickers
+      }
+    });
+  };
+
   return (
     <Wrapper>
       <ContentWrapper>
@@ -245,7 +258,7 @@ const Status = ({user, login, setLogin}) => {
             <ContentContainer>
                 <TitleWrapper>
                     <TitleText>학습 현황</TitleText>
-                    <SubTitleText>{user?.childName}님의 학습 현황</SubTitleText>
+                    <SubTitleText>{user?.name}님의 학습 현황</SubTitleText>
                 </TitleWrapper>
                 <ProgressWrapper>
                     <CircularProgress>
@@ -295,6 +308,7 @@ const Status = ({user, login, setLogin}) => {
                                 progress={box.progress}
                                 description={box.description}
                                 stickers={box.stickers}
+                                onClick={handleStatusBoxClick}
                             />
                         ))}
                     </StatusBoxGrid>

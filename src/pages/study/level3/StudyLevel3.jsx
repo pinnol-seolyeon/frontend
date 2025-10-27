@@ -11,7 +11,7 @@ import MiniHeader from "../../../components/study/MiniHeader";
 import Sidebar from "../../../components/Sidebar";
 import { useChapter } from "../../../context/ChapterContext";
 import background from "../../../assets/study_background.png";
-import hopin from "../../../assets/hopin.svg";
+import hoppin from "../../../assets/hopin.svg";
 import questionIcon from "../../../assets/question_icon.svg";
 import TtsPlayer from "../../../components/TtsPlayer";
 import api from "../../../api/login/axiosInstance";
@@ -65,38 +65,54 @@ const MainWrapper = styled.div`
   }
 `;
 
-const ImageWrapper=styled.div`
-    position:relative;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    // gap:12px;
+const ContentContainer = styled.div`
+  display: flex;
+  align-items: flex-end;
+  gap: 2rem;
+  width: 100%;
+  max-width: 1200px;
+  justify-content: center;
+`;
+
+const LeftSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  margin-left: 2rem;
+  gap: 0;
+  flex: 2;
+`;
+
+const HoppinImage = styled.img`
+  width: clamp(200px, 25vw, 350px);
+  height: auto;
+  object-fit: contain;
+`;
+
+const RightSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
 `;
 
 const ImageWithSpeechWrapper = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  
   width: 100%;
-  margin:1rem 0rem;
+  margin: 1rem 0rem;
 `;
 
 const SpeechWrapper = styled.div`
   position: relative;
   width: 100%;
   display: flex;
-  align-items: stretch;
+  align-items: center;
+  justify-content: center;
   flex-direction: row;
-  gap: 20px;
-`;
-
-const Image=styled.img`
-    width:50%; 
-    height:auto;
-    object-fit:contain;
-    // width: clamp(100px,40vw,250px); //최소 150px, 최대 250px, 화면 너비 40%까지 가능
-    align-self:center;
 `;
 
 const SpeechBubble=styled.div`
@@ -105,12 +121,14 @@ const SpeechBubble=styled.div`
     height: fit-content;
     padding: 2rem;
     background-color: rgba(255, 255, 255, 0.8);
+    max-width: 1200px;
     border-radius: 20px;
-    justify-content: center; /* 수평 중앙 */
-    align-items: center;     /* 수직 중앙 */
+    justify-content: center;
+    align-items: center;
     flex-direction: column;
     gap: 1rem;
     position:relative;
+    margin-top: 0;
 `;
 
 
@@ -208,9 +226,9 @@ const QuestionButton = styled.button`
   font-size: 18px;
   font-weight: 500;
   transition: all 0.3s;
-  margin: 1rem 0; /* 이미지와 스피치 버블 사이 간격 */
-  align-self: flex-end; /* 오른쪽 정렬 */
+  align-self: flex-end;
   gap: 0.5rem;
+  margin-bottom: 1rem;
   &:hover {
     background-color: #F5F5F5;
     border-color: #B8B8B8;
@@ -637,18 +655,23 @@ const stopVoiceRecognition = () => {
                 3/6 선생님과 학습하기
                 </MiniHeader> */}
             <ImageWithSpeechWrapper>
-              <ImageWrapper>
-                    <Image src={hopin} alt="샘플" />
-              </ImageWrapper>
-              <QuestionButton onClick={()=>navigate('/question', {
-                    state: { 
-                        returnToIndex: currentIndex,
-                        from: "/study/level3" 
-                    }
-                })}>
-                    <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
-                    질문하기
-                </QuestionButton>
+              <ContentContainer>
+                <LeftSection>
+                  <HoppinImage src={hoppin} alt="호핀" />
+                </LeftSection>
+
+                <RightSection>
+                  <QuestionButton onClick={()=>navigate('/question', {
+                        state: { 
+                            returnToIndex: currentIndex,
+                            from: "/study/level3" 
+                        }
+                    })}>
+                        <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
+                        질문하기
+                    </QuestionButton>
+                </RightSection>
+              </ContentContainer>
 
               <TtsPlayer
                 sentences={ttsSentences}     // useMemo로 감싼 배열
