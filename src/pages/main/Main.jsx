@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import Card from "../../components/Card";
 import pencil from "../../assets/pencil_icon.png";
@@ -11,6 +11,18 @@ import Book from "../../assets/book.svg";
 import Graph from "../../assets/graph.svg";
 import Pencil from "../../assets/pencil.svg";
 import CircleGraph from "../../assets/circle_graph.svg";
+
+// SVG 이미지 프리로딩
+const preloadImages = () => {
+  const images = [Book, Graph, Pencil, CircleGraph];
+  images.forEach(src => {
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = src;
+    document.head.appendChild(link);
+  });
+};
 
 const Wrapper = styled.div`
   background-color: #ffffff;
@@ -128,6 +140,12 @@ const Main = ({user, login, setLogin}) => {
   console.log('현재 NODE_ENV:', process.env.NODE_ENV);
 
   const navigate = useNavigate();
+  
+  // SVG 이미지 프리로딩
+  useEffect(() => {
+    preloadImages();
+  }, []);
+  
   return (
     <Wrapper>
       <ContentWrapper>
