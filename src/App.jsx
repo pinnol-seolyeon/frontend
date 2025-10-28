@@ -14,10 +14,32 @@ import CircleGraph from './assets/circle_graph.svg';
 
 // 이미지를 미리 로드하여 캐시에 저장
 const preloadMainImages = () => {
-  const images = [Book, Graph, Pencil, CircleGraph];
-  images.forEach(src => {
-    const img = new Image();
-    img.src = src;
+  return new Promise((resolve) => {
+    const images = [Book, Graph, Pencil, CircleGraph];
+    let loadedCount = 0;
+    const totalImages = images.length;
+
+    if (totalImages === 0) {
+      resolve();
+      return;
+    }
+
+    images.forEach(src => {
+      const img = new window.Image();
+      img.onload = () => {
+        loadedCount++;
+        if (loadedCount === totalImages) {
+          resolve();
+        }
+      };
+      img.onerror = () => {
+        loadedCount++;
+        if (loadedCount === totalImages) {
+          resolve();
+        }
+      };
+      img.src = src;
+    });
   });
 };
 
@@ -54,7 +76,7 @@ function AppContent() {
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
 
-  // 앱 시작 시 이미지 프리로드
+  // 앱 시작 시 이미지 프리로드 (백그라운드에서 실행)
   useEffect(() => {
     preloadMainImages();
   }, []);
