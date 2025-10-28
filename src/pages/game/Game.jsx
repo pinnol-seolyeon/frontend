@@ -21,7 +21,8 @@ import gameStartQuiz from '../../assets/game_quiz_start.svg';
 import gameStartBtn from '../../assets/game_start_btn.svg';
 import gameQuizTitle from '../../assets/game_quizoverlay_title.svg';
 import gameEndTitle from '../../assets/game_endoverlay_title.svg';
-
+import pause_btn from '../../assets/pause_btn.svg';
+import exit_btn from '../../assets/exit_btn.svg';
 // 폰트 import
 const fontFace = `
   @font-face {
@@ -62,6 +63,104 @@ const LoadingOverlay = styled.div`
   align-items: center;
   color: white;
   font-size: 2rem;
+`;
+
+const GameControls = styled.div`
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  display: flex;
+  gap: 1rem;
+  z-index: 5;
+  pointer-events: auto;
+`;
+
+const ControlButton = styled.img`
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  transition: transform 0.2s;
+  
+  &:hover {
+    transform: scale(1.1);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const ModalBox = styled.div`
+  background-color: #ffffff;
+  padding: 3rem 2rem;
+  border-radius: 20px;
+  text-align: center;
+  min-width: 450px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+`;
+
+const ModalTitle = styled.div`
+  font-size: 32px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 1.5rem;
+`;
+
+const ModalDescription = styled.div`
+  font-size: 16px;
+  color: #333;
+  font-weight: 400;
+  white-space: pre-line;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+`
+
+const ModalButtonContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+`;
+
+const ModalButton = styled.button`
+  padding: 0.8rem 2rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  
+  ${props => props.primary ? `
+    background-color: #ffffff;
+    color: #2D7BED;
+    border: 1px solid #2D7BED;
+
+    &:hover {
+      background-color: rgb(242, 242, 246);
+    }
+  ` : `
+    background-color: #2D7BED;
+    color: #ffffff;
+    
+    &:hover {
+      background-color:#104EA7;
+    }
+  `}
 `;
 
 const QuizOverlay = styled.div`
@@ -608,6 +707,10 @@ export default function Game() {
 
   const [isGameStarted, setIsGameStarted] = useState(false);
   const bgmRef = useRef(null);
+  
+  // Pause/Exit 모달 상태
+  const [showPauseModal, setShowPauseModal] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
 
   // 퀴즈 푸는 시간
   const quizStartTimeRef = useRef(null);
@@ -615,12 +718,12 @@ export default function Game() {
 
   // 퀴즈 만났을 때 화면 정지 위함
   function snapshotState() {
-    const quizFilteredEntities = entitiesRef.current.filter(e => e.type !== 'quiz');
+    // 모든 엔티티를 저장 (퀴즈 포함)
     pausedSnapshotRef.current = {
       frame: frameRef.current,
       gameSpeed: gameSpeedRef.current,
       backgroundX: backgroundXRef.current,
-      entities: JSON.parse(JSON.stringify(quizFilteredEntities)),
+      entities: JSON.parse(JSON.stringify(entitiesRef.current)),
       player: JSON.parse(JSON.stringify(playerRef.current)),
     };
   }
@@ -1076,8 +1179,8 @@ export default function Game() {
         if (ent.type === 'quiz' && !quiz && ent.x + ent.width < player.x) {
             console.log("퀴즈 박스와 충돌 감지!"); // 디버그 로그 추가
             cancelAnimationFrame(animationIdRef.current);
-            snapshotState();
-            entities.splice(i, 1);
+            entities.splice(i, 1); // 퀴즈를 먼저 제거
+            snapshotState(); // 그 다음에 스냅샷 저장
             setIsPaused(true);
             showQuiz();
             return;
@@ -1114,9 +1217,10 @@ export default function Game() {
         }
       }
 
-      ctx.font = `${canvas.width * 0.02}px Arial`;
-      ctx.fillStyle = 'black';
-      ctx.fillText('Score: ' + scoreRef.current, canvas.width - 200, 50);
+      // 점수 표시 (나중에 사용)
+      // ctx.font = `${canvas.width * 0.02}px Arial`;
+      // ctx.fillStyle = 'black';
+      // ctx.fillText('Score: ' + scoreRef.current, canvas.width - 200, 50);
 
       if (!isPaused) {
         frameRef.current++;
@@ -1217,6 +1321,50 @@ export default function Game() {
   };
 }, []);
 
+  // Pause 버튼 핸들러
+  const handlePauseClick = (e) => {
+    e.stopPropagation();
+    setShowPauseModal(true);
+    setIsPaused(true);
+    cancelAnimationFrame(animationIdRef.current);
+    snapshotState();
+  };
+
+  // Exit 버튼 핸들러
+  const handleExitClick = (e) => {
+    e.stopPropagation();
+    setShowExitModal(true);
+    setIsPaused(true);
+    cancelAnimationFrame(animationIdRef.current);
+    snapshotState();
+  };
+
+  // Pause 모달 - 게임 재개
+  const handleResume = () => {
+    setShowPauseModal(false);
+    setIsPaused(false);
+    restoreSnapshot();
+    animationIdRef.current = requestAnimationFrame(updateRef.current);
+  };
+
+  // Pause 모달 - 게임 종료
+  const handleExitFromPause = () => {
+    navigate('/main');
+  };
+
+  // Exit 모달 - 확인
+  const handleConfirmExit = () => {
+    navigate('/main');
+  };
+
+  // Exit 모달 - 취소
+  const handleCancelExit = () => {
+    setShowExitModal(false);
+    setIsPaused(false);
+    restoreSnapshot();
+    animationIdRef.current = requestAnimationFrame(updateRef.current);
+  };
+
   // 로딩 화면 표시 (게임이 시작되지 않았을 때는 시작 화면을 보여줌)
   if (!quizLoaded || !imagesLoaded) {
     return (
@@ -1232,6 +1380,14 @@ export default function Game() {
       
       <GameCanvas ref={canvasRef} onClick={triggerJump} onTouchStart={triggerJump} /> 
       <audio ref={bgmRef} src={bgmSrc} loop />
+      
+      {/* Pause/Exit 버튼 */}
+      {isGameStarted && !gameOver && (
+        <GameControls>
+          <ControlButton src={pause_btn} alt="일시정지" onClick={handlePauseClick} />
+          <ControlButton src={exit_btn} alt="나가기" onClick={handleExitClick} />
+        </GameControls>
+      )}
 
       {quiz && (
         <QuizOverlay>
@@ -1288,6 +1444,45 @@ export default function Game() {
         <EndNotification>
           완주 완료!
         </EndNotification>
+      )}
+      
+      {/* Pause 모달 */}
+      {showPauseModal && (
+        <ModalOverlay onClick={(e) => e.stopPropagation()}>
+          <ModalBox>
+            <ModalTitle>게임이 잠시 멈췄어요.</ModalTitle>
+            <ModalDescription>{`게임을 종료하게 되면
+            지금까지의 학습 기록과 포인트가 초기화됩니다.`}</ModalDescription>
+
+            <ModalButtonContainer>
+              <ModalButton primary onClick={handleResume}>
+                이어하기
+              </ModalButton>
+              <ModalButton onClick={handleExitFromPause}>
+                종료하기
+              </ModalButton>
+            </ModalButtonContainer>
+          </ModalBox>
+        </ModalOverlay>
+      )}
+      
+      {/* Exit 모달 */}
+      {showExitModal && (
+        <ModalOverlay onClick={(e) => e.stopPropagation()}>
+          <ModalBox>
+            <ModalTitle>게임을 종료하시겠습니까?</ModalTitle>
+            <ModalDescription>{`게임을 종료하게 되면
+            지금까지의 학습 기록과 포인트가 초기화됩니다.`}</ModalDescription>
+            <ModalButtonContainer>
+              <ModalButton onClick={handleCancelExit}>
+                이어하기
+              </ModalButton>
+              <ModalButton primary onClick={handleConfirmExit}>
+                종료하기
+              </ModalButton>
+            </ModalButtonContainer>
+          </ModalBox>
+        </ModalOverlay>
       )}
 
       {gameOver && (
