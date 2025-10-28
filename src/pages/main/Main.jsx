@@ -16,7 +16,7 @@ import CircleGraph from "../../assets/circle_graph.svg";
 const preloadImages = () => {
   const images = [Book, Graph, Pencil, CircleGraph];
   images.forEach(src => {
-    const img = new Image();
+    const img = new window.Image();
     img.src = src;
   });
 };

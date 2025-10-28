@@ -1,7 +1,14 @@
 import styled from "styled-components";
+import { useEffect } from "react";
 import logo from '../../assets/finnol-logo.png';
 import kakaologin from "../../assets/kakaologin.png";
 import hopin from "../../assets/hopin.svg";
+
+// 메인페이지 이미지 미리 로드
+import Book from '../../assets/book.svg';
+import Graph from '../../assets/graph.svg';
+import Pencil from '../../assets/pencil.svg';
+import CircleGraph from '../../assets/circle_graph.svg';
 
 const Wrapper=styled.div`
     width:100vw;
@@ -159,6 +166,19 @@ const LoginContent = styled.div`
 
 function Login(){
   console.log(process.env.REACT_APP_API_BASE_URL);
+
+  // 메인페이지 이미지 미리 로드
+  useEffect(() => {
+    const preloadMainImages = () => {
+      const images = [Book, Graph, Pencil, CircleGraph];
+      images.forEach(src => {
+        const img = new window.Image();
+        img.src = src;
+      });
+    };
+    
+    preloadMainImages();
+  }, []);
 
     //로그인 버튼 클릭시 호출
     // const redirectToKakao=()=>{
