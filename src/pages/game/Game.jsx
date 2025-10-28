@@ -562,7 +562,7 @@ export default function Game() {
   const [imagesLoaded, setImagesLoaded] = useState(false);
 
   const frameRef = useRef(0);
-  const gameSpeedRef = useRef(6); // 속도 감소 (화면 크기와 무관)
+  const gameSpeedRef = useRef(8); // 속도 증가 (6 -> 8, 게임 길이 단축)
   const backgroundXRef = useRef(0);
   const entitiesRef = useRef([]);
   const playerRef = useRef({});
@@ -913,7 +913,37 @@ export default function Game() {
     }
 
     let lastQuizFrame = -1000;
-    const quizSpawnInterval = 900;
+    const quizSpawnInterval = 700; // 900 -> 700으로 감소 (게임 길이 단축)
+    
+    // 고정 시드를 사용한 랜덤 생성기 (모두에게 동일한 코인/장애물)
+    let seed = chapterId ? parseInt(chapterId.slice(-8), 16) : 12345; // chapterId 기반 시드
+    const seededRandom = () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
+    
+    // 고정된 개수의 코인과 장애물 위치 미리 생성
+    const TOTAL_COINS = 10;
+    const TOTAL_HURDLES = 15;
+    const GAME_DURATION_FRAMES = 1200; // 게임 예상 길이 (프레임 수) - 2000에서 1200으로 감소 (약 40% 단축)
+    
+    const coinSpawnFrames = [];
+    const hurdleSpawnFrames = [];
+    
+    // 코인 생성 위치 미리 결정
+    for (let i = 0; i < TOTAL_COINS; i++) {
+      coinSpawnFrames.push(Math.floor(seededRandom() * GAME_DURATION_FRAMES) + 100);
+    }
+    coinSpawnFrames.sort((a, b) => a - b);
+    
+    // 장애물 생성 위치 미리 결정
+    for (let i = 0; i < TOTAL_HURDLES; i++) {
+      hurdleSpawnFrames.push(Math.floor(seededRandom() * GAME_DURATION_FRAMES) + 100);
+    }
+    hurdleSpawnFrames.sort((a, b) => a - b);
+    
+    let coinIndex = 0;
+    let hurdleIndex = 0;
 
     function spawnEntities() {
       if (flagShown) return;
@@ -926,7 +956,7 @@ export default function Game() {
 
       // 퀴즈가 로드된 경우에만 퀴즈 박스 생성
       if (frameRef.current - lastQuizFrame > quizSpawnInterval && 
-          Math.random() < 0.2 && 
+          seededRandom() < 0.25 && // Math.random() 대신 seededRandom() 사용
           quizCountRef.current < 5 && 
           quizList.length > 0) { // 퀴즈 리스트가 있을 때만
         candidates.push('quiz');
@@ -934,15 +964,24 @@ export default function Game() {
         lastQuizFrame = frameRef.current;          
       }
 
-      if (Math.random() < 0.4) candidates.push('coin');
-      if (Math.random() < 0.8) candidates.push('hurdle');
+      // 코인을 고정된 프레임에 생성
+      if (coinIndex < TOTAL_COINS && frameRef.current >= coinSpawnFrames[coinIndex]) {
+        candidates.push('coin');
+        coinIndex++;
+      }
+      
+      // 장애물을 고정된 프레임에 생성
+      if (hurdleIndex < TOTAL_HURDLES && frameRef.current >= hurdleSpawnFrames[hurdleIndex]) {
+        candidates.push('hurdle');
+        hurdleIndex++;
+      }
 
       candidates.forEach(type => {
         let width, height, y, img;
         const player = playerRef.current;
 
         if (type === 'hurdle') {
-          const idx = Math.floor(Math.random() * hurdleImagesRef.current.length);
+          const idx = Math.floor(seededRandom() * hurdleImagesRef.current.length); // Math.random() 대신 seededRandom() 사용
           img = hurdleImagesRef.current[idx];
           // 원본 이미지 비율 유지하면서 크기 축소
           const baseWidth = canvas.width * 0.04; // 기본 너비를 더 작게 (8% -> 4%)

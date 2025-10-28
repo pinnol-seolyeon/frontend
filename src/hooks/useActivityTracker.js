@@ -40,17 +40,30 @@ export const useActivityTracker = (chapterId, level, userId) => {
 
   // API 호출 함수
   const updateSessionStatus = useCallback(async (status, includeStartTime = false) => {
+    // ISO 시간을 YYYY-MM-DDTHH:mm:ss 형식으로 변환
+    const formatDateTime = (date) => {
+      const d = new Date(date);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const seconds = String(d.getSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    };
+
     const payload = {
-      userId: userId || "user-id", // username을 userId로 사용
+      userId: userId, // username을 userId로 사용
       chapterId,
       level,
+      startTime: null,
+      lastActive: formatDateTime(new Date()),
       status,
-      lastActive: new Date().toISOString(),
     };
 
     // COMPLETED일 때만 startTime 포함
     if (includeStartTime) {
-      payload.startTime = new Date(sessionStartRef.current).toISOString();
+      payload.startTime = formatDateTime(new Date(sessionStartRef.current));
     }
 
     // 콘솔에 로그 출력
@@ -86,9 +99,9 @@ export const useActivityTracker = (chapterId, level, userId) => {
     const now = Date.now();
     const timeSinceLastActive = now - lastActiveRef.current;
 
-    // 5분 이상 비활성 상태였다면
-    if (timeSinceLastActive >= INACTIVITY_THRESHOLD && currentStatusRef.current === 'INACTIVE') {
-      console.log('🔄 활동 재개 감지: INACTIVE → ACTIVE');
+    // INACTIVE 상태에서 활동 감지 시 즉시 ACTIVE로 전환
+    if (currentStatusRef.current === 'INACTIVE') {
+      console.log('🔄 활동 재개 감지: INACTIVE → ACTIVE (즉시 업데이트)');
       currentStatusRef.current = 'ACTIVE';
       updateSessionStatus('ACTIVE');
     }
@@ -114,16 +127,17 @@ export const useActivityTracker = (chapterId, level, userId) => {
   // Page Visibility 감지
   const handleVisibilityChange = useCallback(() => {
     if (document.hidden) {
-      // 탭을 벗어남
-      console.log('👋 탭 벗어남 감지');
-      if (currentStatusRef.current === 'ACTIVE') {
-        currentStatusRef.current = 'INACTIVE';
-        updateSessionStatus('INACTIVE');
-      }
+      // 탭을 벗어남 - 5분 후에 INACTIVE로 전환되도록 타이머만 유지
+      console.log('👋 탭 벗어남 감지 (5분 후 INACTIVE 전환 예정)');
+      // 타이머는 handleActivity에서 이미 설정되어 있으므로 별도 처리 불필요
     } else {
-      // 탭으로 돌아옴
-      console.log('👀 탭으로 복귀 감지');
-      handleActivity(); // 활동으로 간주
+      // 탭으로 돌아옴 - 즉시 ACTIVE로 전환
+      console.log('👀 탭으로 복귀 감지 (즉시 ACTIVE 전환)');
+      if (currentStatusRef.current === 'INACTIVE') {
+        currentStatusRef.current = 'ACTIVE';
+        updateSessionStatus('ACTIVE');
+      }
+      handleActivity(); // 활동으로 간주하고 타이머 재시작
     }
   }, [handleActivity, updateSessionStatus]);
 
@@ -177,7 +191,7 @@ export const useActivityTracker = (chapterId, level, userId) => {
       handleActivity(); // 타이머 시작
     }, 100); // 레벨 시작 API 호출 후 실행되도록 약간의 딜레이
 
-    // 정기적으로 상태 확인 (선택적)
+    // 정기적으로 상태 확인 (선택적) - 5분 이상 비활성일 때만 INACTIVE로 전환
     const intervalId = setInterval(() => {
       const timeSinceLastActive = Date.now() - lastActiveRef.current;
       console.log('⏰ 주기적 확인:', {
@@ -185,8 +199,9 @@ export const useActivityTracker = (chapterId, level, userId) => {
         마지막활동: `${Math.floor(timeSinceLastActive / 1000)}초 전`,
       });
       
+      // 5분 이상 비활성 상태일 때만 INACTIVE로 전환
       if (timeSinceLastActive >= INACTIVITY_THRESHOLD && currentStatusRef.current === 'ACTIVE') {
-        console.log('⏸️ 주기적 확인: 비활성 감지');
+        console.log('⏸️ 주기적 확인: 5분 이상 비활성 감지 → INACTIVE 전환');
         currentStatusRef.current = 'INACTIVE';
         updateSessionStatus('INACTIVE');
       }
