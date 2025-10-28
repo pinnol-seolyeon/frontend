@@ -402,12 +402,12 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
     useEffect(() => {
       const handleResize = () => {
         const currentPath = window.location.pathname;
-        const isStudyPage = currentPath.includes('/study') || currentPath.includes('/book/chapter');
+        const isStudyPage = currentPath.includes('/study') && !currentPath.includes('/book');
         
         if (window.innerWidth <= 768) {
           setCollapsed(true); // 모바일에서는 기본적으로 접힌 상태
         } else {
-          // 웹에서는 학습하기 페이지면 접힌 상태, 다른 페이지면 펼친 상태
+          // 웹에서는 학습하기 페이지(/study)만 접힌 상태, 다른 페이지면 펼친 상태
           setCollapsed(isStudyPage);
         }
       };
@@ -424,7 +424,7 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
     // 경로 변경 시 사이드바 상태 업데이트
     useEffect(() => {
       const currentPath = window.location.pathname;
-      const isStudyPage = currentPath.includes('/study');
+      const isStudyPage = currentPath.includes('/study') && !currentPath.includes('/book');
       
       if (window.innerWidth > 768) {
         setCollapsed(isStudyPage);

@@ -63,83 +63,86 @@ const PageSubtitle = styled.p`
 `;
 
 const ChapterGrid = styled.div`
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   
-  @media (max-width: 768px) {
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  @media (max-width: 1023px) and (min-width: 600px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  @media (max-width: 599px) {
+    grid-template-columns: 1fr;
     gap: 1rem;
   }
 `;
 
 const ChapterCard = styled.div`
   background: #ffffff;
-  padding: 1.5rem;
-  border-radius: 20px;
+  padding: 2rem 1.5rem;
+  border-radius: 16px;
   text-align: center;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  border: 1px solid #DADADA;
-  flex: 1;
-  min-width: 280px;
-  max-width: 350px;
-  
-  ${props => props.status === 'completed' && `
-    border-color: #4CAF50;
-    background: #f8fff8;
-  `}
+  justify-content: center;
+  gap: 1rem;
+  border: 1px solid #E5E5E5;
+  width: 100%;
+  height: 250px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   
   ${props => props.status === 'current' && `
-    border-color: #2D7BED;
-    background: #f0f7ff;
+    border-color: #E5E5E5;
+    background: #ffffff;
   `}
   
-  @media (max-width: 768px) {
-    min-width: 200px;
-    max-width: 250px;
+  ${props => props.status === 'locked' || props.status === 'completed' && `
+    border-color: #E5E5E5;
+    background: #ffffff;
+  `}
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
   
-  @media (max-width: 480px) {
-    min-width: 100%;
-    max-width: 100%;
+  @media (max-width: 768px) {
+    height: 250px;
+    padding: 1.5rem 1rem;
   }
-`;
-
-const IconContainer = styled.div`
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 1rem;
-  font-size: 2.5rem;
-  background-color: #F7F7F7;
+  
+  @media (max-width: 600px) {
+    width: 100%;
+    height: auto;
+    min-height: 250px;
+  }
 `;
 
 const ChapterTitle = styled.h3`
   font-size: 20px;
   font-weight: 700;
   color: #191919;
-  margin-bottom: 0.5rem;
-  line-height: 1.3;
+  margin: 0;
+  line-height: 1.4;
 `;
 
 const ActionButton = styled.button`
   width: 100%;
-  padding: 0.6rem;
+  padding: 0.5rem 0.8rem;
   border: none;
   border-radius: 10px;
-  font-size: 18px;
+  font-size: 20px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -147,11 +150,12 @@ const ActionButton = styled.button`
   font-weight: 500;
   
   ${props => props.variant === 'completed' && `
-    background: #4CAF50;
-    color: #ffffff;
+    background: #E8E8E8;
+    color: #666666;
+    cursor: not-allowed;
     
     &:hover {
-      background: #45a049;
+      background: #E8E8E8;
     }
   `}
   
@@ -160,7 +164,7 @@ const ActionButton = styled.button`
     color: #ffffff;
     
     &:hover {
-      background: #104EA7;
+      background: #1E6DD8;
     }
   `}
   
@@ -171,17 +175,31 @@ const ActionButton = styled.button`
   `}
 `;
 
-const ThumbIcon = styled.span`
-  font-size: 1rem;
+const LevelIcon = styled.div`
+  font-size: 13px;
+  color: #ffffff;
+  font-weight: 600;
+  background-color: #AED2FF;
+  border-radius: 20px;
+  padding: 0.3rem 0.8rem;
+  display: inline-block;
+`;
+
+const TitleWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
 `;
 
 
   // ChapterCard 컴포넌트
-  const ChapterCardComponent = ({ chapter, onSelect }) => {
+  const ChapterCardComponent = ({ chapter, onSelect, levelNumber }) => {
     const getButtonText = () => {
       if (chapter.status === 'locked') return '잠금';
-      if (chapter.status === 'completed') return '학습 완료';
-      return '학습하기';
+      if (chapter.status === 'completed') return '완료!';
+      return '시작하기';
     };
 
     const getButtonVariant = () => {
@@ -190,32 +208,22 @@ const ThumbIcon = styled.span`
       return 'current';
     };
 
-    const getIcon = () => {
-      if (chapter.status === 'completed') return '📖';
-      if (chapter.status === 'current') return '📘';
-      return '🔒';
-    };
-
     return (
       <ChapterCard status={chapter.status}>
-        <div>
-          <IconContainer>
-            {getIcon()}
-          </IconContainer>
-          
+        <TitleWrapper>
+          <LevelIcon>
+            {`Lv.${String(levelNumber).padStart(2, '0')}`}
+          </LevelIcon>
           <ChapterTitle>{chapter.title}</ChapterTitle>
-        </div>
+        </TitleWrapper>
 
-        <div>
-          <ActionButton 
-            variant={getButtonVariant()}
-            onClick={() => onSelect(chapter.id)}
-            disabled={chapter.status === 'locked' || chapter.status === 'completed'}
-          >
-            {getButtonText()}
-            {chapter.status === 'completed' && <ThumbIcon>👍</ThumbIcon>}
-          </ActionButton>
-        </div>
+        <ActionButton 
+          variant={getButtonVariant()}
+          onClick={() => onSelect(chapter.id)}
+          disabled={chapter.status === 'locked' || chapter.status === 'completed'}
+        >
+          {getButtonText()}
+        </ActionButton>
       </ChapterCard>
     );
   };
@@ -316,7 +324,7 @@ function ChapterPage({ user, login, setLogin }) {
           <BookPageContainer>
             <PageHeader>
               <PageTitle>단원을 선택하세요</PageTitle>
-              <PageSubtitle>학습하고 싶은 단원을 선택해주세요</PageSubtitle>
+              <PageSubtitle>학습할 단원을 선택해주세요</PageSubtitle>
             </PageHeader>
 
             {loading && <div>단원을 불러오는 중...</div>}
@@ -343,6 +351,7 @@ function ChapterPage({ user, login, setLogin }) {
                       key={index}
                       chapter={chapterData}
                       onSelect={handleChapterClick}
+                      levelNumber={index + 1}
                     />
                   );
                 })}
