@@ -25,7 +25,7 @@ import Callback from './pages/login/Callback';
 import Status from './pages/Status';
 import StudyLevel6_complete from './pages/study/level6/StudyLeve6_complete';
 import StatusDetail from './pages/Status_Detail';
-
+import Game2 from './pages/game/Game2';
 
 const GlobalStyles = createGlobalStyle`
   ${reset};
@@ -59,6 +59,7 @@ const routes = [
   { path: '/question', element: <Question /> },
   { path: '/review', element: <ReviewPage/> },
   { path: '/game', element: <Game/> },
+  { path: '/game2', element: <Game2 /> },
   {path:'/book',element:<BookListPage/>},
   {path:'/book/chapter/:bookId',element:<ChapterPage/>},
   {path:'/study/level2-img',element:<StudyLv2_withImg/>},
