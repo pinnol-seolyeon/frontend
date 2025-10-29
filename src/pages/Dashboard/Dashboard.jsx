@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import StudyTimeStats from '../../components/analyze/StudyTimeStats';
 import RadarGraph from '../../components/analyze/RadarChart';
 import QnAViewer from '../../components/analyze/QnAViewer';
-import { fetchStudyStats, fetchRadarScore } from '../../api/analyze/analytics';
+import { fetchStudyStats, fetchStudyNowStats, fetchRadarScore } from '../../api/analyze/analytics';
 import Sidebar from '../../components/Sidebar';
 
 const Wrapper = styled.div`
@@ -175,7 +175,8 @@ export default function Dashboard({ user, login, setLogin }) {
   const [progress, setProgress] = useState(80);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const [nowStudying, setNowStudying] = useState(null);
+  
   useEffect(() => {
     if (studyStats && studyStats.totalCompleted !== undefined) {
       // Assuming max progress is 100, adjust as needed
@@ -195,14 +196,16 @@ export default function Dashboard({ user, login, setLogin }) {
         setLoading(true);
         setError(null);
         
-        const [statsData, radarData] = await Promise.all([
+        const [statsData, radarData, nowStudyingData] = await Promise.all([
           fetchStudyStats(),
+          fetchStudyNowStats(),
           fetchRadarScore()
         ]);
         
         setStudyStats(statsData);
         setThisWeek(radarData.thisWeek);
         setLastWeek(radarData.lastWeek);
+        setNowStudying(nowStudyingData);
       } catch (err) {
         console.error("❌ 데이터 불러오기 실패:", err);
         setError(err.message);
@@ -269,7 +272,7 @@ export default function Dashboard({ user, login, setLogin }) {
                       strokeWidth="10"
                       strokeLinecap="round"
                       strokeDasharray={`${2 * Math.PI * 40}`}
-                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - progress / 100)}`}
+                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - (progress) / 100)}`}
                       transform="rotate(-90 48 48)"
                     />
                   </svg>
