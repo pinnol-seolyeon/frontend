@@ -5,8 +5,9 @@ import tigerPencil from "../../../assets/tiger-pencil.png";
 import Button from "../../../components/Button";
 import MiniHeader from "../../../components/study/MiniHeader";
 import Sidebar from "../../../components/Sidebar";
+import { fetchChapterContents } from "../../../api/study/level3API";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import React,{useState,useEffect} from "react";
 import { useChapter } from "../../../context/ChapterContext";
 import background from "../../../assets/study_background.png";
@@ -220,20 +221,50 @@ export const Popup = styled.div`
 function StudyLevel6_2({ user, login, setLogin }){
 
     const navigate=useNavigate();
-    const {chapterData,clearChapterData}=useChapter();
+    const [searchParams] = useSearchParams();
+    const {chapterData, setChapterData, clearChapterData}=useChapter();
     const [topic,setTopic]=useState();
     const [loading,setLoading]=useState(true);
 
-      // ✅ useEffect 단순화
-      useEffect(() => {
-        if (chapterData?.topic) {
-          setTopic(chapterData.topic);
-          setLoading(false);
-        } else {
-          // setTopic("❌ 전달받은 내용이 없어요");
-          setLoading(false);
-        }
-      }, [chapterData]);
+    // Level 6 데이터 가져오기 (토론 주제)
+    useEffect(() => {
+        const loadLevel6Data = async () => {
+            const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+            
+            if (!chapterId) {
+                console.error("❌ chapterId가 없습니다.");
+                setTopic("❌ 단원 정보가 없습니다. 다시 돌아가주세요.");
+                setLoading(false);
+                return;
+            }
+
+            try {
+                setLoading(true);
+                console.log("🔄 Level 6 (토론 주제) 데이터 로딩 중... chapterId:", chapterId);
+                const level6Data = await fetchChapterContents(6, chapterId);
+                console.log("✅ Level 6 데이터:", level6Data);
+                
+                // Context 업데이트
+                setChapterData(level6Data);
+
+                const topicText = level6Data?.topic;
+                console.log("💬 토론 주제:", topicText);
+                
+                if (topicText) {
+                    setTopic(topicText);
+                } else {
+                    setTopic("토론 주제를 불러올 수 없습니다.");
+                }
+            } catch (error) {
+                console.error("❌ Level 6 데이터 로딩 실패:", error);
+                setTopic("❌ 내용을 불러오는데 실패했습니다. 다시 시도해주세요.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadLevel6Data();
+    }, [searchParams]);
 
 
     const handleComplete=async()=>{

@@ -5,8 +5,8 @@ import Header from "../../../components/Header";
 import Box from "../../../components/Box";
 import tiger from "../../../assets/tiger-upperbody1.png";
 import Button from "../../../components/Button";
-import { useNavigate,useLocation } from "react-router-dom";
-import { fetchFeedback } from "../../../api/study/level3API";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { fetchFeedback, fetchChapterContents } from "../../../api/study/level3API";
 import MiniHeader from "../../../components/study/MiniHeader";
 import Sidebar from "../../../components/Sidebar";
 import { useChapter } from "../../../context/ChapterContext";
@@ -354,11 +354,12 @@ function StudyPage({ user, login, setLogin }){
 
     const navigate=useNavigate();
     const location=useLocation();
+    const [searchParams] = useSearchParams();
     const [sentences,setSentences]=useState([]);
     const [currentIndex,setCurrentIndex]=useState(0);
 
     
-    const {chapterData}=useChapter();
+    const {chapterData, setChapterData}=useChapter();
     const [questionIndexes, setQuestionIndexes] = useState([]);
     const [isFinished,setIsFinished]=useState(false);
 
@@ -370,6 +371,7 @@ function StudyPage({ user, login, setLogin }){
     const [isRecording, setIsRecording] = useState(false);
     const [recognizedText, setRecognizedText] = useState("");
     const [isVoiceRecognitionComplete, setIsVoiceRecognitionComplete] = useState(false);
+    const [loading, setLoading] = useState(false);
     const ttsSentences = useMemo(() => sentences, [sentences]);
     const nextContext=sentences[currentIndex+1]||"다음 학습 내용 없음";
     const returnToIndex=location.state?.returnToIndex??0;
@@ -379,60 +381,85 @@ function StudyPage({ user, login, setLogin }){
         navigate("/question",{
             state:{
                 returnToIndex:currentIndex,
-                from: "/study/level3"
+                from: "/study/level3",
+                chapterId: chapterData?.chapterId
             }
         });
    }
 
+   // Level 3 데이터 가져오기
    useEffect(() => {
-
-        //chapterData를 사용하려면 직접 url 열면 안됨.. navigate로 url이동해야 (Context는 메모리에만 존재하기 때문에 초기화됨)
-        console.log("📦 현재 저장된 chapterData:", chapterData);
-        if (chapterData?.content) {
-            const contents = chapterData.content;
-            console.log("✅ Chapter content:", contents);
+        const loadLevel3Data = async () => {
+            const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
             
-            //문장 분리
-            const baseSentences = contents
-            .split(/(?<=[.?!])\s+/)
-            .filter((s) => s.trim() !== ""); //공백만 있는 문장 등을 제거
-            
-            //질문 감지 함수
-            const isQuestion = (s) => s.includes("?");
+            if (!chapterId) {
+                console.error("❌ chapterId가 없습니다.");
+                setSentences(["❌ 단원 정보가 없습니다. 다시 돌아가주세요."]);
+                return;
+            }
 
-            //긴 문장 분할 함수(질문 제외)
-            const breakLongSentence = (sentence, max = 50) => {
-                if (isQuestion(sentence)) return [sentence]; // ✅ 질문이면 그대로
-                if (sentence.length <= max) return [sentence];
+            try {
+                setLoading(true);
+                console.log("🔄 Level 3 데이터 로딩 중... chapterId:", chapterId);
+                const level3Data = await fetchChapterContents(3, chapterId);
+                console.log("✅ Level 3 데이터:", level3Data);
+                
+                // Context 업데이트
+                setChapterData(level3Data);
+                
+                const contents = level3Data?.content;
+                
+                if (contents) {
+                    console.log("✅ Chapter content:", contents);
+                    
+                    //문장 분리
+                    const baseSentences = contents
+                        .split(/(?<=[.?!])\s+/)
+                        .filter((s) => s.trim() !== ""); //공백만 있는 문장 등을 제거
+                    
+                    //질문 감지 함수
+                    const isQuestion = (s) => s.includes("?");
 
-                const mid = Math.floor(sentence.length / 2);
-                let splitIndex = sentence.lastIndexOf(" ", mid);
-                if (splitIndex === -1) splitIndex = mid;
-                const first = sentence.slice(0, splitIndex).trim();
-                const second = sentence.slice(splitIndex).trim();
-                return [first, second];
-            };
+                    //긴 문장 분할 함수(질문 제외)
+                    const breakLongSentence = (sentence, max = 50) => {
+                        if (isQuestion(sentence)) return [sentence]; // ✅ 질문이면 그대로
+                        if (sentence.length <= max) return [sentence];
 
-            //문장분해
-            const splitSentences=baseSentences
-                .map((s)=>breakLongSentence(s))
-                .flat();
-            console.log("🐋분할된 최종 문장 배열:",splitSentences);
+                        const mid = Math.floor(sentence.length / 2);
+                        let splitIndex = sentence.lastIndexOf(" ", mid);
+                        if (splitIndex === -1) splitIndex = mid;
+                        const first = sentence.slice(0, splitIndex).trim();
+                        const second = sentence.slice(splitIndex).trim();
+                        return [first, second];
+                    };
 
-            //질문이 포함된 문장의 인덱스만 추출
-            const questionIndexes=splitSentences
-                .map((s,i)=>isQuestion(s)?i:null)
-                .filter((i)=>i!=null);
-            console.log("🧠 질문 문장 인덱스:", questionIndexes);
+                    //문장분해
+                    const splitSentences=baseSentences
+                        .map((s)=>breakLongSentence(s))
+                        .flat();
+                    console.log("🐋분할된 최종 문장 배열:",splitSentences);
 
-            setSentences(splitSentences);
-            setQuestionIndexes(questionIndexes);
-            
+                    //질문이 포함된 문장의 인덱스만 추출
+                    const questionIndexes=splitSentences
+                        .map((s,i)=>isQuestion(s)?i:null)
+                        .filter((i)=>i!=null);
+                    console.log("🧠 질문 문장 인덱스:", questionIndexes);
 
-        } else {
-            setSentences(["❌ 내용이 없습니다. 다시 돌아가주세요."]);
-        }
-    }, [chapterData]);
+                    setSentences(splitSentences);
+                    setQuestionIndexes(questionIndexes);
+                } else {
+                    setSentences(["❌ 내용이 없습니다."]);
+                }
+            } catch (error) {
+                console.error("❌ Level 3 데이터 로딩 실패:", error);
+                setSentences(["❌ 내용을 불러오는데 실패했습니다. 다시 시도해주세요."]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadLevel3Data();
+    }, [searchParams]);
 
 
     //질문 버튼 누른 후 다시 학습하기 3단계로 돌아온 경우 포함
@@ -448,18 +475,8 @@ function StudyPage({ user, login, setLogin }){
     const goToNextSentence=()=>{
     if (!preloadDone) return;
     
-    // 기존 코드: 모든 문장을 다 본 후에 완료
-    // if (currentIndex<sentences.length-1){
-    //     console.log("✅currentIndex:",currentIndex);
-    //     setCurrentIndex(currentIndex+1);
-    // }else{
-    //     setIsQuestionFinished(true);
-    //     setIsFinished(true);
-    //     alert("✅학습을 모두 완료했어요! 다음 단계로 이동해볼까요? 오른 쪽의 다음 단계로 버튼을 클릭해주세요 ")
-    // }
-
-    // 수정된 코드: 2-3개 문장만 보고 완료
-    if (currentIndex < 2) { // 0, 1 인덱스까지만
+    // 모든 문장을 다 본 후에 완료
+    if (currentIndex < sentences.length - 1){
         console.log("✅currentIndex:",currentIndex);
         setCurrentIndex(currentIndex+1);
     } else {

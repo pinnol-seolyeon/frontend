@@ -26,9 +26,20 @@ export const useActivityTracker = (chapterId, level, userId) => {
         skipAuthRedirect: true
       });
       
-      console.log('✅ 레벨 시작 성공:', response.data);
-      levelStartedRef.current = true;
-      sessionStartRef.current = Date.now(); // 시작 시간 기록
+      // 응답 상태 체크
+      if (response.data.status === 0 && response.data.code === 'session-001') {
+        // SESSION_NOT_FOUND - 기존 세션이 없는 경우, 정상적으로 진행
+        console.log('ℹ️ 기존 세션 없음 - 새로운 세션 시작:', response.data.message);
+        levelStartedRef.current = true;
+        sessionStartRef.current = Date.now(); // 시작 시간 기록
+      } else if (response.data.data) {
+        // 정상 응답
+        console.log('✅ 레벨 시작 성공:', response.data);
+        levelStartedRef.current = true;
+        sessionStartRef.current = Date.now(); // 시작 시간 기록
+      } else {
+        console.warn('⚠️ 예상치 못한 응답 형식:', response.data);
+      }
     } catch (error) {
       console.error('❌ 레벨 시작 실패:', error);
       if (error.response) {
@@ -56,9 +67,9 @@ export const useActivityTracker = (chapterId, level, userId) => {
       userId: userId, // username을 userId로 사용
       chapterId,
       level,
-      startTime: null,
       lastActive: formatDateTime(new Date()),
       status,
+      completed: false
     };
 
     // COMPLETED일 때만 startTime 포함
@@ -185,11 +196,8 @@ export const useActivityTracker = (chapterId, level, userId) => {
     // Page Visibility API
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    // 2. 레벨 시작 후 ACTIVE 상태 전송
-    setTimeout(() => {
-      updateSessionStatus('ACTIVE');
-      handleActivity(); // 타이머 시작
-    }, 100); // 레벨 시작 API 호출 후 실행되도록 약간의 딜레이
+    // 2. 레벨 시작 후 타이머만 시작 (ACTIVE 상태는 startLevel에서 설정됨)
+    handleActivity(); // 타이머 시작
 
     // 정기적으로 상태 확인 (선택적) - 5분 이상 비활성일 때만 INACTIVE로 전환
     const intervalId = setInterval(() => {

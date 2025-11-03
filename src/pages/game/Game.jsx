@@ -11,6 +11,7 @@ import playerEndImg from '../../assets/game_character_2.png';
 import { saveCoinToDB } from '../../api/analyze/saveCoinToDB';
 import { useChapter } from "../../context/ChapterContext";
 import { fetchQuizByChapterId } from '../../api/study/fetchQuiz';
+import { fetchChapterContents } from '../../api/study/level3API';
 import { useNavigate } from "react-router-dom";
 import bgmSrc from '../../assets/Tiki_Bar_Mixer.mp3';
 import { sendQuizResults } from '../../api/analyze/sendQuizResults';
@@ -1526,7 +1527,7 @@ export default function Game() {
 
               <NextButton onClick={(e) => { 
                 e.stopPropagation(); // 이벤트 전파 방지
-                navigate("/study/level6/summary"); 
+                navigate(`/study/level6/summary?chapterId=${chapterId}`); 
               }}>
                 다음단계로
               </NextButton>

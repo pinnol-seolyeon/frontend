@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import StudyTimeStats from '../../components/analyze/StudyTimeStats';
 import RadarGraph from '../../components/analyze/RadarChart';
 import QnAViewer from '../../components/analyze/QnAViewer';
-import { fetchStudyStats, fetchStudyNowStats, fetchRadarScore } from '../../api/analyze/analytics';
+import { fetchStudyStats, fetchStudyNowStats, fetchRadarScore, fetchTotalProgress } from '../../api/analyze/analytics';
 import Sidebar from '../../components/Sidebar';
 
 const Wrapper = styled.div`
@@ -65,11 +65,11 @@ const SubTitleText = styled.div`
 
 const ContentBox = styled.div`
   width: 100%;
-  max-width: 1200px;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  align-self: center;
+  align-self: flex-start;
   border-radius: 20px;
 `;
 
@@ -175,8 +175,9 @@ export default function Dashboard({ user, login, setLogin }) {
   const [progress, setProgress] = useState(80);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [noStudy, setNoStudy] = useState(false);
   const [nowStudying, setNowStudying] = useState(null);
-  
+  const [totalProgress, setTotalProgress] = useState(null);
   useEffect(() => {
     if (studyStats && studyStats.totalCompleted !== undefined) {
       // Assuming max progress is 100, adjust as needed
@@ -196,16 +197,24 @@ export default function Dashboard({ user, login, setLogin }) {
         setLoading(true);
         setError(null);
         
-        const [statsData, radarData, nowStudyingData] = await Promise.all([
+        const [statsData, radarData, nowStudyingData, totalProgressData] = await Promise.all([
           fetchStudyStats(),
           fetchStudyNowStats(),
-          fetchRadarScore()
+          fetchRadarScore(),
+          fetchTotalProgress()
         ]);
         
-        setStudyStats(statsData);
+        if (statsData === 0) {
+          setNoStudy(true);
+          setStudyStats({ totalCompleted: 0, weeklyCompleted: 0, level: 0 });
+        } else {
+          setNoStudy(false);
+          setStudyStats(statsData);
+        }
+        setNowStudying(nowStudyingData);
+        setTotalProgress(totalProgressData);
         setThisWeek(radarData.thisWeek);
         setLastWeek(radarData.lastWeek);
-        setNowStudying(nowStudyingData);
       } catch (err) {
         console.error("❌ 데이터 불러오기 실패:", err);
         setError(err.message);
@@ -246,9 +255,9 @@ export default function Dashboard({ user, login, setLogin }) {
             <TopBox>
               <ProgressContainer>
                 <ContainerWrapper>
-                  <ContainerTitle>지난주 대비 진행률</ContainerTitle>
+                  <ContainerTitle>전체 진행률</ContainerTitle>
                   <PlusContainer>+{studyStats?.weeklyCompleted || 0}</PlusContainer>
-                  <ContainerText>{`이번 주에 ${studyStats?.weeklyCompleted || 0}개의 단원을 완료했어요!
+                  <ContainerText>{noStudy ? '아직 학습을 진행 안했어 학습을 시작해볼까?' : `이번 주에 ${studyStats?.weeklyCompleted || 0}개의 단원을 완료했어요!
   앞으로도 지금처럼 열심해 해봐요!`}</ContainerText>
                 </ContainerWrapper>
                 <CircularProgress>
@@ -272,7 +281,7 @@ export default function Dashboard({ user, login, setLogin }) {
                       strokeWidth="10"
                       strokeLinecap="round"
                       strokeDasharray={`${2 * Math.PI * 40}`}
-                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - (progress) / 100)}`}
+                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - (totalProgress?.progress || 0) / 100)}`}
                       transform="rotate(-90 48 48)"
                     />
                   </svg>
@@ -282,7 +291,7 @@ export default function Dashboard({ user, login, setLogin }) {
               <ProgressContainer>
               <ContainerWrapper>
                   <ContainerTitle>학습 완료한 단원 수</ContainerTitle>
-                  <ContainerText>{`지금까지 ${studyStats?.totalCompleted || 0}개의 레벨을 학습 완료했어요!
+                  <ContainerText>{noStudy ? '아직 학습을 진행 안했어 학습을 시작해볼까?' : `지금까지 ${studyStats?.totalCompleted || 0}개의 레벨을 학습 완료했어요!
   앞으로도 열심히 해봐요!`}</ContainerText>
                 </ContainerWrapper>
                 <CircleWrapper>
@@ -292,8 +301,8 @@ export default function Dashboard({ user, login, setLogin }) {
               <ProgressContainer>
               <ContainerWrapper>
                   <ContainerTitle>현재 교재 레벨</ContainerTitle>
-                  <ContainerText>{`현재 학습 단원은 Lv.${(studyStats?.level || 0) + 1}
-  돈의 여러가지 모습을 학습하고 있어요!`}</ContainerText>
+                  <ContainerText>{noStudy ? '아직 학습을 진행 안했어 학습을 시작해볼까?' : `현재 학습 단원은 Lv.${(studyStats?.level || 0) + 1}
+  ${studyStats?.chapterTitle || '돈이란 무엇일까?'}을 학습하고 있어요!`}</ContainerText>
                 </ContainerWrapper>
                 <CircleWrapper>
                   <CircleText>Lv.{(studyStats?.level || 0) + 1}</CircleText>

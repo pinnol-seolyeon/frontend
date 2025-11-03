@@ -4,6 +4,7 @@ import Box from "../../../components/Box";
 import tiger from "../../../assets/tiger-pencil.png";
 import Button from "../../../components/Button";
 import { fetchChapterContents} from "../../../api/study/level3API";
+import { fetchChapterTitle } from "../../../api/study/level1API";
 import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect, useMemo } from "react";
 import {useParams} from "react-router-dom";
@@ -16,8 +17,6 @@ import hoppin from "../../../assets/hopin.svg";
 import { useActivityTracker } from "../../../hooks/useActivityTracker";
 
 /*학습하기-1단계-1*/
-
-
 const Wrapper = styled.div`
   background-color: #ffffff;
   margin: 0;
@@ -234,7 +233,7 @@ function StudyPage({ user, login, setLogin }){
             setStep(1);
             setPreloadDone(false);
         }else{
-            navigate(`/study/2`);
+            navigate(`/study/2?chapterId=${chapterData?.chapterId}`);
             setIsFinished(true);
         }
     }
@@ -270,7 +269,7 @@ function StudyPage({ user, login, setLogin }){
                             left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
                             right={
                             isFinished?(
-                                <Button onClick={() => navigate(`/study/2`)}>다음 단계로</Button>
+                                <Button onClick={() => navigate(`/study/2?chapterId=${chapterData?.chapterId}`)}>다음 단계로</Button>
                             ):<Button disabled>진행 중...</Button>
                             }
                         >
