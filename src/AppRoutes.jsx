@@ -26,6 +26,7 @@ import Status from './pages/Status';
 import StudyLevel6_complete from './pages/study/level6/StudyLeve6_complete';
 import StatusDetail from './pages/Status_Detail';
 import Game2 from './pages/game/Game2';
+import Point from './pages/Point';
 
 const GlobalStyles = createGlobalStyle`
   ${reset};
@@ -65,7 +66,8 @@ const routes = [
   {path:'/study/level2-img',element:<StudyLv2_withImg/>},
   {path:'/status',element:<Status/>},
   {path:'/study/level6/complete',element:<StudyLevel6_complete/>},
-  {path:'/status/detail',element:<StatusDetail/>}
+  {path:'/status/detail',element:<StatusDetail/>},
+  {path:'/point',element:<Point/>}
 ];
 
 export default function AppRoutes({ login, setLogin, user }) {

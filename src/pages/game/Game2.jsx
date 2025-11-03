@@ -261,7 +261,6 @@ const StartModalBox = styled.div`
   position: relative;
   z-index: 1;
   overflow: visible;
-  margin-top: 40px;
 `;
 
 const TitleBanner = styled.div`
@@ -574,7 +573,7 @@ export default function Game2() {
 
   useEffect(() => {
     if (!isGameRunning || isPaused || gameEnded) return;
-    const MAX_DURATION_MS = 60000;
+    const MAX_DURATION_MS = 50000;
     const timerId = setTimeout(() => {
       if (quizTimerRef.current) {
         clearTimeout(quizTimerRef.current);

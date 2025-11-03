@@ -295,7 +295,7 @@ function ChapterPage({ user, login, setLogin }) {
 
   const handleChapterClick = async (chapterId) => {
   try {
-    const chapter = await fetchChapterContents(chapterId);
+    const chapter = await fetchChapterContents(1, chapterId); // level=1, chapterId 전달
     if(chapterData?.chapterId){
       clearChapterData();
     }

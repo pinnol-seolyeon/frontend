@@ -321,6 +321,7 @@ function Question({ user, login, setLogin }){
     const location=useLocation(); //이전 페이지 정보를 받기 위해
     const [returnToIndex,setReturnToIndex]=useState(0);
     const [previousPage,setPreviousPage]=useState('/main'); // 기본값은 메인 페이지
+    const [chapterId, setChapterId]=useState(null); // chapterId 저장
 
 
     //컴포넌트가 처음 마운트될 때 한 번만 실행됨 
@@ -340,6 +341,11 @@ function Question({ user, login, setLogin }){
         // 이전 페이지 정보 저장
         if(location.state?.from){
             setPreviousPage(location.state.from);
+        }
+        
+        // chapterId 저장
+        if(location.state?.chapterId){
+            setChapterId(location.state.chapterId);
         }
 
         //사용자가 말하는 내용을 실시간으로 transcript에 저장 
@@ -460,15 +466,15 @@ function Question({ user, login, setLogin }){
         
         // 이전 페이지가 study 페이지인 경우 returnToIndex와 함께 이동
         if(previousPage.includes('/study/level3')){
-            navigate("/study/level3",{
+            navigate(`/study/level3?chapterId=${chapterId}`,{
                 state:{
                     returnToIndex
                 },
             });
         } else if(previousPage.includes('/study/level2-img')){
-            navigate("/study/level2-img");
+            navigate(`/study/level2-img?chapterId=${chapterId}`);
         } else if(previousPage.includes('/study/level6/summary')){
-            navigate("/study/level6/summary");
+            navigate(`/study/level6/summary?chapterId=${chapterId}`);
         } else {
             // 다른 페이지인 경우 그냥 이동
             navigate(previousPage);

@@ -242,9 +242,12 @@ export default function QnAViewer() {
     }
   };
 
-  // 날짜를 API 형식으로 변환 (YYYY-MM-DD)
+  // 날짜를 API 형식으로 변환 (YYYY-MM-DD) - 로컬 타임존 기준
   const formatDateForAPI = (date) => {
-    return date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   // 월 이동 함수
@@ -311,8 +314,12 @@ export default function QnAViewer() {
 
   // API 데이터를 컴포넌트 형식으로 변환
   const transformApiDataToQnA = (apiData) => {
-    return apiData.map(item => ({
-      id: item.id,
+    if (!apiData || !Array.isArray(apiData)) {
+      return [];
+    }
+    
+    return apiData.map((item, index) => ({
+      id: item.id || index,
       type: 'question',
       header: '오늘의 학습 질문',
       content: item.questions && item.questions.length > 0 ? item.questions.join('\n') : '질문이 없습니다.',

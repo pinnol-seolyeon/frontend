@@ -8,8 +8,9 @@ import Button from "../../../components/Button";
 import nextButton from "../../../assets/nextButton.png";
 import Sidebar from "../../../components/Sidebar";
 import { useChapter } from "../../../context/ChapterContext";
+import { fetchChapterContents } from "../../../api/study/level3API";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import React, { useState, useEffect, useRef } from "react";
 import TtsPlayer from "../../../components/TtsPlayer";
 import background from "../../../assets/study_background.png";
@@ -348,15 +349,12 @@ const NextStepButton = styled(Button)`
 `;
 
 
-
-
-
-
 //물어보고 대답하면 그에 따른 반응을 해줘야함.. 그러려면 AI와 연결할필요있음.. 
 function StudyLv2_withImg({ user, login, setLogin }){
 
     const navigate=useNavigate();
-    const {chapterData}=useChapter();
+    const [searchParams] = useSearchParams();
+    const {chapterData, setChapterData}=useChapter();
     const [sentences,setSentences]=useState([]);
     const [answers,setAnswers]=useState([]);
     const [currentIndex,setCurrentIndex]=useState(0);
@@ -376,29 +374,57 @@ function StudyLv2_withImg({ user, login, setLogin }){
     const [isRecording, setIsRecording] = useState(false);
     const [recognizedText, setRecognizedText] = useState("");
     const [isVoiceRecognitionComplete, setIsVoiceRecognitionComplete] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    useEffect(()=>{
-        console.log("📦 현재 저장된 chapterData:", chapterData);
-        if(chapterData){
-            // const question=chapterData.question; //질문 필드 추가해야함
-            const question=chapterData?.objectiveQuestion;
-            const img=chapterData.imgUrl; //이미지 불러올 수 있는지 확인해보기
-            console.log("📷chapterData.imgUrl",img);
-            console.log("✅chapterData.objectiveQuestion")
-            setImage(img);
-
-           const splitSentences = question
-            .split(/(?<=[.?!])\s+/)
-            .filter((s) => s.trim() !== "");
-
-            setSentences(splitSentences);
-            setCurrentIndex(0);
-            setPreloadDone(false);
+    // Level 2 데이터 가져오기
+    useEffect(() => {
+        const loadLevel2Data = async () => {
+            const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
             
-        }else{
-            setSentences(["❌ 내용이 없습니다. 다시 돌아가주세요."])
-        }
-    },[chapterData]);
+            if (!chapterId) {
+                console.error("❌ chapterId가 없습니다.");
+                setSentences(["❌ 단원 정보가 없습니다. 다시 돌아가주세요."]);
+                return;
+            }
+
+            try {
+                setLoading(true);
+                console.log("🔄 Level 2 데이터 로딩 중... chapterId:", chapterId);
+                const level2Data = await fetchChapterContents(2, chapterId);
+                console.log("✅ Level 2 데이터:", level2Data);
+                
+                // Context 업데이트
+                setChapterData(level2Data);
+                
+                const question = level2Data?.objectiveQuestion;
+                const img = level2Data?.imgUrl;
+                console.log("📷 imgUrl:", img);
+                console.log("✅ objectiveQuestion:", question);
+                
+                // imgUrl이 있으면 설정, 없으면 undefined (onError로 fallback 처리)
+                setImage(img || undefined);
+
+                if (question) {
+                    const splitSentences = question
+                        .split(/(?<=[.?!])\s+/)
+                        .filter((s) => s.trim() !== "");
+                    setSentences(splitSentences);
+                } else {
+                    setSentences(["질문이 없습니다."]);
+                }
+                
+                setCurrentIndex(0);
+                setPreloadDone(false);
+            } catch (error) {
+                console.error("❌ Level 2 데이터 로딩 실패:", error);
+                setSentences(["❌ 내용을 불러오는데 실패했습니다. 다시 시도해주세요."]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadLevel2Data();
+    }, [searchParams]);
 
 
 
@@ -415,7 +441,7 @@ function StudyLv2_withImg({ user, login, setLogin }){
         setCurrentIndex(currentIndex+1);
       }else{
         // 답변을 맞추는 화면이 아니면 다음 단계로 이동
-        navigate('/study/level3');
+        navigate(`/study/level3?chapterId=${chapterData?.chapterId}`);
       }
     }
    };
@@ -428,9 +454,9 @@ function StudyLv2_withImg({ user, login, setLogin }){
         // 실제로는 여기에 AI 호출 로직이 들어감 (예: fetch("/chat", { method: POST ... }))
         console.log("🙋 유저 입력:", userAnswer);
 
-        // 임시 응답 시뮬레이션 //AI 모델 추후에 연결.. 
-        const response=chapterData?.objectiveAnswer;
-        const fullResponse=`${response}. 그럼 이제 본격적으로 수업을 들어가볼까?`;
+        // objectiveAnswer가 있으면 사용, 없으면 기본 응답 사용
+        const response = chapterData?.objectiveAnswer || "좋은 답변이에요";
+        const fullResponse = `${response}. 그럼 이제 본격적으로 수업을 들어가볼까?`;
         // setNextResponse(`그럼 이제 본격적으로 수업을 들어가볼까?`);
         setAiResponse(fullResponse);
 
@@ -515,7 +541,7 @@ function StudyLv2_withImg({ user, login, setLogin }){
                         $active={!!aiResponse} //깜빡이는 스타일을 위한 props 전달
                         onClick={()=>{
                             if(aiResponse){
-                                navigate('/study/level3');
+                                navigate(`/study/level3?chapterId=${chapterData?.chapterId}`);
                             }
                         }}
                         >다음 단계로</NextStepButton>

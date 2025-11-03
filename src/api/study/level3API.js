@@ -1,18 +1,22 @@
-export async function fetchChapterContents(chapterId){
-    const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/start?chapterId=${chapterId}`,{
-        method:"GET",
-        credentials:"include"
+export async function fetchChapterContents(level, chapterId){
+    const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/session/start-level?level=${level}&chapterId=${chapterId}`,{
+        method:"POST",
+        credentials:"include",
+        headers: {
+            'Content-Type': 'application/json',
+        },
     });
 
     if(!response.ok){
         throw new Error("단원 내용을 불러오는 데 실패했습니다.");
     }
 
-    const data=await response.json();
-    return data;
+    const result=await response.json();
+    return result.data; // 응답의 data 필드 반환
 }
 
 export async function fetchChapters(bookId){
+    // TODO: 실제 단원 리스트 API 엔드포인트로 변경 필요
     const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/chapter-select?bookId=${bookId}`,{
         method:"GET",
         credentials:"include"
