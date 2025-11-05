@@ -70,7 +70,7 @@ export const useActivityTracker = (chapterId, level, userId, minusFocusingScore 
       lastActive: formatDateTime(new Date()),
       status,
       completed: false, // 항상 false (status로만 구분)
-      minusFocusingScore: minusFocusingScore ?? 0,
+      minusFocusingScore: status === 'INACTIVE' ? 2 : 0, // INACTIVE일 때만 2, 나머지는 0
     };
 
     // COMPLETED일 때만 startTime 포함
@@ -139,9 +139,12 @@ export const useActivityTracker = (chapterId, level, userId, minusFocusingScore 
   // Page Visibility 감지
   const handleVisibilityChange = useCallback(() => {
     if (document.hidden) {
-      // 탭을 벗어남 - 5분 후에 INACTIVE로 전환되도록 타이머만 유지
-      console.log('👋 탭 벗어남 감지 (5분 후 INACTIVE 전환 예정)');
-      // 타이머는 handleActivity에서 이미 설정되어 있으므로 별도 처리 불필요
+      // 탭을 벗어남 - 즉시 INACTIVE로 전환
+      if (currentStatusRef.current === 'ACTIVE') {
+        console.log('👋 탭 벗어남 감지 (즉시 INACTIVE 전환)');
+        currentStatusRef.current = 'INACTIVE';
+        updateSessionStatus('INACTIVE');
+      }
     } else {
       // 탭으로 돌아옴 - 즉시 ACTIVE로 전환
       console.log('👀 탭으로 복귀 감지 (즉시 ACTIVE 전환)');
