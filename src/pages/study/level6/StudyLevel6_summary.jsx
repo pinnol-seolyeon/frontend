@@ -8,6 +8,7 @@ import MiniHeader from "../../../components/study/MiniHeader";
 import Button from "../../../components/Button";
 import Sidebar from "../../../components/Sidebar";
 import { fetchChapterContents } from "../../../api/study/level3API";
+import { useActivityTracker } from "../../../hooks/useActivityTracker";
 
 import { useNavigate, useSearchParams } from "react-router-dom";
 import React,{useState,useEffect} from "react";
@@ -258,6 +259,13 @@ function StudyPage({ user, login, setLogin }){
     const [preloadDone, setPreloadDone] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    // 활동 감지 Hook 사용 (level 5)
+    const { completeSession } = useActivityTracker(
+        chapterData?.chapterId, 
+        5, // level 5
+        user?.userId
+    );
+
     // Level 5 데이터 가져오기 (요약)
     useEffect(() => {
         const loadLevel5Data = async () => {
@@ -340,8 +348,9 @@ function StudyPage({ user, login, setLogin }){
       }
     };
 
-    const handleComplete=()=>{
+    const handleComplete = async () => {
       alert("✅ 좋아요! 이제 마지막 단계로 넘어가볼까요?");
+      await completeSession(); // Level 5 완료 상태 전송
       navigate(`/study/level6/2?chapterId=${chapterData?.chapterId}`);
     };
    

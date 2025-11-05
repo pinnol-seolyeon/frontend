@@ -350,8 +350,8 @@ function Point({ user, login, setLogin }) {
         <MainWrapper>
           <ContentContainer>
             <TitleWrapper>
-              <TitleText>포인트 내역</TitleText>
-              <SubTitleText>포인트 상세 내역을 확인해 보세요!</SubTitleText>
+              <TitleText>피넛(FINUT) 내역</TitleText>
+              <SubTitleText>피넛(FINUT) 상세 내역을 확인해 보세요!</SubTitleText>
             </TitleWrapper>
 
             <TotalPointWrapper>
@@ -360,7 +360,7 @@ function Point({ user, login, setLogin }) {
                 </PointIconWrapper>
                 <PointTextWrapper>
                     <PointText>현재 {user?.name}님의 피넛</PointText>
-                    <PointValue>{(user?.coin ?? 0).toLocaleString()}P</PointValue>
+                    <PointValue>{(user?.coin ?? 0).toLocaleString()}F</PointValue>
                 </PointTextWrapper>
             </TotalPointWrapper>
 
@@ -372,7 +372,7 @@ function Point({ user, login, setLogin }) {
                     <TableHeaderCell>카테고리</TableHeaderCell>
                     <TableHeaderCell>상세내역</TableHeaderCell>
                     <TableHeaderCell>날짜</TableHeaderCell>
-                    <TableHeaderCell>포인트내역</TableHeaderCell>
+                    <TableHeaderCell>피넛(FINUT) 내역</TableHeaderCell>
                   </tr>
                 </TableHeader>
                 <TableBody>

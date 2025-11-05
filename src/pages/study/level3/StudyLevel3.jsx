@@ -15,6 +15,7 @@ import hoppin from "../../../assets/hopin.svg";
 import questionIcon from "../../../assets/question_icon.svg";
 import TtsPlayer from "../../../components/TtsPlayer";
 import api from "../../../api/login/axiosInstance";
+import { useActivityTracker } from "../../../hooks/useActivityTracker";
 
 
 /*학습하기-3단계-1*/
@@ -376,6 +377,13 @@ function StudyPage({ user, login, setLogin }){
     const nextContext=sentences[currentIndex+1]||"다음 학습 내용 없음";
     const returnToIndex=location.state?.returnToIndex??0;
 
+    // 활동 감지 Hook 사용 (level 3)
+    const { completeSession } = useActivityTracker(
+        chapterData?.chapterId, 
+        3, // level 3
+        user?.userId
+    );
+
    const navigateToQuestion=()=>{
         console.log("🐛question에게 보내는 returnToIndex:",currentIndex)
         navigate("/question",{
@@ -472,7 +480,7 @@ function StudyPage({ user, login, setLogin }){
 
     //질문 문장인 경우 -> 사용자 입력 UI 노출 + 답변 수집
     //질문이 끝나면 답변 버튼이 생성되도록 함 
-    const goToNextSentence=()=>{
+    const goToNextSentence = async () => {
     if (!preloadDone) return;
     
     // 모든 문장을 다 본 후에 완료
@@ -483,6 +491,7 @@ function StudyPage({ user, login, setLogin }){
         setIsQuestionFinished(true); //질문 끝났다는 상태
         setIsFinished(true);
         alert("✅학습을 모두 완료했어요! 게임 단계로 이동해볼까요?")
+        await completeSession(); // Level 3 완료 상태 전송
         navigate("/game")
     }
    };

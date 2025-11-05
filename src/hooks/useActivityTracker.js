@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import api from '../api/login/axiosInstance';
 
-export const useActivityTracker = (chapterId, level, userId) => {
+export const useActivityTracker = (chapterId, level, userId, minusFocusingScore = 0) => {
   const lastActiveRef = useRef(Date.now());
   const sessionStartRef = useRef(Date.now());
   const inactivityTimerRef = useRef(null);
@@ -69,7 +69,8 @@ export const useActivityTracker = (chapterId, level, userId) => {
       level,
       lastActive: formatDateTime(new Date()),
       status,
-      completed: false
+      completed: false, // 항상 false (status로만 구분)
+      minusFocusingScore: minusFocusingScore ?? 0,
     };
 
     // COMPLETED일 때만 startTime 포함
@@ -153,10 +154,11 @@ export const useActivityTracker = (chapterId, level, userId) => {
   }, [handleActivity, updateSessionStatus]);
 
   // 학습 완료 함수
-  const completeSession = useCallback(() => {
+  const completeSession = useCallback(async () => {
     console.log('✅ 학습 완료 - COMPLETED 상태 전송');
     currentStatusRef.current = 'COMPLETED';
-    updateSessionStatus('COMPLETED', true); // startTime 포함
+    await updateSessionStatus('COMPLETED'); // startTime 없이, 완료될 때까지 대기
+    console.log('✅ COMPLETED 상태 전송 완료');
   }, [updateSessionStatus]);
 
   // 이벤트 리스너 등록
@@ -229,8 +231,12 @@ export const useActivityTracker = (chapterId, level, userId) => {
       }
       clearInterval(intervalId);
 
-      // 컴포넌트 언마운트 시 INACTIVE로 전환
-      if (currentStatusRef.current === 'ACTIVE') {
+      // 컴포넌트 언마운트 시 처리
+      if (currentStatusRef.current === 'COMPLETED') {
+        // 이미 completeSession()으로 COMPLETED 전송한 경우 추가 전송 없음
+        console.log('✅ 컴포넌트 종료: 이미 COMPLETED 상태 (추가 전송 없음)');
+      } else if (currentStatusRef.current === 'ACTIVE') {
+        // ACTIVE 상태에서 종료되면 INACTIVE 전송
         console.log('📤 컴포넌트 종료: INACTIVE 전송');
         updateSessionStatus('INACTIVE');
       }

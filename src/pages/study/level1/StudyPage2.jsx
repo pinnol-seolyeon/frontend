@@ -206,7 +206,7 @@ function StudyPage({ user, login, setLogin }){
     const { completeSession } = useActivityTracker(
         chapterData?.chapterId, 
         2, // level 2
-        user?.username // userId (username 사용)
+        user?.userId
     );
 
     // Level 2 데이터 가져오기 (학습 목표)
@@ -265,8 +265,8 @@ function StudyPage({ user, login, setLogin }){
                 <MainWrapper>
                         {/* <MiniHeader
                             left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
-                            right={<Button onClick={() => {
-                                completeSession(); // 학습 완료 상태 전송
+                            right={<Button onClick={async () => {
+                                await completeSession(); // COMPLETED 상태 전송
                                 navigate(`/study/level2-img?chapterId=${chapterData?.chapterId}`);
                             }}>다음 단계로</Button>}
                         >
@@ -305,8 +305,8 @@ function StudyPage({ user, login, setLogin }){
                                  <BackButton onClick={() => navigate(-1)}>
                                      뒤로
                                  </BackButton>
-                                  <BubbleButton onClick={() => {
-                                      completeSession(); // 학습 완료 상태 전송
+                                  <BubbleButton onClick={async () => {
+                                      await completeSession(); // COMPLETED 상태 전송
                                       navigate(`/study/level2-img?chapterId=${chapterData?.chapterId}`);
                                   }}>
                                          다음
