@@ -7,8 +7,6 @@ import {
   Radar, ResponsiveContainer
 } from 'recharts';
 
-// import styles from './RadarGraph.module.css'; // 스타일 분리
-
 const AnalysisCard = styled.div`
   background: white;
   border-radius: 5px;
@@ -159,44 +157,44 @@ const KeywordMessage = styled.div`
 
 
 
-  export default function RadarGraph({ thisWeek, lastWeek }) {
-  const [showTooltip, setShowTooltip] = useState(false);
-  // API 데이터가 없거나 빈 객체인 경우 기본값 설정
-  const safeThisWeek = thisWeek || { engagement: 0, focus: 0, understanding: 0, expression: 0 };
-  const safeLastWeek = lastWeek || { engagement: 0, focus: 0, understanding: 0, expression: 0 };
+export default function RadarGraph({ thisWeek, lastWeek }) {
+const [showTooltip, setShowTooltip] = useState(false);
+// API 데이터가 없거나 빈 객체인 경우 기본값 설정
+const safeThisWeek = thisWeek || { engagement: 0, focus: 0, understanding: 0, expression: 0 };
+const safeLastWeek = lastWeek || { engagement: 0, focus: 0, understanding: 0, expression: 0 };
 
-  // API 데이터를 사용하여 차트 데이터 생성
-  const data = [
-    { subject: "참여도", thisWeek: safeThisWeek.engagement * 100, lastWeek: safeLastWeek.engagement * 100 },
-    { subject: "집중도", thisWeek: safeThisWeek.focus * 100, lastWeek: safeLastWeek.focus * 100 },
-    { subject: "이해도", thisWeek: safeThisWeek.understanding * 100, lastWeek: safeLastWeek.understanding * 100 },
-    { subject: "표현력", thisWeek: safeThisWeek.expression * 100, lastWeek: safeLastWeek.expression * 100 },
-  ];
+// API 데이터를 사용하여 차트 데이터 생성
+const data = [
+  { subject: "참여도", thisWeek: safeThisWeek.engagement * 100, lastWeek: safeLastWeek.engagement * 100 },
+  { subject: "집중도", thisWeek: safeThisWeek.focus * 100, lastWeek: safeLastWeek.focus * 100 },
+  { subject: "이해도", thisWeek: safeThisWeek.understanding * 100, lastWeek: safeLastWeek.understanding * 100 },
+  { subject: "표현력", thisWeek: safeThisWeek.expression * 100, lastWeek: safeLastWeek.expression * 100 },
+];
 
-  const getSummaryText = () => {
-    const avg = (safeThisWeek.engagement + safeThisWeek.focus + safeThisWeek.understanding + safeThisWeek.expression) / 4 * 100;
-    if (avg >= 80) return "학습 태도가 매우 우수합니다! 👍";
-    if (avg >= 60) return "양호한 학습 태도입니다.\n약간의 개선 여지는 있지만 좋은 흐름이에요.";
-    // if (avg >= 40) return "노력이 필요해요. 열심히 하면 못할 건 없어요!";
-    return "노력이 필요해요.\n열심히 하면 못할 건 없어요!";
+const getSummaryText = () => {
+  const avg = (safeThisWeek.engagement + safeThisWeek.focus + safeThisWeek.understanding + safeThisWeek.expression) / 4 * 100;
+  if (avg >= 80) return "학습 태도가 매우 우수합니다! 👍";
+  if (avg >= 60) return "양호한 학습 태도입니다.\n약간의 개선 여지는 있지만 좋은 흐름이에요.";
+  // if (avg >= 40) return "노력이 필요해요. 열심히 하면 못할 건 없어요!";
+  return "노력이 필요해요.\n열심히 하면 못할 건 없어요!";
 
-    // return "학습 활동이 부족해요. 충분한 학습이 필요합니다.";
-  };
+  // return "학습 활동이 부족해요. 충분한 학습이 필요합니다.";
+};
 
-  const getKeywordText = () => {
-    const avg = (safeThisWeek.engagement + safeThisWeek.focus + safeThisWeek.understanding + safeThisWeek.expression) / 4 * 100;
-    if (avg >= 80) return "학습 태도가 매우 우수해요!";
-    if (avg >= 60) return "양호한 학습 태도에요!";
-    return "노력이 필요해요!";
-  };
+const getKeywordText = () => {
+  const avg = (safeThisWeek.engagement + safeThisWeek.focus + safeThisWeek.understanding + safeThisWeek.expression) / 4 * 100;
+  if (avg >= 80) return "학습 태도가 매우 우수해요!";
+  if (avg >= 60) return "양호한 학습 태도에요!";
+  return "노력이 필요해요!";
+};
 
-  console.log('📊 RadarGraph 데이터:', { thisWeek: safeThisWeek, lastWeek: safeLastWeek, data });
+console.log('📊 RadarGraph 데이터:', { thisWeek: safeThisWeek, lastWeek: safeLastWeek, data });
 
-  return (
-    <AnalysisCard>
-      <CardHeader>
-        <CardTitleWrapper>
-          <CardTitle>이해도 분석</CardTitle>
+return (
+  <AnalysisCard>
+    <CardHeader>
+      <CardTitleWrapper>
+        <CardTitle>이해도 분석</CardTitle>
           <CardInfo 
             onMouseEnter={() => setShowTooltip(true)}
             onMouseLeave={() => setShowTooltip(false)}

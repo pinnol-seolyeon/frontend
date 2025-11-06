@@ -607,14 +607,14 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
                 >
                   <PointIcon src={point} alt="Points" />
                 </PointIconContainer>
-                <PointText collapsed={collapsed}>피넛</PointText>
+                <PointText collapsed={collapsed}>피넛(FINUT)</PointText>
               </PointTextWrapper>
               <PointValue collapsed={collapsed}>{(user?.coin ?? 0).toLocaleString()}</PointValue>
             </PointSection>
             )}
             
             <PointTooltip show={showTooltip} position={tooltipPosition}>
-              포인트 {user?.coin ?? 0}P
+              피넛(FINUT) {user?.coin ?? 0}F
             </PointTooltip>
 
           <NavigationMenu>

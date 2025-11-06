@@ -10,9 +10,9 @@ import flagImg from '../../assets/game_end.svg';
 import playerEndImg from '../../assets/game_character_2.png';
 import { saveCoinToDB } from '../../api/analyze/saveCoinToDB';
 import { useChapter } from "../../context/ChapterContext";
-import { fetchQuizByChapterId } from '../../api/study/fetchQuiz';
 import { fetchChapterContents } from '../../api/study/level3API';
 import { useNavigate } from "react-router-dom";
+import { useActivityTracker } from "../../hooks/useActivityTracker";
 import bgmSrc from '../../assets/Tiki_Bar_Mixer.mp3';
 import { sendQuizResults } from '../../api/analyze/sendQuizResults';
 import gameStartTitle from '../../assets/game_startoverlay_title.svg';
@@ -641,10 +641,17 @@ const GameResultItem2 = styled.div`
   flex: 1;
 `;
 
-export default function Game() {
+export default function Game({ user }) {
   const { chapterData } = useChapter();
   const chapterId = chapterData?.chapterId;
   const navigate = useNavigate();
+  
+  // 활동 감지 Hook 사용 (level 4 - 게임)
+  const { completeSession } = useActivityTracker(
+      chapterId, 
+      4, // level 4 (게임)
+      user?.userId
+  );
   
   // chapterId가 없으면 메인 페이지로 리다이렉트
   useEffect(() => {
@@ -872,16 +879,21 @@ export default function Game() {
     loadImages();
   }, []);
 
-  // 챕터 별 퀴즈 불러오기
+  // 챕터 별 퀴즈 불러오기 (level 4 API 사용)
   useEffect(() => {
     // chapterId가 없으면 퀴즈 로딩 시도하지 않음 (리다이렉트됨)
     if (!chapterId) return;
     
     async function loadQuiz() {
       try {
-        const data = await fetchQuizByChapterId(chapterId);
-        console.log("✅ 퀴즈 응답:", data);
-        setQuizList(data);
+        console.log("🎮 Level 4 (퀴즈) 데이터 로딩 중... chapterId:", chapterId);
+        const level4Data = await fetchChapterContents(4, chapterId);
+        console.log("✅ Level 4 (퀴즈) 응답:", level4Data);
+        
+        // quiz 배열 추출
+        const quizData = level4Data?.quiz || [];
+        console.log("✅ 퀴즈 데이터:", quizData);
+        setQuizList(quizData);
         setQuizLoaded(true); // 퀴즈 로딩 완료 상태 설정
       } catch (err) {
         console.error("❌ 퀴즈 불러오기 실패:", err);
@@ -1525,8 +1537,9 @@ export default function Game() {
                 ))}
               </QuizResultsContainer>
 
-              <NextButton onClick={(e) => { 
+              <NextButton onClick={async (e) => { 
                 e.stopPropagation(); // 이벤트 전파 방지
+                await completeSession(); // Level 4 (게임) 완료 상태 전송
                 navigate(`/study/level6/summary?chapterId=${chapterId}`); 
               }}>
                 다음단계로

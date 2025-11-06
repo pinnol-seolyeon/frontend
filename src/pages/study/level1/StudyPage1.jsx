@@ -168,11 +168,11 @@ function StudyPage({ user, login, setLogin }){
     const {chapterData}=useChapter();
     const [isFinished,setIsFinished]=useState(false);
     
-    // 활동 감지 Hook 사용 (ACTIVE/INACTIVE만 감지)
-    useActivityTracker(
+    // 활동 감지 Hook 사용 (level 1)
+    const { completeSession } = useActivityTracker(
         chapterData?.chapterId, 
         1, // level 1
-        user?.username // userId (username 사용)
+        user?.userId // userId 전달
     );
 
     const fullTitle="";
@@ -228,11 +228,12 @@ function StudyPage({ user, login, setLogin }){
     }, [chapterData]);
 
 
-    const handleNext=()=>{
+    const handleNext = async () => {
         if (step===0){
             setStep(1);
             setPreloadDone(false);
         }else{
+            await completeSession(); // Level 1 완료 상태 전송
             navigate(`/study/2?chapterId=${chapterData?.chapterId}`);
             setIsFinished(true);
         }

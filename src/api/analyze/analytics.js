@@ -254,7 +254,7 @@ function transformWeeklyPatternData(apiData) {
 // 방사형 그래프 데이터
 export async function fetchRadarScore() {
   try {
-    const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/analysis/radar-score/compare`, {
+    const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study-log/radar-score/compare`, {
       method: 'GET',
       credentials: "include",
       headers: {

@@ -6,6 +6,7 @@ import Button from "../../../components/Button";
 import MiniHeader from "../../../components/study/MiniHeader";
 import Sidebar from "../../../components/Sidebar";
 import { fetchChapterContents } from "../../../api/study/level3API";
+import { useActivityTracker } from "../../../hooks/useActivityTracker";
 
 import { useNavigate, useSearchParams } from "react-router-dom";
 import React,{useState,useEffect} from "react";
@@ -226,6 +227,13 @@ function StudyLevel6_2({ user, login, setLogin }){
     const [topic,setTopic]=useState();
     const [loading,setLoading]=useState(true);
 
+    // 활동 감지 Hook 사용 (level 6)
+    const { completeSession } = useActivityTracker(
+        chapterData?.chapterId, 
+        6, // level 6
+        user?.userId
+    );
+
     // Level 6 데이터 가져오기 (토론 주제)
     useEffect(() => {
         const loadLevel6Data = async () => {
@@ -268,29 +276,33 @@ function StudyLevel6_2({ user, login, setLogin }){
 
 
     const handleComplete=async()=>{
-         try {
-            console.log("📦 현재 저장된 chapterData:", chapterData);
+        //  try {
+        //     console.log("📦 현재 저장된 chapterData:", chapterData);
 
-            // ✅ 여기에 실제 완료 처리 API 호출
-            const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/finish?chapterId=${chapterData?.chapterId}`, {
-                method: 'POST',
-                credentials:'include', //쿠키 인증 시 필요
-         });
+        //     // Level 6 완료 상태 전송
+            await completeSession();
 
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(errorText);
-          }
+        //     // ✅ 전체 학습 완료 처리 API 호출
+        //     const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/finish?chapterId=${chapterData?.chapterId}`, {
+        //         method: 'POST',
+        //         credentials:'include', //쿠키 인증 시 필요
+        //  });
 
-        const message=await response.text();
-        console.log("✅학습완료 메시지:",message);
+        //   if (!response.ok) {
+        //     const errorText = await response.text();
+        //     throw new Error(errorText);
+        //   }
 
-         clearChapterData(); //localstorage + 상태 모두 초기화
-         navigate('/study/level6/complete'); // 완료 페이지로 이동
+        // const message=await response.text();
+        // console.log("✅학습완료 메시지:",message);
+
+        //  clearChapterData(); //localstorage + 상태 모두 초기화
+        //  navigate('/study/level6/complete'); // 완료 페이지로 이동
          
-        } catch(e){
-            console.error('학습 완료 처리 중 오류',e);
-        }
+        // } catch(e){
+        //     console.error('학습 완료 처리 중 오류',e);
+        // }
+        navigate('/review')
       };
     
     return(

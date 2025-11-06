@@ -9,6 +9,7 @@ import nextButton from "../../../assets/nextButton.png";
 import Sidebar from "../../../components/Sidebar";
 import { useChapter } from "../../../context/ChapterContext";
 import { fetchChapterContents } from "../../../api/study/level3API";
+import { useActivityTracker } from "../../../hooks/useActivityTracker";
 
 import { useNavigate, useSearchParams } from "react-router-dom";
 import React, { useState, useEffect, useRef } from "react";
@@ -376,6 +377,13 @@ function StudyLv2_withImg({ user, login, setLogin }){
     const [isVoiceRecognitionComplete, setIsVoiceRecognitionComplete] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    // 활동 감지 Hook 사용 (level 2)
+    const { completeSession } = useActivityTracker(
+        chapterData?.chapterId, 
+        2, // level 2
+        user?.userId
+    );
+
     // Level 2 데이터 가져오기
     useEffect(() => {
         const loadLevel2Data = async () => {
@@ -429,7 +437,7 @@ function StudyLv2_withImg({ user, login, setLogin }){
 
 
 
-   const handleAnswer=()=>{
+   const handleAnswer = async () => {
     if(!aiResponse){
       if(currentIndex<sentences.length-1){
         setCurrentIndex(currentIndex+1);
@@ -441,6 +449,7 @@ function StudyLv2_withImg({ user, login, setLogin }){
         setCurrentIndex(currentIndex+1);
       }else{
         // 답변을 맞추는 화면이 아니면 다음 단계로 이동
+        await completeSession(); // Level 2 완료 상태 전송
         navigate(`/study/level3?chapterId=${chapterData?.chapterId}`);
       }
     }
