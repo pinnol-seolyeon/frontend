@@ -8,7 +8,6 @@ import Button from "../../../components/Button";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { fetchFeedback, fetchChapterContents } from "../../../api/study/level3API";
 import MiniHeader from "../../../components/study/MiniHeader";
-import Sidebar from "../../../components/Sidebar";
 import { useChapter } from "../../../context/ChapterContext";
 import background from "../../../assets/study_background.png";
 import hoppin from "../../../assets/hopin.svg";
@@ -42,13 +41,9 @@ const Wrapper=styled.div`
     position: relative;
 `;
 
-const ContentWrapper = styled.div`
-  display: flex;
+const MainWrapper = styled.div`
   width: 100%;
   min-height: 100vh;
-`;
-
-const MainWrapper = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -350,6 +345,30 @@ const SendButton = styled.button`
   }
 `;
 
+// 무당벌레 스타일
+const Ladybug = styled.div`
+    position: fixed;
+    font-size: 60px;
+    cursor: pointer;
+    z-index: 9999;
+    transition: transform 0.3s ease;
+    animation: float 3s ease-in-out infinite;
+    user-select: none;
+    
+    &:hover {
+        transform: scale(1.2);
+    }
+    
+    @keyframes float {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-20px);
+        }
+    }
+`;
+
 
 function StudyPage({ user, login, setLogin }){
 
@@ -377,20 +396,91 @@ function StudyPage({ user, login, setLogin }){
     const nextContext=sentences[currentIndex+1]||"다음 학습 내용 없음";
     const returnToIndex=location.state?.returnToIndex??0;
 
+    // 무당벌레 관련 상태
+    const [ladybugs, setLadybugs] = useState([]); // [{id, x, y, createdAt}]
+    const [ladybugCount, setLadybugCount] = useState(0); // 총 나타난 무당벌레 수
+    const [questionClickTime, setQuestionClickTime] = useState(null); // 질문하기 클릭 시간
+
     // 활동 감지 Hook 사용 (level 3)
     const { completeSession } = useActivityTracker(
         chapterData?.chapterId, 
         3, // level 3
-        user?.userId
+        user?.userId,
+        chapterData?.bookId
     );
 
+    // 무당벌레 생성 함수
+    const spawnLadybug = () => {
+        if (ladybugCount >= 3) return; // 최대 3마리
+
+        const id = Date.now();
+        const x = Math.random() * (window.innerWidth - 100); // 화면 너비 내 랜덤
+        const y = Math.random() * (window.innerHeight - 100); // 화면 높이 내 랜덤
+
+        setLadybugs(prev => [...prev, { id, x, y, createdAt: Date.now() }]);
+        setLadybugCount(prev => prev + 1);
+
+        console.log('🐞 무당벌레 생성:', { id, x, y, count: ladybugCount + 1 });
+
+        // 5초 후 자동 제거
+        setTimeout(() => {
+            setLadybugs(prev => prev.filter(lb => lb.id !== id));
+            console.log('⏱️ 무당벌레 자동 제거 (5초 경과):', id);
+        }, 5000);
+    };
+
+    // 무당벌레 클릭 핸들러
+    const handleLadybugClick = (id) => {
+        // 질문하기 클릭 2초 이내인지 확인
+        if (questionClickTime && Date.now() - questionClickTime < 2000) {
+            console.log('❌ 무당벌레 클릭 무효 (질문하기 클릭 2초 이내)');
+            return;
+        }
+
+        setLadybugs(prev => prev.filter(lb => lb.id !== id));
+        console.log('✅ 무당벌레 클릭 제거:', id);
+    };
+
+    // 무당벌레 랜덤 생성 (10~30초마다)
+    useEffect(() => {
+        if (ladybugCount >= 3 || loading) return;
+
+        const randomDelay = Math.random() * 20000 + 10000; // 10~30초
+        console.log(`⏰ 다음 무당벌레 생성까지: ${Math.floor(randomDelay / 1000)}초`);
+
+        const timer = setTimeout(() => {
+            spawnLadybug();
+        }, randomDelay);
+
+        return () => clearTimeout(timer);
+    }, [ladybugCount, loading, ladybugs.length]);
+
    const navigateToQuestion=()=>{
-        console.log("🐛question에게 보내는 returnToIndex:",currentIndex)
+        // 질문하기 클릭 시간 기록
+        setQuestionClickTime(Date.now());
+        
+        // URL에서 직접 chapterId 가져오기 (chapterData보다 더 신뢰할 수 있음)
+        const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+        
+        console.log("🔀 질문하기로 이동 - 전달 데이터:", {
+            returnToIndex: currentIndex,
+            from: "/study/level3",
+            chapterId: chapterId,
+            fromURL: searchParams.get('chapterId'),
+            fromContext: chapterData?.chapterId
+        });
+        
+        if (!chapterId) {
+            console.error('⚠️⚠️⚠️ chapterId를 찾을 수 없습니다!');
+            alert('오류가 발생했습니다. chapterId를 찾을 수 없습니다.');
+            return;
+        }
+        
         navigate("/question",{
             state:{
                 returnToIndex:currentIndex,
                 from: "/study/level3",
-                chapterId: chapterData?.chapterId
+                chapterId: chapterId
             }
         });
    }
@@ -408,12 +498,15 @@ function StudyPage({ user, login, setLogin }){
 
             try {
                 setLoading(true);
-                console.log("🔄 Level 3 데이터 로딩 중... chapterId:", chapterId);
-                const level3Data = await fetchChapterContents(3, chapterId);
+                console.log("🔄 Level 3 데이터 로딩 중... chapterId:", chapterId, "bookId:", chapterData?.bookId);
+                const level3Data = await fetchChapterContents(3, chapterId, chapterData?.bookId);
                 console.log("✅ Level 3 데이터:", level3Data);
                 
-                // Context 업데이트
-                setChapterData(level3Data);
+                // Context 업데이트 (bookId 보존)
+                setChapterData({
+                    ...level3Data,
+                    bookId: chapterData?.bookId
+                });
                 
                 const contents = level3Data?.content;
                 
@@ -662,9 +755,21 @@ const stopVoiceRecognition = () => {
 
     return(
     <>
+        {/* 무당벌레 렌더링 */}
+        {ladybugs.map(ladybug => (
+            <Ladybug
+                key={ladybug.id}
+                style={{
+                    left: `${ladybug.x}px`,
+                    top: `${ladybug.y}px`,
+                }}
+                onClick={() => handleLadybugClick(ladybug.id)}
+            >
+                ❤️
+            </Ladybug>
+        ))}
+        
         <Wrapper> 
-            <ContentWrapper>
-                <Sidebar user={user} login={login} setLogin={setLogin} defaultCollapsed={true} />
                 <MainWrapper>
                 {/* <MiniHeader
                     left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
@@ -687,12 +792,7 @@ const stopVoiceRecognition = () => {
                 </LeftSection>
 
                 <RightSection>
-                  <QuestionButton onClick={()=>navigate('/question', {
-                        state: { 
-                            returnToIndex: currentIndex,
-                            from: "/study/level3" 
-                        }
-                    })}>
+                  <QuestionButton onClick={navigateToQuestion}>
                         <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
                         질문하기
                     </QuestionButton>
@@ -791,7 +891,6 @@ const stopVoiceRecognition = () => {
                </ImageWithSpeechWrapper>
                     
                 </MainWrapper>
-            </ContentWrapper>
         </Wrapper>
     </>
     );

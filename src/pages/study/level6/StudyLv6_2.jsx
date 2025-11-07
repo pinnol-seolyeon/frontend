@@ -4,7 +4,6 @@ import Box from "../../../components/Box";
 import tigerPencil from "../../../assets/tiger-pencil.png";
 import Button from "../../../components/Button";
 import MiniHeader from "../../../components/study/MiniHeader";
-import Sidebar from "../../../components/Sidebar";
 import { fetchChapterContents } from "../../../api/study/level3API";
 import { useActivityTracker } from "../../../hooks/useActivityTracker";
 
@@ -27,13 +26,9 @@ const Wrapper=styled.div`
     position: relative;
 `;
 
-const ContentWrapper = styled.div`
-  display: flex;
+const MainWrapper = styled.div`
   width: 100%;
   min-height: 100vh;
-`;
-
-const MainWrapper = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -231,7 +226,8 @@ function StudyLevel6_2({ user, login, setLogin }){
     const { completeSession } = useActivityTracker(
         chapterData?.chapterId, 
         6, // level 6
-        user?.userId
+        user?.userId,
+        chapterData?.bookId
     );
 
     // Level 6 데이터 가져오기 (토론 주제)
@@ -248,12 +244,15 @@ function StudyLevel6_2({ user, login, setLogin }){
 
             try {
                 setLoading(true);
-                console.log("🔄 Level 6 (토론 주제) 데이터 로딩 중... chapterId:", chapterId);
-                const level6Data = await fetchChapterContents(6, chapterId);
+                console.log("🔄 Level 6 (토론 주제) 데이터 로딩 중... chapterId:", chapterId, "bookId:", chapterData?.bookId);
+                const level6Data = await fetchChapterContents(6, chapterId, chapterData?.bookId);
                 console.log("✅ Level 6 데이터:", level6Data);
                 
-                // Context 업데이트
-                setChapterData(level6Data);
+                // Context 업데이트 (bookId 보존)
+                setChapterData({
+                    ...level6Data,
+                    bookId: chapterData?.bookId
+                });
 
                 const topicText = level6Data?.topic;
                 console.log("💬 토론 주제:", topicText);
@@ -308,8 +307,6 @@ function StudyLevel6_2({ user, login, setLogin }){
     return(
     <>
         <Wrapper>
-            <ContentWrapper>
-                <Sidebar user={user} login={login} setLogin={setLogin} defaultCollapsed={true} />
                 <MainWrapper>
                     <ImageWithSpeechWrapper>
                         <ImageWrapper>
@@ -352,7 +349,6 @@ function StudyLevel6_2({ user, login, setLogin }){
                         </SpeechBubble>
                     </ImageWithSpeechWrapper>
                 </MainWrapper>
-            </ContentWrapper>
         </Wrapper>
     </>
     );

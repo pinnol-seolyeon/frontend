@@ -6,7 +6,6 @@ import testImage from "../../../assets/testImage.png";
 import nextButton from "../../../assets/nextButton.png";
 import MiniHeader from "../../../components/study/MiniHeader";
 import Button from "../../../components/Button";
-import Sidebar from "../../../components/Sidebar";
 import { fetchChapterContents } from "../../../api/study/level3API";
 import { useActivityTracker } from "../../../hooks/useActivityTracker";
 
@@ -31,13 +30,9 @@ const Wrapper=styled.div`
     position: relative;
 `;
 
-const ContentWrapper = styled.div`
-  display: flex;
+const MainWrapper = styled.div`
   width: 100%;
   min-height: 100vh;
-`;
-
-const MainWrapper = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -263,7 +258,8 @@ function StudyPage({ user, login, setLogin }){
     const { completeSession } = useActivityTracker(
         chapterData?.chapterId, 
         5, // level 5
-        user?.userId
+        user?.userId,
+        chapterData?.bookId
     );
 
     // Level 5 데이터 가져오기 (요약)
@@ -279,12 +275,15 @@ function StudyPage({ user, login, setLogin }){
 
             try {
                 setLoading(true);
-                console.log("🔄 Level 5 (요약) 데이터 로딩 중... chapterId:", chapterId);
-                const level5Data = await fetchChapterContents(5, chapterId);
+                console.log("🔄 Level 5 (요약) 데이터 로딩 중... chapterId:", chapterId, "bookId:", chapterData?.bookId);
+                const level5Data = await fetchChapterContents(5, chapterId, chapterData?.bookId);
                 console.log("✅ Level 5 데이터:", level5Data);
                 
-                // Context 업데이트
-                setChapterData(level5Data);
+                // Context 업데이트 (bookId 보존)
+                setChapterData({
+                    ...level5Data,
+                    bookId: chapterData?.bookId
+                });
 
                 //요약 네컷 만화 제공
                 const img = level5Data?.summaryImgUrl;
@@ -359,8 +358,6 @@ function StudyPage({ user, login, setLogin }){
     return(
     <>
         <Wrapper>
-            <ContentWrapper>
-                <Sidebar user={user} login={login} setLogin={setLogin} defaultCollapsed={true} />
                 <MainWrapper>
                     <ImageWithSpeechWrapper>
                       <ContentContainer>
@@ -371,7 +368,10 @@ function StudyPage({ user, login, setLogin }){
                         <RightSection>
                           <SummaryImage src={image} alt="요약 이미지" />
                           <QuestionButton onClick={() => navigate('/question', {
-                                state: { from: '/study/level6/summary' }
+                                state: { 
+                                    from: '/study/level6/summary',
+                                    chapterId: searchParams.get('chapterId') || chapterData?.chapterId
+                                }
                             })}>
                                 <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
                                 질문하기
@@ -410,7 +410,6 @@ function StudyPage({ user, login, setLogin }){
                         )}
                     </ImageWithSpeechWrapper>
                 </MainWrapper>
-            </ContentWrapper>
         </Wrapper>
     </>
     );

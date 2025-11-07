@@ -12,7 +12,6 @@ import MiniHeader from "../../../components/study/MiniHeader";
 import {useChapter} from "../../../context/ChapterContext";
 import TtsPlayer from "../../../components/TtsPlayer";
 import background from "../../../assets/study_background.png";
-import Sidebar from "../../../components/Sidebar";
 import hoppin from "../../../assets/hopin.svg";
 import { useActivityTracker } from "../../../hooks/useActivityTracker";
 
@@ -34,7 +33,7 @@ const ContentWrapper = styled.div`
 
 const MainWrapper = styled.div` 
   flex: 1;
-  min-height: calc(100vh - var(--header-height, 70px));
+  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -156,6 +155,37 @@ const ButtonWrapper=styled.div`
     gap: 2rem;
 `;
 
+// 토스트 메시지 스타일
+const Toast = styled.div`
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    color: #454545;
+    padding: 1rem 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10000;
+    font-size: 16px;
+    font-weight: 500;
+    max-width: 90%;
+    text-align: center;
+    line-height: 1.5;
+    animation: slideDown 0.3s ease-out;
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    }
+`;
+
 function StudyPage({ user, login, setLogin }){
 
     const navigate=useNavigate();
@@ -167,16 +197,36 @@ function StudyPage({ user, login, setLogin }){
     const [step,setStep]=useState(0); //0이면 인사, 1이면 제목 출력
     const {chapterData}=useChapter();
     const [isFinished,setIsFinished]=useState(false);
+    const [showToast, setShowToast] = useState(true); // 토스트 표시 여부
+    
+    // chapterData 디버깅
+    console.log('📚 StudyPage1 - chapterData:', {
+        chapterId: chapterData?.chapterId,
+        bookId: chapterData?.bookId,
+        fullData: chapterData
+    });
     
     // 활동 감지 Hook 사용 (level 1)
     const { completeSession } = useActivityTracker(
         chapterData?.chapterId, 
         1, // level 1
-        user?.userId // userId 전달
+        user?.userId, // userId 전달
+        chapterData?.bookId // bookId 전달
     );
 
     const fullTitle="";
-    const [preloadDone, setPreloadDone] = useState(false)
+    const [preloadDone, setPreloadDone] = useState(false);
+
+    // 토스트 메시지 자동 숨김 (5초 후)
+    useEffect(() => {
+        if (showToast) {
+            const timer = setTimeout(() => {
+                setShowToast(false);
+            }, 5000); // 5초 후 사라짐
+            
+            return () => clearTimeout(timer);
+        }
+    }, [showToast]);
 
     // useEffect(()=>{
     //     const loadChapterTitle=async()=>{
@@ -262,9 +312,16 @@ function StudyPage({ user, login, setLogin }){
     
     return(
     <>
+        {/* 토스트 메시지 */}
+          {showToast && (
+              <Toast>
+                  학습 도중 화면에 나타난 무당벌레를 클릭해 없애주세요!<br/>
+                  무당벌레는 학습 3단계에서 나타날 수 있습니다!
+              </Toast>
+          )}
+        
         <Wrapper>
             <ContentWrapper>
-                <Sidebar user={user} login={login} setLogin={setLogin} defaultCollapsed={true} />
                 <MainWrapper>
                     {/* <MiniHeader
                             left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}

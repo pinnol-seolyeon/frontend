@@ -344,8 +344,12 @@ function Question({ user, login, setLogin }){
         }
         
         // chapterId 저장
+        console.log('📖 Question - location.state:', location.state);
         if(location.state?.chapterId){
+            console.log('✅ Question - chapterId 설정:', location.state.chapterId);
             setChapterId(location.state.chapterId);
+        } else {
+            console.error('⚠️ Question - chapterId가 없습니다!');
         }
 
         //사용자가 말하는 내용을 실시간으로 transcript에 저장 
@@ -463,9 +467,17 @@ function Question({ user, login, setLogin }){
     const handleClose=()=>{
         console.log("✅returnToIndex:",returnToIndex);
         console.log("✅previousPage:",previousPage);
+        console.log("✅chapterId:", chapterId);
         
         // 이전 페이지가 study 페이지인 경우 returnToIndex와 함께 이동
         if(previousPage.includes('/study/level3')){
+            if (!chapterId) {
+                console.error('⚠️⚠️⚠️ chapterId가 null입니다! 돌아가기 실패');
+                alert('오류가 발생했습니다. 메인 페이지로 이동합니다.');
+                navigate('/main');
+                return;
+            }
+            console.log('🔙 Level 3로 돌아가기:', `/study/level3?chapterId=${chapterId}`);
             navigate(`/study/level3?chapterId=${chapterId}`,{
                 state:{
                     returnToIndex

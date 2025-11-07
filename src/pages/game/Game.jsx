@@ -647,10 +647,11 @@ export default function Game({ user }) {
   const navigate = useNavigate();
   
   // 활동 감지 Hook 사용 (level 4 - 게임)
-  const { completeSession } = useActivityTracker(
+  const { completeSession, sendExit } = useActivityTracker(
       chapterId, 
       4, // level 4 (게임)
-      user?.userId
+      user?.userId,
+      chapterData?.bookId
   );
   
   // chapterId가 없으면 메인 페이지로 리다이렉트
@@ -886,8 +887,8 @@ export default function Game({ user }) {
     
     async function loadQuiz() {
       try {
-        console.log("🎮 Level 4 (퀴즈) 데이터 로딩 중... chapterId:", chapterId);
-        const level4Data = await fetchChapterContents(4, chapterId);
+        console.log("🎮 Level 4 (퀴즈) 데이터 로딩 중... chapterId:", chapterId, "bookId:", chapterData?.bookId);
+        const level4Data = await fetchChapterContents(4, chapterId, chapterData?.bookId);
         console.log("✅ Level 4 (퀴즈) 응답:", level4Data);
         
         // quiz 배열 추출
@@ -939,7 +940,20 @@ export default function Game({ user }) {
     
     if (gameOver) {
         saveCoinToDB(scoreRef.current);
-        sendQuizResults(quizResultsRef.current);
+        
+        // API 형식에 맞게 데이터 변환
+        const formattedResults = quizResultsRef.current.map(result => ({
+          question: result.question,
+          options: result.options,
+          correctAnswer: result.correctAnswer,
+          userAnswer: result.userAnswer,
+          responseTime: result.responseTime,
+          userId: user?.userId || '',
+          quizDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD 형식
+          correct: result.isCorrect
+        }));
+        
+        sendQuizResults(formattedResults);
       }
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -1352,26 +1366,30 @@ export default function Game({ user }) {
     snapshotState();
   };
 
-  // Pause 모달 - 게임 재개
+  // Pause 모달 - 게임 재개 (EXIT 상태 전송 안 함)
   const handleResume = () => {
+    console.log('▶️ 게임 재개 - EXIT 상태 전송하지 않음');
     setShowPauseModal(false);
     setIsPaused(false);
     restoreSnapshot();
     animationIdRef.current = requestAnimationFrame(updateRef.current);
   };
 
-  // Pause 모달 - 게임 종료
-  const handleExitFromPause = () => {
+  // Pause 모달 - 게임 종료 (EXIT 상태 전송)
+  const handleExitFromPause = async () => {
+    await sendExit(); // EXIT 상태 전송
     navigate('/main');
   };
 
-  // Exit 모달 - 확인
-  const handleConfirmExit = () => {
+  // Exit 모달 - 확인 (EXIT 상태 전송)
+  const handleConfirmExit = async () => {
+    await sendExit(); // EXIT 상태 전송
     navigate('/main');
   };
 
-  // Exit 모달 - 취소
+  // Exit 모달 - 취소 (EXIT 상태 전송 안 함)
   const handleCancelExit = () => {
+    console.log('🚫 Exit 취소 - EXIT 상태 전송하지 않음');
     setShowExitModal(false);
     setIsPaused(false);
     restoreSnapshot();
