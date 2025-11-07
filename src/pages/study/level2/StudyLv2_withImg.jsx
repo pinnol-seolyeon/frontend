@@ -6,9 +6,7 @@ import testImage from "../../../assets/testImage.png";
 import MiniHeader from "../../../components/study/MiniHeader";
 import Button from "../../../components/Button";
 import nextButton from "../../../assets/nextButton.png";
-import Sidebar from "../../../components/Sidebar";
 import { useChapter } from "../../../context/ChapterContext";
-import { fetchChapterContents } from "../../../api/study/level3API";
 import { useActivityTracker } from "../../../hooks/useActivityTracker";
 
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -33,12 +31,6 @@ const Wrapper=styled.div`
     position: relative;
 `;
 
-const ContentWrapper = styled.div`
-  display: flex;
-  width: 100%;
-  min-height: 100vh;
-`;
-
 const MainWrapper = styled.div`
   flex: 1;
   display: flex;
@@ -51,6 +43,8 @@ const MainWrapper = styled.div`
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  width: 100%;
+  min-height: 100vh;
   
   @media (max-width: 768px) {
     padding: 1rem;
@@ -377,62 +371,48 @@ function StudyLv2_withImg({ user, login, setLogin }){
     const [isVoiceRecognitionComplete, setIsVoiceRecognitionComplete] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    // 활동 감지 Hook 사용 (level 2)
+    // 활동 감지 Hook 사용 (level 2, start-level 스킵)
+    // FIXME: 백엔드 start-level API 401 에러로 임시 스킵
     const { completeSession } = useActivityTracker(
         chapterData?.chapterId, 
         2, // level 2
-        user?.userId
+        user?.userId,
+        chapterData?.bookId,
+        0, // minusFocusingScore
+        true // skipStartLevel: 백엔드 이슈로 임시 스킵
     );
 
-    // Level 2 데이터 가져오기
+    // Level 2 데이터는 context에서 가져오기 (StudyPage2에서 이미 로드됨)
     useEffect(() => {
-        const loadLevel2Data = async () => {
-            const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+        if (chapterData) {
+            console.log("✅ Level 2 데이터 사용 (context):", chapterData);
             
-            if (!chapterId) {
-                console.error("❌ chapterId가 없습니다.");
-                setSentences(["❌ 단원 정보가 없습니다. 다시 돌아가주세요."]);
-                return;
+            const question = chapterData?.objectiveQuestion;
+            const img = chapterData?.imgUrl;
+            console.log("📷 imgUrl:", img);
+            console.log("✅ objectiveQuestion:", question);
+            
+            // imgUrl이 있으면 설정, 없으면 undefined (onError로 fallback 처리)
+            setImage(img || undefined);
+
+            if (question) {
+                const splitSentences = question
+                    .split(/(?<=[.?!])\s+/)
+                    .filter((s) => s.trim() !== "");
+                setSentences(splitSentences);
+            } else {
+                setSentences(["질문이 없습니다."]);
             }
-
-            try {
-                setLoading(true);
-                console.log("🔄 Level 2 데이터 로딩 중... chapterId:", chapterId);
-                const level2Data = await fetchChapterContents(2, chapterId);
-                console.log("✅ Level 2 데이터:", level2Data);
-                
-                // Context 업데이트
-                setChapterData(level2Data);
-                
-                const question = level2Data?.objectiveQuestion;
-                const img = level2Data?.imgUrl;
-                console.log("📷 imgUrl:", img);
-                console.log("✅ objectiveQuestion:", question);
-                
-                // imgUrl이 있으면 설정, 없으면 undefined (onError로 fallback 처리)
-                setImage(img || undefined);
-
-                if (question) {
-                    const splitSentences = question
-                        .split(/(?<=[.?!])\s+/)
-                        .filter((s) => s.trim() !== "");
-                    setSentences(splitSentences);
-                } else {
-                    setSentences(["질문이 없습니다."]);
-                }
-                
-                setCurrentIndex(0);
-                setPreloadDone(false);
-            } catch (error) {
-                console.error("❌ Level 2 데이터 로딩 실패:", error);
-                setSentences(["❌ 내용을 불러오는데 실패했습니다. 다시 시도해주세요."]);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        loadLevel2Data();
-    }, [searchParams]);
+            
+            setCurrentIndex(0);
+            setPreloadDone(false);
+            setLoading(false);
+        } else {
+            console.error("❌ chapterData가 없습니다!");
+            setSentences(["❌ 데이터를 불러올 수 없습니다."]);
+            setLoading(false);
+        }
+    }, [chapterData]);
 
 
 
@@ -540,8 +520,6 @@ function StudyLv2_withImg({ user, login, setLogin }){
     
     return(
         <Wrapper>
-            <ContentWrapper>
-                <Sidebar user={user} login={login} setLogin={setLogin} defaultCollapsed={true} />
                 <MainWrapper>
                         {/* <MiniHeader
                     left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
@@ -571,7 +549,10 @@ function StudyLv2_withImg({ user, login, setLogin }){
                       onError={(e)=>e.target.src=testImage}
                   />
                   <QuestionButton onClick={()=>navigate('/question', {
-                      state: { from: '/study/level2-img' }
+                      state: { 
+                          from: '/study/level2-img',
+                          chapterId: searchParams.get('chapterId') || chapterData?.chapterId
+                      }
                   })}>
                      <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
                      질문하기
@@ -634,7 +615,6 @@ function StudyLv2_withImg({ user, login, setLogin }){
                 )}
                </ImageWithSpeechWrapper>
                 </MainWrapper>
-            </ContentWrapper>
         </Wrapper>
     );
 }

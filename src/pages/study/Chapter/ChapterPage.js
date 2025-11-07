@@ -235,9 +235,13 @@ function ChapterPage({ user, login, setLogin }) {
   const { bookId } = useParams(); //URL에서 bookID 가져오기
   const {chapterData,setChapterData,clearChapterData}=useChapter();
 
+  // bookId 디버깅
+  console.log('📖 ChapterPage - URL에서 가져온 bookId:', bookId);
+
 
   const [chapters,setChapters]=useState([]);
   const [currentChapterId,setCurrentChapterId]=useState(null);
+  const [currentLevel,setCurrentLevel]=useState(null); // 현재 학습 중인 레벨 추가
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState(null);
 
@@ -252,7 +256,9 @@ function ChapterPage({ user, login, setLogin }) {
         if (data && data.data && data.data.chapterList && Array.isArray(data.data.chapterList.content)) {
           setChapters(data.data.chapterList.content);
           setCurrentChapterId(data.data.currentChapterId);
+          setCurrentLevel(data.data.currentLevel); // currentLevel 저장
           console.log("🎯 Current Chapter ID:", data.data.currentChapterId);
+          console.log("🎯 Current Level:", data.data.currentLevel);
         } else if (Array.isArray(data)) {
           setChapters(data);
         } else if (data && Array.isArray(data.chapters)) {
@@ -293,17 +299,44 @@ function ChapterPage({ user, login, setLogin }) {
     return { isCompleted, isCurrent };
   };
 
-  const handleChapterClick = async (chapterId) => {
+  const handleChapterClick = async (clickedChapterId) => {
   try {
-    const chapter = await fetchChapterContents(1, chapterId); // level=1, chapterId 전달
+    // 클릭한 챕터가 현재 학습 중인 챕터인지 확인
+    const isCurrentChapter = clickedChapterId === currentChapterId;
+    const targetLevel = isCurrentChapter && currentLevel ? currentLevel : 1; // 현재 챕터면 currentLevel, 아니면 1부터
+    
+    console.log("🎯 챕터 클릭:", {
+      clickedChapterId,
+      currentChapterId,
+      currentLevel,
+      isCurrentChapter,
+      targetLevel
+    });
+    
+    const chapter = await fetchChapterContents(targetLevel, clickedChapterId, bookId);
     if(chapterData?.chapterId){
       clearChapterData();
     }
-    setChapterData(chapter);
-    console.log("✅API응답 chapter:",chapter.chapterId);
+    // bookId를 포함하여 setChapterData 호출
+    setChapterData({
+      ...chapter,
+      bookId: bookId
+    });
+    console.log("✅API응답 chapter:",chapter.chapterId, "bookId:", bookId);
 
-    // 예: chapter.id를 사용해서 다음 페이지로 이동
-    navigate(`/study/1?chapterId=${chapter.chapterId}`);
+    // currentLevel에 따라 해당 레벨로 이동
+    const levelRoutes = {
+      1: `/study/1?chapterId=${chapter.chapterId}`,
+      2: `/study/2?chapterId=${chapter.chapterId}`,
+      3: `/study/level3?chapterId=${chapter.chapterId}`,
+      4: `/game`,
+      5: `/study/level6/summary?chapterId=${chapter.chapterId}`,
+      6: `/study/level6/2?chapterId=${chapter.chapterId}`
+    };
+    
+    const targetRoute = levelRoutes[targetLevel] || `/study/1?chapterId=${chapter.chapterId}`;
+    console.log("🚀 이동할 경로:", targetRoute);
+    navigate(targetRoute);
   } catch (err) {
     console.error("학습 시작 API 호출 실패:", err);
     alert("단원 정보를 불러오지 못했습니다.");

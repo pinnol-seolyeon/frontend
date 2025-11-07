@@ -4,7 +4,6 @@ import Box from "../../../components/Box";
 import tigerPencil from "../../../assets/tiger-pencil.png";
 import Button from "../../../components/Button";
 import MiniHeader from "../../../components/study/MiniHeader";
-import Sidebar from "../../../components/Sidebar";
 import { fetchChapterContents } from "../../../api/study/level3API";
 import { useActivityTracker } from "../../../hooks/useActivityTracker";
 
@@ -203,10 +202,14 @@ function StudyPage({ user, login, setLogin }){
     const [step, setStep] = useState(0);
 
     // 활동 감지 Hook 사용 (level 2)
+    // FIXME: 백엔드 start-level API 401 에러로 임시 스킵
     const { completeSession } = useActivityTracker(
         chapterData?.chapterId, 
         2, // level 2
-        user?.userId
+        user?.userId,
+        chapterData?.bookId,
+        0, // minusFocusingScore
+        true // skipStartLevel: 백엔드 이슈로 임시 스킵
     );
 
     // Level 2 데이터 가져오기 (학습 목표)
@@ -223,12 +226,15 @@ function StudyPage({ user, login, setLogin }){
 
             try {
                 setLoading(true);
-                console.log("🔄 Level 2 학습 목표 로딩 중... chapterId:", chapterId);
-                const level2Data = await fetchChapterContents(2, chapterId);
+                console.log("🔄 Level 2 학습 목표 로딩 중... chapterId:", chapterId, "bookId:", chapterData?.bookId);
+                const level2Data = await fetchChapterContents(2, chapterId, chapterData?.bookId);
                 console.log("✅ Level 2 데이터:", level2Data);
                 
-                // Context 업데이트
-                setChapterData(level2Data);
+                // Context 업데이트 (bookId 보존)
+                setChapterData({
+                    ...level2Data,
+                    bookId: chapterData?.bookId
+                });
                 
                 if (level2Data?.objective) {
                     setObjective(level2Data.objective);
@@ -261,7 +267,6 @@ function StudyPage({ user, login, setLogin }){
     return(
         <Wrapper>
             <ContentWrapper>
-                <Sidebar user={user} login={login} setLogin={setLogin} defaultCollapsed={true} />
                 <MainWrapper>
                         {/* <MiniHeader
                             left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
@@ -302,11 +307,7 @@ function StudyPage({ user, login, setLogin }){
 
                             </TextBox>
                              <ButtonWrapper>
-                                 <BackButton onClick={() => navigate(-1)}>
-                                     뒤로
-                                 </BackButton>
-                                  <BubbleButton onClick={async () => {
-                                      await completeSession(); // COMPLETED 상태 전송
+                                  <BubbleButton onClick={() => {
                                       navigate(`/study/level2-img?chapterId=${chapterData?.chapterId}`);
                                   }}>
                                          다음

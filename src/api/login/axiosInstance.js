@@ -36,20 +36,15 @@ api.interceptors.response.use(
         // skipAuthRedirect 플래그가 있으면 자동 리다이렉트 하지 않음
         const skipAuthRedirect = error.config?.skipAuthRedirect;
         
-        // if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-        //     if (skipAuthRedirect) {
-        //         console.log('🔕 인증 오류 발생 (백그라운드 작업 - 리다이렉트 스킵)');
-        //     } else {
-        //         console.log('🔒 인증 오류 발생 - 로그인 페이지로 이동합니다.');
-        //         console.log('🔍 현재 경로:', window.location.pathname);
-        //         
-        //         // 현재 페이지가 로그인 페이지가 아닐 때만 리다이렉트
-        //         if (!window.location.pathname.includes('/login')) {
-        //             alert('세션이 만료되었습니다. 다시 로그인해주세요.');
-        //             window.location.href = '/login';
-        //         }
-        //     }
-        // }
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+            if (skipAuthRedirect) {
+                console.log('🔕 인증 오류 발생 (백그라운드 작업 - 리다이렉트 스킵)');
+            } else {
+                console.log('🔒 인증 오류 발생:', error.config?.url);
+                console.log('🔍 현재 경로:', window.location.pathname);
+                // 알림 및 리다이렉트 제거 (디버깅용)
+            }
+        }
         return Promise.reject(error);
     }
 );

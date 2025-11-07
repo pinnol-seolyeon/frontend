@@ -1,11 +1,22 @@
-export async function fetchChapterContents(level, chapterId){
-    const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/session/start-level?level=${level}&chapterId=${chapterId}`,{
+export async function fetchChapterContents(level, chapterId, bookId){
+    const url = bookId 
+        ? `${process.env.REACT_APP_API_BASE_URL}/api/session/start-level?level=${level}&chapterId=${chapterId}&bookId=${bookId}`
+        : `${process.env.REACT_APP_API_BASE_URL}/api/session/start-level?level=${level}&chapterId=${chapterId}`;
+    
+    const response=await fetch(url,{
         method:"POST",
         credentials:"include",
         headers: {
             'Content-Type': 'application/json',
         },
     });
+
+    // 401 에러 처리 (알림 제거)
+    if (response.status === 401 || response.status === 403) {
+        console.log('🔒 인증 오류 발생:', url, response.status);
+        console.log('🔍 응답:', await response.text());
+        throw new Error("인증이 필요합니다.");
+    }
 
     if(!response.ok){
         throw new Error("단원 내용을 불러오는 데 실패했습니다.");

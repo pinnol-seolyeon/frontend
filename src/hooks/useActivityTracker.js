@@ -1,26 +1,38 @@
 import { useEffect, useRef, useCallback } from 'react';
 import api from '../api/login/axiosInstance';
 
-export const useActivityTracker = (chapterId, level, userId, minusFocusingScore = 0) => {
+export const useActivityTracker = (chapterId, level, userId, bookId, minusFocusingScore = 0, skipStartLevel = false) => {
   const lastActiveRef = useRef(Date.now());
   const sessionStartRef = useRef(Date.now());
   const inactivityTimerRef = useRef(null);
   const currentStatusRef = useRef('ACTIVE'); // ACTIVE, INACTIVE, COMPLETED
   const levelStartedRef = useRef(false); // 레벨 시작 API 호출 여부
+  const isUnloadingRef = useRef(false); // 페이지 언로드 중인지 플래그
   
-  const INACTIVITY_THRESHOLD = 5 * 60 * 1000; // 5분
+  const INACTIVITY_THRESHOLD = 1 * 60 * 1000; // 1분
   const ACTIVITY_CHECK_INTERVAL = 30 * 1000; // 30초마다 확인
 
   // 레벨 시작 API 호출
   const startLevel = useCallback(async () => {
-    if (!chapterId || !level || levelStartedRef.current) return;
+    if (!chapterId || !level || levelStartedRef.current || skipStartLevel) {
+      if (skipStartLevel) {
+        console.log('⏭️ start-level 스킵 (skipStartLevel=true)');
+      }
+      return;
+    }
+
+    // bookId 디버깅
+    if (!bookId) {
+      console.error('⚠️⚠️⚠️ bookId가 undefined입니다!', { level, chapterId, bookId });
+    }
 
     try {
-      console.log('🎬 레벨 시작 API 호출:', { level, chapterId });
+      console.log('🎬 레벨 시작 API 호출:', { level, chapterId, bookId });
       const response = await api.post('/api/session/start-level', null, {
         params: {
           level,
-          chapterId
+          chapterId,
+          bookId
         },
         // 이 요청은 인터셉터에서 자동 리다이렉트하지 않음
         skipAuthRedirect: true
@@ -47,7 +59,7 @@ export const useActivityTracker = (chapterId, level, userId, minusFocusingScore 
         // 401 에러지만 자동 리다이렉트는 하지 않음 (백그라운드 작업)
       }
     }
-  }, [chapterId, level]);
+  }, [chapterId, level, bookId, skipStartLevel]);
 
   // API 호출 함수
   const updateSessionStatus = useCallback(async (status, includeStartTime = false) => {
@@ -67,7 +79,8 @@ export const useActivityTracker = (chapterId, level, userId, minusFocusingScore 
       userId: userId, // username을 userId로 사용
       chapterId,
       level,
-      lastActive: formatDateTime(new Date()),
+      bookId,
+      lastActive: formatDateTime(new Date(lastActiveRef.current)), // 실제 마지막 활동 시간 사용
       status,
       completed: false, // 항상 false (status로만 구분)
       minusFocusingScore: status === 'INACTIVE' ? 2 : 0, // INACTIVE일 때만 2, 나머지는 0
@@ -104,7 +117,7 @@ export const useActivityTracker = (chapterId, level, userId, minusFocusingScore 
       }
     }
 
-  }, [chapterId, level, userId]);
+  }, [chapterId, level, userId, bookId]);
 
   // 활동 감지 핸들러
   const handleActivity = useCallback(() => {
@@ -139,6 +152,12 @@ export const useActivityTracker = (chapterId, level, userId, minusFocusingScore 
   // Page Visibility 감지
   const handleVisibilityChange = useCallback(() => {
     if (document.hidden) {
+      // 언로드 중이면 INACTIVE 전환하지 않음 (EXIT 전송 대기 중)
+      if (isUnloadingRef.current) {
+        console.log('🚪 페이지 언로드 중 - INACTIVE 전환 스킵 (EXIT 대기)');
+        return;
+      }
+      
       // 탭을 벗어남 - 즉시 INACTIVE로 전환
       if (currentStatusRef.current === 'ACTIVE') {
         console.log('👋 탭 벗어남 감지 (즉시 INACTIVE 전환)');
@@ -148,6 +167,13 @@ export const useActivityTracker = (chapterId, level, userId, minusFocusingScore 
     } else {
       // 탭으로 돌아옴 - 즉시 ACTIVE로 전환
       console.log('👀 탭으로 복귀 감지 (즉시 ACTIVE 전환)');
+      
+      // 언로드 플래그 리셋 (사용자가 팝업에서 "취소" 선택)
+      if (isUnloadingRef.current) {
+        console.log('🚫 언로드 취소 감지 - isUnloadingRef 리셋');
+        isUnloadingRef.current = false;
+      }
+      
       if (currentStatusRef.current === 'INACTIVE') {
         currentStatusRef.current = 'ACTIVE';
         updateSessionStatus('ACTIVE');
@@ -156,12 +182,79 @@ export const useActivityTracker = (chapterId, level, userId, minusFocusingScore 
     }
   }, [handleActivity, updateSessionStatus]);
 
+  // beforeunload - 브라우저 확인 팝업만 표시
+  const handleBeforeUnload = useCallback((event) => {
+    console.log('🚪 beforeunload - 브라우저 확인 팝업 표시');
+    
+    // 언로드 플래그 설정
+    isUnloadingRef.current = true;
+    console.log('✅ isUnloadingRef = true 설정');
+    
+    // 브라우저 기본 확인 팝업 표시
+    event.preventDefault();
+    event.returnValue = '';
+    
+    console.log('💡 팝업 표시됨 - EXIT는 pagehide에서 전송 예정');
+  }, []);
+
+  // pagehide - 사용자가 "나가기" 선택 시만 EXIT 전송
+  const handlePageHide = useCallback((event) => {
+    console.log('🚪🚪🚪 pagehide 이벤트 발생!');
+    console.log('🔍 isUnloadingRef.current:', isUnloadingRef.current);
+    console.log('🔍 event.persisted:', event.persisted);
+    
+    if (!isUnloadingRef.current) {
+      console.log('🚫 isUnloadingRef가 false - EXIT 전송 안 함 (탭 전환 또는 "취소" 선택)');
+      return;
+    }
+    
+    console.log('✅ 사용자가 "나가기" 선택 - EXIT 전송 시작');
+    currentStatusRef.current = 'EXIT';
+    
+    const formatDateTime = (date) => {
+      const d = new Date(date);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const seconds = String(d.getSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    };
+
+    const payload = {
+      userId: userId,
+      chapterId,
+      level,
+      lastActive: formatDateTime(new Date(lastActiveRef.current)),
+      status: 'EXIT',
+      completed: false,
+      minusFocusingScore: 0,
+      bookId: bookId,
+    };
+
+    console.log('📤 EXIT 상태 전송 (pagehide):', payload);
+
+    // sendBeacon 사용 (페이지 종료 시에도 전송 보장)
+    const url = `${process.env.REACT_APP_API_BASE_URL || ''}/api/session/update`;
+    const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+    navigator.sendBeacon(url, blob);
+  }, [chapterId, level, userId, bookId]);
+
   // 학습 완료 함수
   const completeSession = useCallback(async () => {
     console.log('✅ 학습 완료 - COMPLETED 상태 전송');
     currentStatusRef.current = 'COMPLETED';
-    await updateSessionStatus('COMPLETED'); // startTime 없이, 완료될 때까지 대기
+    await updateSessionStatus('COMPLETED');
     console.log('✅ COMPLETED 상태 전송 완료');
+  }, [updateSessionStatus]);
+
+  // 명시적으로 EXIT 전송 (Exit 모달에서 "확인" 클릭 시)
+  const sendExit = useCallback(async () => {
+    console.log('🚪 EXIT 버튼 확인 - EXIT 상태 전송');
+    currentStatusRef.current = 'EXIT';
+    await updateSessionStatus('EXIT');
+    console.log('✅ EXIT 상태 전송 완료');
   }, [updateSessionStatus]);
 
   // 이벤트 리스너 등록
@@ -201,6 +294,15 @@ export const useActivityTracker = (chapterId, level, userId, minusFocusingScore 
     // Page Visibility API
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
+    // beforeunload - 확인 팝업만 표시 (EXIT 전송 안 함)
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    // pagehide - 실제로 페이지가 언로드될 때 EXIT 전송
+    window.addEventListener('pagehide', handlePageHide);
+    console.log('✅ beforeunload & pagehide 이벤트 리스너 등록 완료');
+    console.log('💡 beforeunload: 확인 팝업 표시');
+    console.log('💡 pagehide: 실제 종료 시 EXIT 전송 (팝업에서 "나가기" 클릭 시)');
+
     // 2. 레벨 시작 후 타이머만 시작 (ACTIVE 상태는 startLevel에서 설정됨)
     handleActivity(); // 타이머 시작
 
@@ -228,6 +330,8 @@ export const useActivityTracker = (chapterId, level, userId, minusFocusingScore 
         window.removeEventListener(event, throttledActivity);
       });
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('pagehide', handlePageHide);
       
       if (inactivityTimerRef.current) {
         clearTimeout(inactivityTimerRef.current);
@@ -235,17 +339,14 @@ export const useActivityTracker = (chapterId, level, userId, minusFocusingScore 
       clearInterval(intervalId);
 
       // 컴포넌트 언마운트 시 처리
-      if (currentStatusRef.current === 'COMPLETED') {
-        // 이미 completeSession()으로 COMPLETED 전송한 경우 추가 전송 없음
-        console.log('✅ 컴포넌트 종료: 이미 COMPLETED 상태 (추가 전송 없음)');
-      } else if (currentStatusRef.current === 'ACTIVE') {
-        // ACTIVE 상태에서 종료되면 INACTIVE 전송
-        console.log('📤 컴포넌트 종료: INACTIVE 전송');
-        updateSessionStatus('INACTIVE');
-      }
+      // cleanup에서는 아무 상태도 전송하지 않음
+      // - ACTIVE/INACTIVE: 5분 타이머나 visibility API에서 처리
+      // - EXIT: pagehide에서 처리
+      // - COMPLETED: completeSession()에서 처리
+      console.log('🛑 컴포넌트 언마운트: 상태 전송 없음 (현재 상태:', currentStatusRef.current, ')');
     };
-  }, [handleActivity, handleVisibilityChange, updateSessionStatus, startLevel, chapterId, level, INACTIVITY_THRESHOLD, ACTIVITY_CHECK_INTERVAL]);
+  }, [handleActivity, handleVisibilityChange, handleBeforeUnload, handlePageHide, updateSessionStatus, startLevel, chapterId, level, INACTIVITY_THRESHOLD, ACTIVITY_CHECK_INTERVAL]);
 
-  return { completeSession };
+  return { completeSession, sendExit };
 };
 
