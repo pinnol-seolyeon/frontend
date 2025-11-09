@@ -82,6 +82,20 @@ export const connectSSE = async (question, onMessage, onEnd, onError) => {
                             // 이벤트 타입 설정
                             currentEvent = trimmedLine.substring(6).trim();
                             console.log('📢 이벤트 타입:', currentEvent);
+                            
+                            // event:end를 받으면 즉시 스트림 종료
+                            if (currentEvent === 'end') {
+                                console.log('✅ 스트림 종료 신호 (event:end) - 이후 데이터 무시');
+                                if (onEnd) onEnd();
+                                isClosed = true;
+                                // reader 즉시 닫기
+                                try {
+                                    reader.cancel();
+                                } catch (e) {
+                                    console.log('reader cancel 중 에러 (무시):', e);
+                                }
+                                return; // readStream 함수 완전히 종료
+                            }
                         } else if (trimmedLine.startsWith('data:')) {
                             const data = trimmedLine.substring(5).trim();
                             
@@ -91,10 +105,16 @@ export const connectSSE = async (question, onMessage, onEnd, onError) => {
                             if (currentEvent === 'message') {
                                 if (onMessage) onMessage(data);
                             } else if (currentEvent === 'end') {
-                                console.log('✅ 스트림 종료 신호');
+                                console.log('✅ 스트림 종료 신호 (data) - 이후 데이터 무시');
                                 if (onEnd) onEnd();
                                 isClosed = true;
-                                break;
+                                // reader 즉시 닫기
+                                try {
+                                    reader.cancel();
+                                } catch (e) {
+                                    console.log('reader cancel 중 에러 (무시):', e);
+                                }
+                                return; // readStream 함수 완전히 종료
                             } else if (currentEvent === 'expired') {
                                 console.log('⚠️ 토큰 만료 감지 → 자동 재연결');
                                 isClosed = true;
@@ -113,7 +133,7 @@ export const connectSSE = async (question, onMessage, onEnd, onError) => {
                                     console.error("❌ 토큰 재발급 실패:", err);
                                     if (onError) onError(err);
                                 }
-                                break;
+                                return; // readStream 함수 완전히 종료
                             }
                             
                             // 다음 줄을 위해 이벤트 타입 리셋
