@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
 import point from '../assets/point_img.svg';
+import { fetchPointHistory } from '../api/analyze/pointHistory';
 
 const Wrapper = styled.div`
   background-color: #ffffff;
@@ -221,61 +222,64 @@ const PaginationButton = styled.button`
 function Point({ user, login, setLogin }) {
   const navigate = useNavigate();
   
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0); // API는 0부터 시작
   const itemsPerPage = 7;
   
-  // 임시 포인트 내역 데이터
-  const pointHistory = [
-    { id: 1, category: '게임 포인트', detail: '1단원 퀴즈게임', date: '2025-10-19 18:24', point: 2000, isDebit: false },
-    { id: 2, category: '게임 포인트', detail: '2단원 퀴즈게임', date: '2025-10-19 18:24', point: 2000, isDebit: false },
-    { id: 3, category: '방문 미션', detail: '화폐박물관 방문 미션 완료', date: '2025-10-19 18:24', point: 2000, isDebit: false },
-    { id: 4, category: '계좌 환급', detail: '50,000원 용돈 환급', date: '2025-10-19 18:24', point: 50000, isDebit: true },
-    { id: 5, category: '상품권 구매', detail: '50,000원 상품권 구매', date: '2025-10-19 18:24', point: 50000, isDebit: true },
-    { id: 6, category: '게임포인트', detail: '3단원 퀴즈게임', date: '2025-10-19 18:24', point: 2000, isDebit: false },
-    { id: 7, category: '게임포인트', detail: '4단원 퀴즈게임', date: '2025-10-19 18:24', point: 2000, isDebit: false },
-    { id: 8, category: '게임 포인트', detail: '5단원 퀴즈게임', date: '2025-10-20 10:15', point: 2000, isDebit: false },
-    { id: 9, category: '방문 미션', detail: '은행 방문 미션 완료', date: '2025-10-20 14:30', point: 3000, isDebit: false },
-    { id: 10, category: '상품권 구매', detail: '10,000원 상품권 구매', date: '2025-10-21 09:00', point: 10000, isDebit: true },
-  ];
-  
-  // API 관련 상태 및 로직은 임시로 주석 처리
-  // const { userProgress } = useOutletContext();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const [completedStages, setCompletedStages] = useState([]);
+  
+  // API 응답 데이터
+  const [pointHistory, setPointHistory] = useState([]);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
-  // API 호출 부분은 임시로 주석 처리
-  // useEffect(() => {
-  //   const initializePage = async () => {
-  //     try {
-  //       setLoading(true);
-  //       if (!auth.currentUser) {
-  //         throw new Error('로그인이 필요합니다.');
-  //       }
-        
-  //       // completedSteps 데이터 처리
-  //       const completed = Array.isArray(userProgress?.completedSteps) 
-  //         ? userProgress.completedSteps 
-  //         : Object.keys(userProgress?.completedSteps || {}).map(Number);
-        
-  //       setCompletedStages(completed);
-  //     } catch (error) {
-  //       console.error('Review page error:', error);
-  //       setError(error.message || '페이지를 불러오는 중 오류가 발생했습니다.');
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   initializePage();
-  // }, [userProgress]);
-
-  // 임시 데이터로 표시 (API 연결 전)
+  // 날짜 포맷팅 함수 (밀리초 제거, 시:분까지만)
+  const formatDateTime = (dateTimeString) => {
+    if (!dateTimeString) return '';
+    
+    try {
+      // "2025-11-09T22:13:31.347" -> "2025-11-09 22:13"
+      const [datePart, timePart] = dateTimeString.split('T');
+      const timeWithoutMs = timePart.split('.')[0]; // 밀리초 제거
+      const [hour, minute] = timeWithoutMs.split(':');
+      
+      return `${datePart} ${hour}:${minute}`;
+    } catch (error) {
+      console.error('날짜 포맷팅 실패:', error);
+      return dateTimeString;
+    }
+  };
+  
+  // 카테고리에 따라 차감 여부 판단
+  const isDebitCategory = (category) => {
+    return category === '계좌 환급' || category === '상품권 구매';
+  };
+  
+  // 포인트 히스토리 불러오기
   useEffect(() => {
-    // 임시로 모든 단계를 완료 상태로 설정
-    setCompletedStages([1, 2, 3, 4, 5, 6]);
-    setLoading(false);
-  }, []);
+    const loadPointHistory = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const data = await fetchPointHistory(currentPage, itemsPerPage);
+        
+        console.log('📊 포인트 히스토리 데이터:', data);
+        
+        setPointHistory(data.content || []);
+        setTotalPages(data.totalPages || 0);
+        setTotalElements(data.totalElements || 0);
+      } catch (err) {
+        console.error('❌ 포인트 히스토리 불러오기 실패:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadPointHistory();
+  }, [currentPage]);
 
   const reviewModules = [
     {
@@ -330,18 +334,9 @@ function Point({ user, login, setLogin }) {
     navigate(`/main/learning/${moduleId}`, { state: { isReview: true, isQuiz: true }});
   };
 
-  // 페이지네이션 계산
-  const totalPages = Math.ceil(pointHistory.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentItems = pointHistory.slice(startIndex, endIndex);
-
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
-
-  if (loading) return <div className="loading">로딩 중...</div>;
-  if (error) return <div className="error-message">{error}</div>;
 
   return (
     <Wrapper>
@@ -364,78 +359,107 @@ function Point({ user, login, setLogin }) {
                 </PointTextWrapper>
             </TotalPointWrapper>
 
-            <TableWrapper>
-              <Table>
-                <TableHeader>
-                  <tr>
-                    <TableHeaderCell>NO</TableHeaderCell>
-                    <TableHeaderCell>카테고리</TableHeaderCell>
-                    <TableHeaderCell>상세내역</TableHeaderCell>
-                    <TableHeaderCell>날짜</TableHeaderCell>
-                    <TableHeaderCell>피넛(FINUT) 내역</TableHeaderCell>
-                  </tr>
-                </TableHeader>
-                <TableBody>
-                  {currentItems.map((item, index) => (
-                    <TableRow key={item.id}>
-                      <TableCell>{String(startIndex + index + 1).padStart(2, '0')}</TableCell>
-                      <TableCell>
-                        <CategoryTag isDebit={item.isDebit}>
-                          {item.category}
-                        </CategoryTag>
-                      </TableCell>
-                      <DetailTableCell>{item.detail}</DetailTableCell>
-                      <TableCell>{item.date}</TableCell>
-                      <TableCell>
-                        <PointChange isPositive={!item.isDebit}>
-                          {item.isDebit ? '-' : '+'} {item.point.toLocaleString()}P
-                        </PointChange>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableWrapper>
+            {loading && (
+              <div style={{ textAlign: 'center', padding: '3rem' }}>
+                <p>포인트 내역을 불러오는 중입니다...</p>
+              </div>
+            )}
 
-            <PaginationWrapper>
-              <PaginationButton 
-                isArrow
-                onClick={() => handlePageChange(1)}
-                disabled={currentPage === 1}
-              >
-                «
-              </PaginationButton>
-              <PaginationButton 
-                isArrow
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                ‹
-              </PaginationButton>
-              {[...Array(totalPages)].map((_, index) => (
-                <PaginationButton
-                  key={index + 1}
-                  active={currentPage === index + 1}
-                  onClick={() => handlePageChange(index + 1)}
+            {error && (
+              <div style={{ textAlign: 'center', padding: '3rem', color: 'red' }}>
+                <p>데이터를 불러오는데 실패했습니다: {error}</p>
+              </div>
+            )}
+
+            {!loading && !error && (
+            <>
+              <TableWrapper>
+                <Table>
+                  <TableHeader>
+                    <tr>
+                      <TableHeaderCell>NO</TableHeaderCell>
+                      <TableHeaderCell>카테고리</TableHeaderCell>
+                      <TableHeaderCell>상세내역</TableHeaderCell>
+                      <TableHeaderCell>날짜</TableHeaderCell>
+                      <TableHeaderCell>피넛(FINUT) 내역</TableHeaderCell>
+                    </tr>
+                  </TableHeader>
+                  <TableBody>
+                    {pointHistory.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>
+                          아직 포인트 내역이 없습니다.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      pointHistory.map((item, index) => {
+                        const isDebit = isDebitCategory(item.category);
+                        return (
+                          <TableRow key={item.id}>
+                            <TableCell>{String(currentPage * itemsPerPage + index + 1).padStart(2, '0')}</TableCell>
+                            <TableCell>
+                              <CategoryTag isDebit={isDebit}>
+                                {item.category}
+                              </CategoryTag>
+                            </TableCell>
+                            <DetailTableCell>{item.category}</DetailTableCell>
+                            <TableCell>{formatDateTime(item.createdAt)}</TableCell>
+                            <TableCell>
+                              <PointChange isPositive={!isDebit}>
+                                {isDebit ? '-' : '+'} {item.amount.toLocaleString()}F
+                              </PointChange>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
+                  </TableBody>
+                </Table>
+              </TableWrapper>
+
+              {totalPages > 0 && (
+                <PaginationWrapper>
+                <PaginationButton 
+                  isArrow
+                  onClick={() => handlePageChange(0)}
+                  disabled={currentPage === 0}
                 >
-                  {index + 1}
+                  «
                 </PaginationButton>
-              ))}
-              <PaginationButton 
-                isArrow
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                ›
-              </PaginationButton>
-              <PaginationButton 
-                isArrow
-                onClick={() => handlePageChange(totalPages)}
-                disabled={currentPage === totalPages}
-              >
-                »
-              </PaginationButton>
-            </PaginationWrapper>
+                <PaginationButton 
+                  isArrow
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 0}
+                >
+                  ‹
+                </PaginationButton>
+                {[...Array(totalPages)].map((_, index) => (
+                  <PaginationButton
+                    key={index}
+                    active={currentPage === index}
+                    onClick={() => handlePageChange(index)}
+                  >
+                    {index + 1}
+                  </PaginationButton>
+                ))}
+                <PaginationButton 
+                  isArrow
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages - 1}
+                >
+                  ›
+                </PaginationButton>
+                <PaginationButton 
+                  isArrow
+                  onClick={() => handlePageChange(totalPages - 1)}
+                  disabled={currentPage === totalPages - 1}
+                >
+                  »
+                </PaginationButton>
+                </PaginationWrapper>
+              )}
+            </>
+            )}
           </ContentContainer>
         </MainWrapper>
       </ContentWrapper>

@@ -27,9 +27,10 @@ export async function fetchStudyStats() {
       throw new Error(`HTTP ${res.status}: ${text}`);
     }
 
-    const data = await res.json();
-    console.log('✅ 학습 통계 데이터:', data);
-    return data;
+    const response = await res.json();
+    console.log('✅ 학습 통계 응답:', response);
+    console.log('✅ 학습 통계 데이터:', response.data);
+    return response.data; // data 필드만 반환
   } catch (error) {
     console.error('❌ fetchStudyStats 실패:', error);
     throw error;
@@ -106,15 +107,16 @@ export async function fetchTotalProgress() {
 
     if (!res.ok) {
       const text = await res.text();
-      console.error('❌ fetchStudyNowStats 실패:', res.status, text);
+      console.error('❌ fetchTotalProgress 실패:', res.status, text);
       throw new Error(`HTTP ${res.status}: ${text}`);
     }
 
-    const data = await res.json();
-    console.log('✅ 학습 통계 데이터:', data);
-    return data;
+    const response = await res.json();
+    console.log('✅ 전체 진행률 응답:', response);
+    console.log('✅ 전체 진행률 데이터:', response.data);
+    return response.data; // data 필드만 반환 (33.3 같은 숫자)
   } catch (error) {
-    console.error('❌ fetchStudyNowStats 실패:', error);
+    console.error('❌ fetchTotalProgress 실패:', error);
     throw error;
   }
 }
@@ -184,12 +186,12 @@ function transformWeeklyPatternData(apiData) {
     'SUNDAY': '일'
   };
 
-  // 시간대 타입 매핑: 아침형 -> morning, 낮형 -> afternoon, 밤형 -> evening, 새벽형 -> night
+  // 시간대 타입 매핑: API에서 오는 대문자 영어를 소문자로 변환
   const timeZoneMap = {
-    '아침형': 'morning',
-    '낮형': 'afternoon',
-    '밤형': 'evening',
-    '새벽형': 'night'
+    'MORNING': 'morning',
+    'AFTERNOON': 'afternoon',
+    'EVENING': 'evening',
+    'NIGHT': 'night'
   };
 
   // 초기화: 요일별 시간대별 분 초기화
@@ -216,9 +218,19 @@ function transformWeeklyPatternData(apiData) {
     const day = dayMap[item.dayOfWeek];
     const timeZoneKey = timeZoneMap[item.timeZone];
     
+    console.log('📊 데이터 변환:', {
+      원본_dayOfWeek: item.dayOfWeek,
+      변환_day: day,
+      원본_timeZone: item.timeZone,
+      변환_timeZoneKey: timeZoneKey,
+      minutes: item.minutes
+    });
+    
     if (day && timeZoneKey && item.minutes) {
       weeklyStats[day][timeZoneKey] += item.minutes;
       totalByTimeZone[timeZoneKey] += item.minutes;
+    } else {
+      console.warn('⚠️ 변환 실패:', { day, timeZoneKey, item });
     }
   });
 
@@ -252,6 +264,13 @@ function transformWeeklyPatternData(apiData) {
       }
     }
   }
+
+  console.log('✅ 변환 완료:', {
+    preferredType,
+    weeklyStats,
+    totalByTimeZone,
+    totalTime
+  });
 
   return {
     preferredType,

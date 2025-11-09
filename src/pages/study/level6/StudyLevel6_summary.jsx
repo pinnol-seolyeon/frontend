@@ -367,15 +367,6 @@ function StudyPage({ user, login, setLogin }){
 
                         <RightSection>
                           <SummaryImage src={image} alt="요약 이미지" />
-                          <QuestionButton onClick={() => navigate('/question', {
-                                state: { 
-                                    from: '/study/level6/summary',
-                                    chapterId: searchParams.get('chapterId') || chapterData?.chapterId
-                                }
-                            })}>
-                                <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
-                                질문하기
-                            </QuestionButton>
                         </RightSection>
                       </ContentContainer>
                         <TtsPlayer
