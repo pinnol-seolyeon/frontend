@@ -197,14 +197,18 @@ const TitleWrapper = styled.div`
   // ChapterCard 컴포넌트
   const ChapterCardComponent = ({ chapter, onSelect, levelNumber }) => {
     const getButtonText = () => {
-      if (chapter.status === 'locked') return '잠금';
       if (chapter.status === 'completed') return '완료!';
+      if (chapter.status === 'locked') return '잠금';
+      // 현재 진행 중인 챕터이면서 할당량 초과인 경우
+      if (chapter.status === 'current' && chapter.isAvailable === false) return '할당량 초과';
       return '시작하기';
     };
 
     const getButtonVariant = () => {
-      if (chapter.status === 'locked') return 'locked';
       if (chapter.status === 'completed') return 'completed';
+      if (chapter.status === 'locked') return 'locked';
+      // 할당량 초과인 경우 잠금 스타일 적용
+      if (chapter.isAvailable === false) return 'locked';
       return 'current';
     };
 
@@ -219,8 +223,8 @@ const TitleWrapper = styled.div`
 
         <ActionButton 
           variant={getButtonVariant()}
-          onClick={() => onSelect(chapter.id)}
-          disabled={chapter.status === 'locked' || chapter.status === 'completed'}
+          onClick={() => onSelect(chapter.id, chapter.isAvailable, chapter.status)}
+          disabled={chapter.isAvailable === false || chapter.status === 'locked' || chapter.status === 'completed'}
         >
           {getButtonText()}
         </ActionButton>
@@ -242,6 +246,7 @@ function ChapterPage({ user, login, setLogin }) {
   const [chapters,setChapters]=useState([]);
   const [currentChapterId,setCurrentChapterId]=useState(null);
   const [currentLevel,setCurrentLevel]=useState(null); // 현재 학습 중인 레벨 추가
+  const [isAvailable,setIsAvailable]=useState(true); // 전체 학습 할당량 여부
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState(null);
 
@@ -257,8 +262,10 @@ function ChapterPage({ user, login, setLogin }) {
           setChapters(data.data.chapterList.content);
           setCurrentChapterId(data.data.currentChapterId);
           setCurrentLevel(data.data.currentLevel); // currentLevel 저장
+          setIsAvailable(data.data.isAvailable !== undefined ? data.data.isAvailable : true); // isAvailable 저장
           console.log("🎯 Current Chapter ID:", data.data.currentChapterId);
           console.log("🎯 Current Level:", data.data.currentLevel);
+          console.log("🎯 Is Available:", data.data.isAvailable);
         } else if (Array.isArray(data)) {
           setChapters(data);
         } else if (data && Array.isArray(data.chapters)) {
@@ -299,8 +306,14 @@ function ChapterPage({ user, login, setLogin }) {
     return { isCompleted, isCurrent };
   };
 
-  const handleChapterClick = async (clickedChapterId) => {
+  const handleChapterClick = async (clickedChapterId, isAvailable, status) => {
   try {
+    // current 상태이고 isAvailable이 false이면 경고 메시지 표시
+    if (status === 'current' && isAvailable === false) {
+      alert("이미 이번 주 할당량 학습을 모두 완료하였어요");
+      return;
+    }
+
     // 클릭한 챕터가 현재 학습 중인 챕터인지 확인
     const isCurrentChapter = clickedChapterId === currentChapterId;
     const targetLevel = isCurrentChapter && currentLevel ? currentLevel : 1; // 현재 챕터면 currentLevel, 아니면 1부터
@@ -317,10 +330,11 @@ function ChapterPage({ user, login, setLogin }) {
     if(chapterData?.chapterId){
       clearChapterData();
     }
-    // bookId를 포함하여 setChapterData 호출
+    // bookId와 isAvailable을 포함하여 setChapterData 호출
     setChapterData({
       ...chapter,
-      bookId: bookId
+      bookId: bookId,
+      isAvailable: isAvailable
     });
     console.log("✅API응답 chapter:",chapter.chapterId, "bookId:", bookId);
 
@@ -376,8 +390,19 @@ function ChapterPage({ user, login, setLogin }) {
                   const chapterData = {
                     id,
                     title,
-                    status: isCompleted ? 'completed' : isCurrent ? 'current' : 'locked'
+                    status: isCompleted ? 'completed' : isCurrent ? 'current' : 'locked',
+                    // 현재 진행 중인 챕터(isCurrent)에만 전체 isAvailable 적용
+                    isAvailable: isCurrent ? isAvailable : true
                   };
+
+                  // 디버깅용 로그
+                  console.log(`📋 Chapter ${chapterId} (${title}):`, {
+                    status: chapterData.status,
+                    chapterIsAvailable: chapterData.isAvailable,
+                    isCurrent,
+                    isCompleted,
+                    globalIsAvailable: isAvailable
+                  });
 
                   return (
                     <ChapterCardComponent
