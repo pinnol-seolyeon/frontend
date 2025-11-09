@@ -197,12 +197,14 @@ export default function Dashboard({ user, login, setLogin }) {
         setLoading(true);
         setError(null);
         
-        const [statsData, radarData, nowStudyingData, totalProgressData] = await Promise.all([
+        const [statsData, nowStudyingResponse, radarData, totalProgressData] = await Promise.all([
           fetchStudyStats(),
           fetchStudyNowStats(),
           fetchRadarScore(),
           fetchTotalProgress()
         ]);
+        
+        console.log('📊 now-studying API 응답:', nowStudyingResponse);
         
         if (statsData === 0) {
           setNoStudy(true);
@@ -211,7 +213,16 @@ export default function Dashboard({ user, login, setLogin }) {
           setNoStudy(false);
           setStudyStats(statsData);
         }
-        setNowStudying(nowStudyingData);
+        
+        // now-studying API의 새로운 구조 사용
+        if (nowStudyingResponse && nowStudyingResponse.data) {
+          setNowStudying(nowStudyingResponse.data);
+          console.log('✅ 현재 학습 중:', nowStudyingResponse.data);
+        } else {
+          setNowStudying(null);
+          console.log('⚠️ 현재 학습 중인 데이터 없음');
+        }
+        
         setTotalProgress(totalProgressData);
         setThisWeek(radarData.thisWeek);
         setLastWeek(radarData.lastWeek);
@@ -300,12 +311,17 @@ export default function Dashboard({ user, login, setLogin }) {
               </ProgressContainer>
               <ProgressContainer>
               <ContainerWrapper>
-                  <ContainerTitle>현재 교재 레벨</ContainerTitle>
-                  <ContainerText>{noStudy ? '아직 학습을 진행 안했어 학습을 시작해볼까?' : `현재 학습 단원은 Lv.${(studyStats?.level || 0) + 1}
-  ${studyStats?.chapterTitle || '돈이란 무엇일까?'}을 학습하고 있어요!`}</ContainerText>
+                  <ContainerTitle>현재 학습 중</ContainerTitle>
+                  <ContainerText>
+                    {noStudy || !nowStudying ? '아직 학습을 진행 안했어 학습을 시작해볼까?' : 
+                    `${nowStudying.bookTitle} - ${nowStudying.chapterTitle}
+Level ${nowStudying.currentLevel}을 학습하고 있어요!`}
+                  </ContainerText>
                 </ContainerWrapper>
                 <CircleWrapper>
-                  <CircleText>Lv.{(studyStats?.level || 0) + 1}</CircleText>
+                  <CircleText>
+                    {nowStudying ? `Lv.${nowStudying.currentLevel}` : 'Lv.0'}
+                  </CircleText>
                 </CircleWrapper>
               </ProgressContainer> 
 

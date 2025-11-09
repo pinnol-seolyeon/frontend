@@ -62,7 +62,7 @@ export const useActivityTracker = (chapterId, level, userId, bookId, minusFocusi
   }, [chapterId, level, bookId, skipStartLevel]);
 
   // API 호출 함수
-  const updateSessionStatus = useCallback(async (status, includeStartTime = false) => {
+  const updateSessionStatus = useCallback(async (status, completed = false) => {
     // ISO 시간을 YYYY-MM-DDTHH:mm:ss 형식으로 변환
     const formatDateTime = (date) => {
       const d = new Date(date);
@@ -82,14 +82,9 @@ export const useActivityTracker = (chapterId, level, userId, bookId, minusFocusi
       bookId,
       lastActive: formatDateTime(new Date(lastActiveRef.current)), // 실제 마지막 활동 시간 사용
       status,
-      completed: false, // 항상 false (status로만 구분)
+      completed, // Level 6 완료 시 true, 나머지는 false
       minusFocusingScore: status === 'INACTIVE' ? 2 : 0, // INACTIVE일 때만 2, 나머지는 0
     };
-
-    // COMPLETED일 때만 startTime 포함
-    if (includeStartTime) {
-      payload.startTime = formatDateTime(new Date(sessionStartRef.current));
-    }
 
     // 콘솔에 로그 출력
     console.log('📡 세션 상태 업데이트 요청:', {
@@ -244,10 +239,22 @@ export const useActivityTracker = (chapterId, level, userId, bookId, minusFocusi
   // 학습 완료 함수
   const completeSession = useCallback(async () => {
     console.log('✅ 학습 완료 - COMPLETED 상태 전송');
+    console.log('📊 세션 정보:', {
+      userId,
+      chapterId,
+      level,
+      bookId,
+      sessionStart: new Date(sessionStartRef.current).toISOString(),
+      sessionDuration: `${Math.floor((Date.now() - sessionStartRef.current) / 1000)}초`
+    });
     currentStatusRef.current = 'COMPLETED';
-    await updateSessionStatus('COMPLETED');
-    console.log('✅ COMPLETED 상태 전송 완료');
-  }, [updateSessionStatus]);
+    
+    // Level 6 완료 시 completed=true, 나머지는 false
+    const isCompleted = level === 6;
+    
+    await updateSessionStatus('COMPLETED', isCompleted);
+    console.log('✅ COMPLETED 상태 전송 완료', { completed: isCompleted });
+  }, [updateSessionStatus, userId, chapterId, level, bookId]);
 
   // 명시적으로 EXIT 전송 (Exit 모달에서 "확인" 클릭 시)
   const sendExit = useCallback(async () => {

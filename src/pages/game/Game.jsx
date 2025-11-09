@@ -939,7 +939,7 @@ export default function Game({ user }) {
     if (!quizLoaded || !isGameStarted || !imagesLoaded) return;
     
     if (gameOver) {
-        saveCoinToDB(scoreRef.current);
+        saveCoinToDB(scoreRef.current, chapterId);
         
         // API 형식에 맞게 데이터 변환
         const formattedResults = quizResultsRef.current.map(result => ({
