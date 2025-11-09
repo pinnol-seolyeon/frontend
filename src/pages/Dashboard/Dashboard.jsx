@@ -179,17 +179,15 @@ export default function Dashboard({ user, login, setLogin }) {
   const [nowStudying, setNowStudying] = useState(null);
   const [totalProgress, setTotalProgress] = useState(null);
   useEffect(() => {
-    if (studyStats && studyStats.totalCompleted !== undefined) {
-      // Assuming max progress is 100, adjust as needed
-      const calculatedProgress = Math.min((studyStats.totalCompleted / 10) * 100, 100);
-      setProgress(Math.round(calculatedProgress));
-      console.log('📊 진행률 계산:', {
-        totalCompleted: studyStats.totalCompleted,
-        calculatedProgress,
-        finalProgress: Math.round(calculatedProgress)
+    if (totalProgress !== null && totalProgress !== undefined) {
+      // totalProgress는 API에서 바로 퍼센트 값으로 옴 (33.3)
+      setProgress(Math.round(totalProgress));
+      console.log('📊 진행률 설정:', {
+        totalProgress,
+        finalProgress: Math.round(totalProgress)
       });
     }
-  }, [studyStats]);
+  }, [totalProgress]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -206,11 +204,15 @@ export default function Dashboard({ user, login, setLogin }) {
         
         console.log('📊 now-studying API 응답:', nowStudyingResponse);
         
+        console.log('📊 statsData:', statsData);
+        console.log('📊 totalProgressData:', totalProgressData);
+        
         if (statsData === 0) {
           setNoStudy(true);
-          setStudyStats({ totalCompleted: 0, weeklyCompleted: 0, level: 0 });
+          setStudyStats({ totalCompleted: 0 });
         } else {
           setNoStudy(false);
+          // API 응답: { totalCompleted: 2 }
           setStudyStats(statsData);
         }
         
@@ -223,6 +225,7 @@ export default function Dashboard({ user, login, setLogin }) {
           console.log('⚠️ 현재 학습 중인 데이터 없음');
         }
         
+        // totalProgressData는 숫자 (33.3)
         setTotalProgress(totalProgressData);
         setThisWeek(radarData.thisWeek);
         setLastWeek(radarData.lastWeek);
@@ -267,8 +270,8 @@ export default function Dashboard({ user, login, setLogin }) {
               <ProgressContainer>
                 <ContainerWrapper>
                   <ContainerTitle>전체 진행률</ContainerTitle>
-                  <PlusContainer>+{studyStats?.weeklyCompleted || 0}</PlusContainer>
-                  <ContainerText>{noStudy ? '아직 학습을 진행 안했어 학습을 시작해볼까?' : `이번 주에 ${studyStats?.weeklyCompleted || 0}개의 단원을 완료했어요!
+                  <PlusContainer>+{studyStats?.totalCompleted || 0}</PlusContainer>
+                  <ContainerText>{noStudy ? '아직 학습을 진행 안했어 학습을 시작해볼까?' : `이번 주에 ${studyStats?.totalCompleted || 0}개의 단원을 완료했어요!
   앞으로도 지금처럼 열심해 해봐요!`}</ContainerText>
                 </ContainerWrapper>
                 <CircularProgress>
@@ -292,7 +295,7 @@ export default function Dashboard({ user, login, setLogin }) {
                       strokeWidth="10"
                       strokeLinecap="round"
                       strokeDasharray={`${2 * Math.PI * 40}`}
-                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - (totalProgress?.progress || 0) / 100)}`}
+                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - (totalProgress || 0) / 100)}`}
                       transform="rotate(-90 48 48)"
                     />
                   </svg>

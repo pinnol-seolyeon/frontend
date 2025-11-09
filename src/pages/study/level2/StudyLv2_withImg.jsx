@@ -87,6 +87,7 @@ const ObjectiveImage = styled.img`
   max-height: 380px;
   height: auto;
   object-fit: contain;
+  margin-bottom: 1rem;
 `;
 
 const ImageWithSpeechWrapper = styled.div`
@@ -548,15 +549,6 @@ function StudyLv2_withImg({ user, login, setLogin }){
                       alt="학습 이미지" 
                       onError={(e)=>e.target.src=testImage}
                   />
-                  <QuestionButton onClick={()=>navigate('/question', {
-                      state: { 
-                          from: '/study/level2-img',
-                          chapterId: searchParams.get('chapterId') || chapterData?.chapterId
-                      }
-                  })}>
-                     <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
-                     질문하기
-                  </QuestionButton>
                 </RightSection>
               </ContentContainer>
 

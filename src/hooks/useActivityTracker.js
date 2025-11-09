@@ -49,6 +49,8 @@ export const useActivityTracker = (chapterId, level, userId, bookId, minusFocusi
         console.log('✅ 레벨 시작 성공:', response.data);
         levelStartedRef.current = true;
         sessionStartRef.current = Date.now(); // 시작 시간 기록
+      } else if (response.data.data.currentLevel === null) {
+        alert(response.data.message);
       } else {
         console.warn('⚠️ 예상치 못한 응답 형식:', response.data);
       }

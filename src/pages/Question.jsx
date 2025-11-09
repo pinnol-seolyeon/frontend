@@ -9,6 +9,7 @@ import Sidebar from "../components/Sidebar";
 import mic from "../assets/mic_img.svg";
 import background from "../assets/background_question.png";
 import hopin from "../assets/hopin_face.png";
+import { connectSSE } from "../api/question/sseClient";
 
 /*질문 버튼 눌렀을 때*/
 
@@ -317,6 +318,7 @@ function Question({ user, login, setLogin }){
     const[isListening,setIsListening]=useState(false);
     const[transcript,setTranscript]=useState(''); //음성 인식 결과
     const recognitionRef=useRef(null); //recognition 매번 호출 비효율 문제 해결
+    const sseCleanupRef=useRef(null); // SSE 연결 cleanup 함수 저장
     const navigate=useNavigate();
     const location=useLocation(); //이전 페이지 정보를 받기 위해
     const [returnToIndex,setReturnToIndex]=useState(0);
@@ -397,7 +399,7 @@ function Question({ user, login, setLogin }){
 
     const handleMessage=async(newMessage)=>{
         console.log("input:",newMessage);
-        if(newMessage){
+        if(newMessage && newMessage.trim()){
             //보낸 메시지 추가
             setMessages(prevMessages=>[ //기존에 쌓여 있던 메시지 배열인 prevMessages 맨 뒤에 새로운 메시지 추가 
                 ...prevMessages,
@@ -405,29 +407,64 @@ function Question({ user, login, setLogin }){
             ]);
             // 입력 필드 초기화
             setTranscript('');
+            
             try{
                 setLoading(true);
-                //메시지를 서버로 POST 요청 //await: 비동기 처리로 서버 응답 기다림
-                const response=await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/question`,{
-                    question:newMessage
-                },{
-                    withCredentials:true,
-                    headers:{
-                        "Content-Type":"application/json"
-                    }
+                
+                // 응답을 누적할 변수
+                let accumulatedResponse = '';
+                
+                // 이전 SSE 연결이 있다면 종료
+                if (sseCleanupRef.current) {
+                    sseCleanupRef.current();
                 }
-            
+                
+                // SSE 연결
+                const cleanup = await connectSSE(
+                    newMessage,
+                    // onMessage: delta 텍스트 조각을 받을 때마다 호출
+                    (delta) => {
+                        console.log("📩 받은 조각:", delta);
+                        accumulatedResponse += delta;
+                        
+                        // 메시지 업데이트 (누적된 텍스트로)
+                        setMessages(prevMessages => {
+                            const newMessages = [...prevMessages];
+                            // 마지막 메시지가 received 타입인지 확인
+                            if (newMessages.length > 0 && newMessages[newMessages.length - 1].type === 'received') {
+                                // 기존 메시지 업데이트
+                                newMessages[newMessages.length - 1] = {
+                                    text: accumulatedResponse,
+                                    type: 'received'
+                                };
+                            } else {
+                                // 새 메시지 추가
+                                newMessages.push({
+                                    text: accumulatedResponse,
+                                    type: 'received'
+                                });
+                            }
+                            return newMessages;
+                        });
+                    },
+                    // onEnd: 스트림 종료
+                    () => {
+                        console.log("✅ 스트림 완료, 최종 응답:", accumulatedResponse);
+                        setLoading(false);
+                        sseCleanupRef.current = null;
+                    },
+                    // onError: 에러 발생
+                    (error) => {
+                        console.error("❌ SSE 에러:", error);
+                        alert("메시지 전송 실패");
+                        setLoading(false);
+                        sseCleanupRef.current = null;
+                    }
                 );
-
-                const serverResponse=response.data.result; //서버의 응답 메시지
-                console.log('서버 응답:',serverResponse);
-
-                //서버 응답 메시지 추가
-                setMessages(prevMessages=>[
-                    ...prevMessages,
-                    {text:serverResponse,type:'received'} //받은 메시지는 'received' 타입
-                ]);
-                setLoading(false);
+                
+                // cleanup 함수 저장
+                sseCleanupRef.current = cleanup;
+                
             }catch(error){
                 console.error("메시지 전송 실패",error);
                 alert("메시지 전송 실패");
@@ -461,6 +498,15 @@ function Question({ user, login, setLogin }){
         };
 
         fetchDummyData();
+        
+        // cleanup: 컴포넌트 언마운트 시 SSE 연결 종료
+        return () => {
+            if (sseCleanupRef.current) {
+                console.log('🧹 Question 언마운트 - SSE 연결 종료');
+                sseCleanupRef.current();
+                sseCleanupRef.current = null;
+            }
+        };
     },[]);
     
     //질문 닫기 -> 이전 페이지로 이동 
