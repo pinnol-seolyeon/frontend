@@ -903,7 +903,7 @@ export default function Game2() {
   const handleExit = async () => {
     if (coins > 0) {
       try {
-        await saveCoinToDB(coins);
+        await saveCoinToDB(coins, chapterId);
         console.log('✅ 코인 저장 성공:', coins);
       } catch (error) {
         console.error('❌ 코인 저장 실패:', error);
@@ -928,7 +928,7 @@ export default function Game2() {
         await sendQuizResults(quizResultsRef.current);
       }
       if (coins > 0) {
-        await saveCoinToDB(coins);
+        await saveCoinToDB(coins, chapterId);
       }
     } catch (e) {
       console.error(e);

@@ -52,24 +52,32 @@ export async function fetchStudyNowStats() {
     console.log('🔍 응답 상태:', res.status);
     console.log('🔍 응답 헤더:', [...res.headers.entries()]);
 
-    // 404 에러가 발생하면 0을 반환
+    // 401 에러 - 백엔드 권한 문제, null 반환
+    if (res.status === 401 || res.status === 403) {
+      console.warn('⚠️ 401/403 에러 - 백엔드 권한 문제, null 반환');
+      return null;
+    }
+
+    // 404 에러가 발생하면 null 반환
     if (res.status === 404) {
-      console.log('⚠️ 404 에러 - 데이터 없음, 0 반환');
-      return 0;
+      console.log('⚠️ 404 에러 - 데이터 없음, null 반환');
+      return null;
     }
 
     if (!res.ok) {
       const text = await res.text();
       console.error('❌ fetchStudyNowStats 실패:', res.status, text);
-      throw new Error(`HTTP ${res.status}: ${text}`);
+      // 에러를 던지지 않고 null 반환 (다른 API는 계속 작동)
+      return null;
     }
 
     const data = await res.json();
-    console.log('✅ 학습 통계 데이터:', data);
+    console.log('✅ 현재 학습 데이터:', data);
     return data;
   } catch (error) {
     console.error('❌ fetchStudyNowStats 실패:', error);
-    throw error;
+    // 에러를 던지지 않고 null 반환
+    return null;
   }
 }
 
@@ -254,6 +262,7 @@ function transformWeeklyPatternData(apiData) {
 // 방사형 그래프 데이터
 export async function fetchRadarScore() {
   try {
+    console.log('🔍 fetchRadarScore 요청 시작');
     const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study-log/radar-score/compare`, {
       method: 'GET',
       credentials: "include",
@@ -262,8 +271,20 @@ export async function fetchRadarScore() {
       },
     });
     
+    console.log('🔍 응답 상태:', res.status);
+
+    // 404 에러가 발생하면 빈 데이터 반환 (아직 weekly analysis가 생성되지 않은 경우)
+    if (res.status === 404) {
+      console.log('⚠️ 404 에러 - weekly analysis 데이터 없음, 빈 데이터 반환');
+      return {
+        thisWeek: {},
+        lastWeek: {}
+      };
+    }
+    
     if (!res.ok) {
       const text = await res.text();
+      console.error('❌ fetchRadarScore 실패:', res.status, text);
       throw new Error(`HTTP ${res.status}: ${text}`);
     }
     
