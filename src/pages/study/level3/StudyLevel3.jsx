@@ -583,6 +583,35 @@ function StudyPage({ user, login, setLogin }){
     } else {
         setIsQuestionFinished(true); //질문 끝났다는 상태
         setIsFinished(true);
+        
+        // Level 3 완료 시 질문/답변 저장 API 호출
+        const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+        if (chapterId) {
+            try {
+                console.log("💾 질문/답변 저장 API 호출 시작 - chapterId:", chapterId);
+                const response = await api.post(`/api/question/save-all`, null, {
+                    params: {
+                        chapterId: chapterId
+                    }
+                });
+                console.log("✅ 질문/답변 저장 성공:", response.data);
+                
+                // sessionStorage에서 해당 chapterId의 질문 데이터 삭제 (선택적)
+                try {
+                    const storageKey = `questionData_${chapterId}`;
+                    sessionStorage.removeItem(storageKey);
+                    console.log("🧹 sessionStorage 질문 데이터 삭제 완료");
+                } catch (error) {
+                    console.error("⚠️ sessionStorage 삭제 실패 (무시):", error);
+                }
+            } catch (error) {
+                console.error("❌ 질문/답변 저장 API 호출 실패:", error);
+                // 에러가 발생해도 학습 완료는 진행 (사용자 경험을 위해)
+            }
+        } else {
+            console.error("⚠️ chapterId가 없어서 질문/답변 저장 API를 호출할 수 없습니다.");
+        }
+        
         alert("✅학습을 모두 완료했어요! 게임 단계로 이동해볼까요?")
         await completeSession(); // Level 3 완료 상태 전송
         navigate("/game")
