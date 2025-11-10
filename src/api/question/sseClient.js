@@ -76,6 +76,7 @@ export const connectSSE = async (question, onMessage, onEnd, onError) => {
                     let currentEvent = 'message';
                     
                     for (const line of lines) {
+                        // event: 라인은 trim하여 파싱 (이벤트 타입 파싱용)
                         const trimmedLine = line.trim();
                         
                         if (trimmedLine.startsWith('event:')) {
@@ -97,7 +98,8 @@ export const connectSSE = async (question, onMessage, onEnd, onError) => {
                                 return; // readStream 함수 완전히 종료
                             }
                         } else if (trimmedLine.startsWith('data:')) {
-                            const data = trimmedLine.substring(5).trim();
+                            // data: 이후 부분을 그대로 사용 (공백, 마침표 등 모든 문자 보존)
+                            const data = line.substring(line.indexOf('data:') + 5);
                             
                             console.log(`📩 [${currentEvent}]`, data);
                             

@@ -163,16 +163,16 @@ const [showTooltip, setShowTooltip] = useState(false);
 const safeThisWeek = thisWeek || { engagement: 0, focus: 0, understanding: 0, expression: 0 };
 const safeLastWeek = lastWeek || { engagement: 0, focus: 0, understanding: 0, expression: 0 };
 
-// API 데이터를 사용하여 차트 데이터 생성
+// API 데이터를 사용하여 차트 데이터 생성 (0-5 범위 → 0-100 범위로 변환)
 const data = [
-  { subject: "참여도", thisWeek: safeThisWeek.engagement * 100, lastWeek: safeLastWeek.engagement * 100 },
-  { subject: "집중도", thisWeek: safeThisWeek.focus * 100, lastWeek: safeLastWeek.focus * 100 },
-  { subject: "이해도", thisWeek: safeThisWeek.understanding * 100, lastWeek: safeLastWeek.understanding * 100 },
-  { subject: "표현력", thisWeek: safeThisWeek.expression * 100, lastWeek: safeLastWeek.expression * 100 },
+  { subject: "참여도", thisWeek: safeThisWeek.engagement * 20, lastWeek: safeLastWeek.engagement * 20 },
+  { subject: "집중력", thisWeek: safeThisWeek.focus * 20, lastWeek: safeLastWeek.focus * 20 },
+  { subject: "이해력", thisWeek: safeThisWeek.understanding * 20, lastWeek: safeLastWeek.understanding * 20 },
+  { subject: "표현력", thisWeek: safeThisWeek.expression * 20, lastWeek: safeLastWeek.expression * 20 },
 ];
 
 const getSummaryText = () => {
-  const avg = (safeThisWeek.engagement + safeThisWeek.focus + safeThisWeek.understanding + safeThisWeek.expression) / 4 * 100;
+  const avg = (safeThisWeek.engagement + safeThisWeek.focus + safeThisWeek.understanding + safeThisWeek.expression) / 4 * 20;
   if (avg >= 80) return "학습 태도가 매우 우수합니다! 👍";
   if (avg >= 60) return "양호한 학습 태도입니다.\n약간의 개선 여지는 있지만 좋은 흐름이에요.";
   // if (avg >= 40) return "노력이 필요해요. 열심히 하면 못할 건 없어요!";
@@ -182,7 +182,7 @@ const getSummaryText = () => {
 };
 
 const getKeywordText = () => {
-  const avg = (safeThisWeek.engagement + safeThisWeek.focus + safeThisWeek.understanding + safeThisWeek.expression) / 4 * 100;
+  const avg = (safeThisWeek.engagement + safeThisWeek.focus + safeThisWeek.understanding + safeThisWeek.expression) / 4 * 20;
   if (avg >= 80) return "학습 태도가 매우 우수해요!";
   if (avg >= 60) return "양호한 학습 태도에요!";
   return "노력이 필요해요!";

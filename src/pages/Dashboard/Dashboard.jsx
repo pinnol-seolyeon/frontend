@@ -206,6 +206,7 @@ export default function Dashboard({ user, login, setLogin }) {
         
         console.log('📊 statsData:', statsData);
         console.log('📊 totalProgressData:', totalProgressData);
+        console.log('📊 radarData 원본:', radarData);
         
         if (statsData === 0) {
           setNoStudy(true);
@@ -227,8 +228,21 @@ export default function Dashboard({ user, login, setLogin }) {
         
         // totalProgressData는 숫자 (33.3)
         setTotalProgress(totalProgressData);
-        setThisWeek(radarData.thisWeek);
-        setLastWeek(radarData.lastWeek);
+        
+        // radarData가 { data: { thisWeek, lastWeek } } 형식인지 확인
+        if (radarData && radarData.data) {
+          console.log('✅ radarData.data 사용:', radarData.data);
+          setThisWeek(radarData.data.thisWeek || {});
+          setLastWeek(radarData.data.lastWeek || {});
+        } else if (radarData) {
+          console.log('✅ radarData 직접 사용:', radarData);
+          setThisWeek(radarData.thisWeek || {});
+          setLastWeek(radarData.lastWeek || {});
+        } else {
+          console.log('⚠️ radarData 없음');
+          setThisWeek({});
+          setLastWeek({});
+        }
       } catch (err) {
         console.error("❌ 데이터 불러오기 실패:", err);
         setError(err.message);

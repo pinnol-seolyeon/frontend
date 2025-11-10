@@ -452,6 +452,30 @@ function Question({ user, login, setLogin }){
                         console.log("✅ 스트림 완료, 최종 응답:", accumulatedResponse);
                         setLoading(false);
                         sseCleanupRef.current = null;
+                        
+                        // 질문/답변을 sessionStorage에 저장
+                        if (chapterId && newMessage && accumulatedResponse) {
+                            try {
+                                const storageKey = `questionData_${chapterId}`;
+                                const existingData = sessionStorage.getItem(storageKey);
+                                const questionData = existingData ? JSON.parse(existingData) : [];
+                                
+                                // 질문/답변 쌍 추가
+                                questionData.push({
+                                    question: newMessage,
+                                    answer: accumulatedResponse,
+                                    timestamp: new Date().toISOString()
+                                });
+                                
+                                sessionStorage.setItem(storageKey, JSON.stringify(questionData));
+                                console.log("💾 질문/답변 sessionStorage에 저장 완료:", {
+                                    chapterId,
+                                    questionCount: questionData.length
+                                });
+                            } catch (error) {
+                                console.error("❌ sessionStorage 저장 실패:", error);
+                            }
+                        }
                     },
                     // onError: 에러 발생
                     (error) => {
