@@ -15,6 +15,7 @@ import questionIcon from "../../../assets/question_icon.svg";
 import TtsPlayer from "../../../components/TtsPlayer";
 import api from "../../../api/login/axiosInstance";
 import { useActivityTracker } from "../../../hooks/useActivityTracker";
+import ladybugImage from "../../../assets/ladybug.png";
 
 
 /*학습하기-3단계-1*/
@@ -367,6 +368,12 @@ const Ladybug = styled.div`
             transform: translateY(-20px);
         }
     }
+`;
+
+const LadybugImage = styled.img`
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
 `;
 
 
@@ -794,7 +801,7 @@ const stopVoiceRecognition = () => {
                 }}
                 onClick={() => handleLadybugClick(ladybug.id)}
             >
-                ❤️
+                <LadybugImage src={ladybugImage} alt="무당벌레" />
             </Ladybug>
         ))}
         
