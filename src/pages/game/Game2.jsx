@@ -1,8 +1,11 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import styled from 'styled-components';
-import playerImg from '../../assets/game_character_1.png';
-import backgroundImg from '../../assets/game_background2.png';
-import coinImg from '../../assets/game_coin.svg';
+import styled, { createGlobalStyle } from 'styled-components';
+import playerImg from '../../assets/game2/Player.png';
+import playerAttackImg from '../../assets/game2/PlayerAttacking.png';
+import backgroundImg from '../../assets/game2/Game_Background.png';
+import readybackgroundImg from '../../assets/game2/Ready_Background.png';
+import startBtn from '../../assets/game2/Ready_Btn_GameStart.png';
+import coinImg from '../../assets/game2/Coin.png';
 import quizAlertImg from '../../assets/game_quiz.svg';
 import { fetchQuizByChapterId } from '../../api/study/fetchQuiz';
 import { useChapter } from "../../context/ChapterContext";
@@ -17,6 +20,21 @@ import gameStartCoin from '../../assets/game_coin_start.svg';
 import gameStartTrap from '../../assets/game_trap_start.svg';
 import gameStartQuiz from '../../assets/game_quiz_start.svg';
 import gameStartBtn from '../../assets/game_start_btn.svg';
+import PlayerEnemy1 from '../../assets/game2/PlayerEnemy1.png';
+import PlayerEnemy2 from '../../assets/game2/PlayerEnemy2.png';
+import PlayerEnemy3 from '../../assets/game2/PlayerEnemy3.png';
+import GumiRomanceFont from '../../assets/game2/Gumi-Romance.otf';
+import safeZoneImg from '../../assets/game2/SafeFence.png';
+
+const GlobalFonts = createGlobalStyle`
+  @font-face {
+    font-family: 'GumiRomance';
+    src: url(${GumiRomanceFont}) format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+`;
 
 const GameCanvas = styled.canvas`
   display: block;
@@ -48,7 +66,8 @@ const CoinDisplay = styled.div`
   align-items: center;
   gap: 0.5rem;
   color: white;
-  font-size: 1.5rem;
+  font-family: 'GumiRomance', sans-serif !important;
+  font-size: 1.8rem;
   font-weight: bold;
   
   img {
@@ -63,7 +82,10 @@ const SafeZone = styled.div`
   left: 0;
   width: 100%;
   height: 100px;
-  background: linear-gradient(to top, rgba(0, 150, 0, 0.5), transparent);
+  background-image: url(${safeZoneImg});
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   z-index: 5;
   pointer-events: none;
 `;
@@ -126,7 +148,8 @@ const QuizContent = styled.div`
 `;
 
 const QuizQuestion = styled.div`
-  font-size: 22px;
+  font-family: 'GumiRomance', sans-serif !important;
+  font-size: 24px;
   color: #333333;
   font-weight: 400;
   margin-bottom: 2rem;
@@ -141,7 +164,8 @@ const QuizButtonContainer = styled.div`
 
 const QuizButton = styled.button`
   padding: 1rem;
-  font-size: 20px;
+  font-family: 'GumiRomance', sans-serif !important;
+  font-size: 22px;
   font-weight: 400;
   cursor: pointer;
   border-radius: 30px;
@@ -206,11 +230,17 @@ const PauseModal = styled.div`
   border-radius: 20px;
   text-align: center;
   min-width: 300px;
+  font-family: 'GumiRomance', sans-serif !important;
+  
+  h2 {
+    font-family: 'GumiRomance', sans-serif !important;
+  }
 `;
 
 const PauseButton = styled.button`
   padding: 1rem 2rem;
-  font-size: 1.2rem;
+  font-family: 'GumiRomance', sans-serif !important;
+  font-size: 1.3rem;
   margin: 0.5rem;
   border: none;
   border-radius: 10px;
@@ -283,7 +313,8 @@ const ModalContent = styled.div`
 
 const TutorialBox = styled.div`
   margin-bottom: 1rem;
-  font-size: 16px;
+  font-family: 'GumiRomance', sans-serif !important;
+  font-size: 18px;
   color: #191919;
   font-weight: 500;
   display: flex;
@@ -309,6 +340,8 @@ const TutorialItem = styled.div`
   }
 
   span {
+    font-family: 'GumiRomance', sans-serif !important;
+    font-size: 18px;
     font-weight: 500;
     color: #2F2F2F;
   }
@@ -317,13 +350,14 @@ const TutorialItem = styled.div`
 const TutorialMove = styled.div`
   text-align: center;
   margin: 0;
+  font-family: 'GumiRomance', sans-serif !important;
   color: #333333;
   font-weight: 400;
-  font-size: 16px;
+  font-size: 18px;
 `;
 
 const StartButton = styled.button`
-  background-image: url(${gameStartBtn});
+  background-image: url(${startBtn});
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -345,7 +379,7 @@ const StartButton = styled.button`
 `;
 
 const StartTitleBanner = styled.div`
-  font-family: 'DungeonFighterOnlineBeatBeat', "Noto Sans KR", sans-serif !important;
+  font-family: 'GumiRomance', sans-serif !important;
   font-size: 3rem;
   font-weight: 500;
   margin-bottom: 1rem;
@@ -360,12 +394,13 @@ const StartTitleBanner = styled.div`
 `;
 
 const StartSubTitleBanner = styled.div`
+  font-family: 'GumiRomance', sans-serif !important;
   font-weight: 500;
   margin-bottom: 1rem;
   text-align: center;
   color: #333333;
   font-weight: 400;
-  font-size: 16px;
+  font-size: 18px;
   white-space: pre-line;
 `;
 
@@ -377,11 +412,15 @@ export default function Game2() {
   const canvasRef = useRef(null);
   const animationIdRef = useRef(null);
   const playerImageRef = useRef(null);
+  const playerAttackImageRef = useRef(null);
   const backgroundImageRef = useRef(null);
   const coinImageRef = useRef(null);
   const quizAlertImageRef = useRef(null);
+  const enemy1ImageRef = useRef(null);
+  const enemy2ImageRef = useRef(null);
+  const enemy3ImageRef = useRef(null);
   
-  const [isGameStarted, setIsGameStarted] = useState(false);
+  const [isGameStarted, setIsGameStarted] = useState(true);
   const [isGameRunning, setIsGameRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [coins, setCoins] = useState(0);
@@ -446,6 +485,10 @@ export default function Game2() {
     playerImgEl.src = playerImg;
     playerImageRef.current = playerImgEl;
     
+    const playerAttackImgEl = new Image();
+    playerAttackImgEl.src = playerAttackImg;
+    playerAttackImageRef.current = playerAttackImgEl;
+    
     const bgImg = new Image();
     bgImg.src = backgroundImg;
     backgroundImageRef.current = bgImg;
@@ -457,6 +500,18 @@ export default function Game2() {
     const quizAlert = new Image();
     quizAlert.src = quizAlertImg;
     quizAlertImageRef.current = quizAlert;
+    
+    const enemy1Img = new Image();
+    enemy1Img.src = PlayerEnemy1;
+    enemy1ImageRef.current = enemy1Img;
+    
+    const enemy2Img = new Image();
+    enemy2Img.src = PlayerEnemy2;
+    enemy2ImageRef.current = enemy2Img;
+    
+    const enemy3Img = new Image();
+    enemy3Img.src = PlayerEnemy3;
+    enemy3ImageRef.current = enemy3Img;
   }, []);
 
   useEffect(() => {
@@ -673,10 +728,10 @@ export default function Game2() {
     if (now - lastBulletTimeRef.current >= bulletIntervalRef.current) {
       const player = playerRef.current;
       bulletsRef.current.push({
-        x: player.x + player.width / 2 - 8,
+        x: player.x + player.width / 2 - 15,
         y: player.y,
-        width: 16,
-        height: 28,
+        width: 30,
+        height: 30,
         speed: 9,
       });
       lastBulletTimeRef.current = now;
@@ -694,19 +749,19 @@ export default function Game2() {
       const topBarHeight = 80;
       
       const virusTypes = [
-        { type: 'red',   color: '#FF4D4D', speed: 3.0, reward: 3 },
-        { type: 'green', color: '#3BC14A', speed: 2.4, reward: 5 },
-        { type: 'blue',  color: '#3DA5FF', speed: 1.8, reward: 7 },
+        { type: 'enemy1', image: enemy1ImageRef.current, speed: 3.0, reward: 5 },
+        { type: 'enemy2', image: enemy2ImageRef.current, speed: 2.4, reward: 7 },
+        { type: 'enemy3', image: enemy3ImageRef.current, speed: 1.8, reward: 10 },
       ];
       const chosen = virusTypes[Math.floor(Math.random() * virusTypes.length)];
       
       virusesRef.current.push({
         x: Math.random() * (canvas.width - 40),
         y: topBarHeight,
-        width: 40,
-        height: 40,
+        width: 50,
+        height: 50,
         speed: chosen.speed,
-        color: chosen.color,
+        image: chosen.image,
         reward: chosen.reward,
         type: chosen.type,
       });
@@ -786,25 +841,28 @@ export default function Game2() {
       );
     }
     
-    ctx.fillStyle = '#FFD700';
     bulletsRef.current.forEach(bullet => {
-      ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+      if (playerAttackImageRef.current) {
+        ctx.drawImage(
+          playerAttackImageRef.current,
+          bullet.x,
+          bullet.y,
+          bullet.width,
+          bullet.height
+        );
+      }
     });
     
     virusesRef.current.forEach(virus => {
-      ctx.beginPath();
-      ctx.fillStyle = virus.color || '#FF0000';
-      ctx.arc(
-        virus.x + virus.width / 2,
-        virus.y + virus.height / 2,
-        virus.width / 2,
-        0,
-        Math.PI * 2
-      );
-      ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-      ctx.stroke();
+      if (virus.image) {
+        ctx.drawImage(
+          virus.image,
+          virus.x,
+          virus.y,
+          virus.width,
+          virus.height
+        );
+      }
     });
   }, [isGameRunning, isPaused, showQuizAlert, isQuizActive]);
   
@@ -939,48 +997,8 @@ export default function Game2() {
   
     return (
     <>
+      <GlobalFonts />
       <GameCanvas ref={canvasRef} />
-      
-      {!isGameStarted && (
-        <StartOverlay>
-          <StartModalBox>            
-            <ModalContent>
-              {/* 게임 설명 / 튜토리얼 */}
-              <TutorialBox>
-                <StartTitleBanner>바이러스를 퇴치하라!</StartTitleBanner>
-                <StartSubTitleBanner>{`바이러스가 울타리 안으로 들어오지 못하게 퇴치하라!\n불시에 내려오는 코인은 울타리 안으로 들어와야 획득 가능`}</StartSubTitleBanner>
-                <TutorialItem>
-                  <img src={gameStartCoin} alt="코인" />
-                  <span>바이러스를 맞추면 코인 획득!</span>
-                </TutorialItem>
-                <TutorialItem>
-                  <img src={gameStartTrap} alt="바이러스" />
-                  <span>바이러스를 피하면서 총알로 제거하세요</span>
-                </TutorialItem>
-                <TutorialItem>
-                  <img src={gameStartQuiz} alt="퀴즈알림선" />
-                  <span>퀴즈 알림선이 내려오면 퀴즈가 시작됩니다!</span>
-                </TutorialItem>
-              </TutorialBox>
-
-              <TutorialMove>
-                ←/→ 키로 좌우 이동하세요!<br />
-                총알은 자동으로 발사됩니다.
-              </TutorialMove>
-
-              {/* 시작 버튼 */}
-              <StartButton onClick={(e) => {
-                e.stopPropagation();
-                setIsGameStarted(true);
-                // 퀴즈 스케줄을 즉시 시도 (퀴즈가 로드되지 않았다면 이후 effect에서 다시 등록)
-                setTimeout(() => {
-                  startQuizEvent();
-                }, 500);
-              }} />
-            </ModalContent>
-          </StartModalBox>
-        </StartOverlay>
-      )}
       
       {showQuizAlert && (
         <QuizAlertLine style={{ top: `${quizAlertY}px` }} />
