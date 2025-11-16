@@ -655,12 +655,12 @@ export default function Game({ user }) {
   );
   
   // chapterId가 없으면 메인 페이지로 리다이렉트
-  useEffect(() => {
-    if (!chapterId) {
-      alert("학습을 한 뒤, 게임을 시작해주세요.");
-      navigate('/');
-    }
-  }, [chapterId, navigate]);
+  // useEffect(() => {
+  //   if (!chapterId) {
+  //     alert("학습을 한 뒤, 게임을 시작해주세요.");
+  //     navigate('/');
+  //   }
+  // }, [chapterId, navigate]);
   
   const canvasRef = useRef(null);
   const animationIdRef = useRef(null);
@@ -771,6 +771,7 @@ export default function Game({ user }) {
 
     // 퀴즈 결과 기록
     quizResultsRef.current.push({
+      quizId: quiz.quizId, // ★ quizId 기록
       question: quiz.question,
       options: quiz.options,
       correctAnswer: quiz.answer,
@@ -943,6 +944,7 @@ export default function Game({ user }) {
         
         // API 형식에 맞게 데이터 변환
         const formattedResults = quizResultsRef.current.map(result => ({
+          quizId: result.quizId,
           question: result.question,
           options: result.options,
           correctAnswer: result.correctAnswer,
@@ -950,7 +952,7 @@ export default function Game({ user }) {
           responseTime: result.responseTime,
           userId: user?.userId || '',
           quizDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD 형식
-          correct: result.isCorrect
+          isCorrect: result.isCorrect
         }));
         
         sendQuizResults(formattedResults);
@@ -1034,7 +1036,10 @@ export default function Game({ user }) {
 
       quizStartTimeRef.current = Date.now();
 
+      const derivedQuizId = nextQuiz?.quizId ?? nextQuiz?.id ?? nextQuiz?._id ?? nextQuiz?.questionId;
+
       setQuiz({
+        quizId: derivedQuizId, // robust quizId
         question: nextQuiz.quiz,
         options: nextQuiz.options,
         answer: nextQuiz.answer,

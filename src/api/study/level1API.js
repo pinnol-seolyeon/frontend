@@ -1,6 +1,6 @@
 export async function fetchChapterTitle(chapterId){
-    const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/session/start-level?level=1&chapterId=${chapterId}`,{
-        method:"POST",
+    const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/session?level=1&chapterId=${chapterId}`,{
+        method:"GET",
         credentials:"include",
         headers: {
             'Content-Type': 'application/json',

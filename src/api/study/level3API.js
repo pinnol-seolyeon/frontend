@@ -1,14 +1,11 @@
 export async function fetchChapterContents(level, chapterId, bookId){
     const url = bookId 
-        ? `${process.env.REACT_APP_API_BASE_URL}/api/session/start-level?level=${level}&chapterId=${chapterId}&bookId=${bookId}`
-        : `${process.env.REACT_APP_API_BASE_URL}/api/session/start-level?level=${level}&chapterId=${chapterId}`;
+        ? `${process.env.REACT_APP_API_BASE_URL}/api/session?level=${level}&chapterId=${chapterId}&bookId=${bookId}`
+        : `${process.env.REACT_APP_API_BASE_URL}/api/session?level=${level}&chapterId=${chapterId}`;
     
     const response=await fetch(url,{
-        method:"POST",
+        method:"GET",
         credentials:"include",
-        headers: {
-            'Content-Type': 'application/json',
-        },
     });
 
     // 401 에러 처리 (알림 제거)
