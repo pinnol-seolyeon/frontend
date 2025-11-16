@@ -6,7 +6,6 @@ import backgroundImg from '../../assets/game2/Game_Background.png';
 import readybackgroundImg from '../../assets/game2/Ready_Background.png';
 import startBtn from '../../assets/game2/Ready_Btn_GameStart.png';
 import coinImg from '../../assets/game2/Coin.png';
-import quizAlertImg from '../../assets/game_quiz.svg';
 import { fetchQuizByChapterId } from '../../api/study/fetchQuiz';
 import { useChapter } from "../../context/ChapterContext";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +24,23 @@ import PlayerEnemy2 from '../../assets/game2/PlayerEnemy2.png';
 import PlayerEnemy3 from '../../assets/game2/PlayerEnemy3.png';
 import GumiRomanceFont from '../../assets/game2/Gumi-Romance.otf';
 import safeZoneImg from '../../assets/game2/SafeFence.png';
+import quizAlertImg from '../../assets/game2/Quiz_StartAlert.png';
+import quizpopupImg from '../../assets/game2/Quiz_Popup.png';
+import safeZoneAttackedImg from '../../assets/game2/SafeFence_Attacked.png';
+import GameEndImg from '../../assets/game2/Game_FinishLine.png';
+import CorrectImg from '../../assets/game2/Correct.png';
+import WrongImg from '../../assets/game2/Wrong.png';
+import PlayerMove1 from '../../assets/game2/Player_Move_1.png';
+import PlayerMove2 from '../../assets/game2/Player_Move_2.png';
+import PlayerEnemy1Attacked from '../../assets/game2/PlayerEnemy1_Popping.png';
+import PlayerEnemy2Attacked from '../../assets/game2/PlayerEnemy2_Popping.png';
+import PlayerEnemy3Attacked from '../../assets/game2/PlayerEnemy3_Popping.png';
+import Player1Attacked from '../../assets/game2/Player_Enemy1_Attacked.png';
+import Player2Attacked from '../../assets/game2/Player_Enemy2_Attacked.png';
+import Player3Attacked from '../../assets/game2/Player_Enemy3_Attacked.png';
+import GameBoxTop from '../../assets/game2/GameBox_Top.png';
+import GameEndTop from '../../assets/game2/GameEnd_Top.png';
+import PlayerCoin from '../../assets/game2/Player_CoinGet_Effect.png'
 
 const GlobalFonts = createGlobalStyle`
   @font-face {
@@ -36,13 +52,22 @@ const GlobalFonts = createGlobalStyle`
   }
 `;
 
-const GameCanvas = styled.canvas`
-  display: block;
+const GameWrapper = styled.div`
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
+  overflow: hidden;
+`;
+
+const GameCanvas = styled.canvas`
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: auto;
 `;
 
@@ -52,7 +77,6 @@ const TopBar = styled.div`
   left: 0;
   width: 100%;
   height: 80px;
-  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -64,43 +88,71 @@ const TopBar = styled.div`
 const CoinDisplay = styled.div`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  color: white;
   font-family: 'GumiRomance', sans-serif !important;
-  font-size: 1.8rem;
-  font-weight: bold;
   
   img {
-    width: 30px;
-    height: 30px;
+    width: 50px;
+    height: 50px;
   }
 `;
 
-const SafeZone = styled.div`
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 100px;
-  background-image: url(${safeZoneImg});
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  z-index: 5;
-  pointer-events: none;
+const CoinText = styled.div`
+  font-family: 'GumiRomance', sans-serif !important;
+  font-size: 2rem;
+  font-weight: bold;
 `;
 
-const QuizAlertLine = styled.div`
+const SafeZone = styled.img`
   position: fixed;
-  left: 0;
-  width: 100%;
-  height: 50px;
-  background-image: url(${quizAlertImg});
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
+  bottom: 0;
+  width: 100vw;
+  height: 15vh;
+  z-index: 5;
+  pointer-events: none;
+  object-fit: fill;
+`;
+
+const QuizAlertLine = styled.img`
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30vw;
+  height: auto;
   z-index: 20;
   pointer-events: none;
+  object-fit: contain;
+  animation: blink 0.5s infinite;
+  
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+`;
+
+const QuizResultImage = styled.img`
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30vw;
+  height: auto;
+  z-index: 25;
+  pointer-events: none;
+  object-fit: contain;
+`;
+
+const GameEndLine = styled.img`
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100vw;
+  height: 20vh;
+  z-index: 30;
+  pointer-events: none;
+  object-fit: fill;
 `;
 
 const CountdownOverlay = styled.div`
@@ -108,6 +160,7 @@ const CountdownOverlay = styled.div`
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  font-family: 'GumiRomance', sans-serif !important;
   font-size: 8rem;
   font-weight: bold;
   color: white;
@@ -116,35 +169,49 @@ const CountdownOverlay = styled.div`
   pointer-events: none;
 `;
 
-const QuizModal = styled.div`
+const QuizModalWrapper = styled.div`
   position: relative;
-  background-color: #FFF1C1;
-  border-radius: 20px;
-  border: 10px solid #C0935B;
-  width: 90%;
-  max-width: 600px;
+  display: inline-flex; /* 배너 + 카드 수직 배치 */
+  flex-direction: column;
+  align-items: center;
   z-index: 20;
   pointer-events: auto;
 `;
 
-const QuizTitleBanner = styled.div`
-  position: absolute;
-  top: -4rem;
-  left: 50%;
-  transform: translateX(-50%);
+/* 상단 배너: 카드와 겹치게 음수 마진 사용 */
+const QuizTopBanner = styled.img`
+  position: relative;
   width: 100%;
-  height: 100px;
+  max-width: 600px; /* 카드와 동일한 최대 너비 */
+  height: auto;
+  margin-bottom: -130px; /* 더 강하게 겹치기 */
+  pointer-events: none;
   z-index: 2;
-  
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
 `;
 
+/* 실제 콘텐츠가 들어갈 카드 (배경 박스) */
+const QuizCard = styled.div`
+  position: relative;
+  display: inline-block; /* 내용 크기에 맞추기 */
+  width: auto;
+  max-width: 80%;
+  background-color: #ffffff;
+  border: 15px solid rgb(202, 178, 233);
+  border-radius: 100px;
+  padding: 3rem 1rem 1rem 1rem;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+  pointer-events: auto;
+  z-index: 1;
+`;
+
+/* 기존 QuizContent 그대로 사용 */
 const QuizContent = styled.div`
-  padding: 3rem 2rem 2rem 2rem;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 `;
 
 const QuizQuestion = styled.div`
@@ -154,25 +221,42 @@ const QuizQuestion = styled.div`
   font-weight: 400;
   margin-bottom: 2rem;
   line-height: 1.5;
+  text-align: center;
+  white-space: pre-line; /* \n 유지 + 자동 줄바꿈 */
+  word-break: keep-all;  /* 한글 단어 단위 줄바꿈 */
+  overflow-wrap: anywhere; /* 긴 영문/숫자 강제 줄바꿈 */
 `;
 
 const QuizButtonContainer = styled.div`
-  display: flex;
-  flex-direction: column;
+  display: inline-flex; /* 기본은 가로 배치 */
+  flex-direction: row;
+  align-items: center;
   gap: 1rem;
+  flex-wrap: wrap;       /* 한 줄이 넘치면 다음 줄로 이동 */
+  justify-content: center;
+  width: 100%;
 `;
 
 const QuizButton = styled.button`
-  padding: 1rem;
+  display: inline-flex;
+  padding: 1rem 1.5rem;
   font-family: 'GumiRomance', sans-serif !important;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 400;
   cursor: pointer;
   border-radius: 30px;
-  background-color: ${props => props.isOdd ? '#FF6200' : '#FFAA00'};
+  background-color: ${props => props.$odd ? '#B9F9EB' : '#F880AC'};
   color: #ffffff;
   transition: all 0.2s;
   border: none;
+  width: auto;
+  max-width: 100%;        /* 부모 영역을 넘지 않음 */
+  box-sizing: border-box;
+  line-height: 1.4;
+  text-align: center;
+  white-space: normal;     /* 줄바꿈 허용 (짧으면 한 줄 유지) */
+  word-break: keep-all;    /* 한글은 단어 단위 줄바꿈 */
+  overflow-wrap: anywhere; /* 너무 긴 토큰은 강제 줄바꿈 */
 
   &:hover {
     transform: translateY(-2px);
@@ -186,7 +270,6 @@ const QuizButton = styled.button`
 
 const GameControls = styled.div`
   position: fixed;
-  top: 90px;
   right: 2rem;
   display: flex;
   gap: 1rem;
@@ -224,33 +307,69 @@ const ModalOverlay = styled.div`
   pointer-events: auto;
 `;
 
+/* 오버레이 중앙 정렬 기준에서 전체 팝업을 조금 위로 이동 */
+const ModalCenter = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: translateY(-6vh);
+`;
+
+// Modal styles (match Game)
+const ModalTitle = styled.div`
+  font-size: 32px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 1.5rem;
+`;
+
+const ModalDescription = styled.div`
+  font-size: 16px;
+  color: #333;
+  font-weight: 400;
+  white-space: pre-line;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+`;
+
+const ModalButtonContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+`;
+
+// Update PauseModal/Buttons to match Game
 const PauseModal = styled.div`
-  background-color: white;
-  padding: 2rem;
+  background-color: #ffffff;
+  padding: 3rem 2rem;
   border-radius: 20px;
   text-align: center;
-  min-width: 300px;
-  font-family: 'GumiRomance', sans-serif !important;
-  
-  h2 {
-    font-family: 'GumiRomance', sans-serif !important;
-  }
+  min-width: 450px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 `;
 
 const PauseButton = styled.button`
-  padding: 1rem 2rem;
-  font-family: 'GumiRomance', sans-serif !important;
-  font-size: 1.3rem;
-  margin: 0.5rem;
+  padding: 0.8rem 2rem;
   border: none;
   border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-  background-color: #478CEE;
-  color: white;
-  
-  &:hover {
-    background-color: #357ABD;
-  }
+  transition: all 0.2s;
+  flex: 1;
+  ${props => props.primary ? `
+    background-color: #ffffff;
+    color: #2D7BED;
+    border: 1px solid #2D7BED;
+
+    &:hover { background-color: rgb(242, 242, 246); }
+  ` : `
+    background-color: #2D7BED;
+    color: #ffffff;
+
+    &:hover { background-color:#104EA7; }
+  `}
 `;
 
 const StartOverlay = styled.div`
@@ -404,6 +523,147 @@ const StartSubTitleBanner = styled.div`
   white-space: pre-line;
 `;
 
+// End modal components (separate from quiz)
+const EndModalWrapper = styled.div`
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 20;
+  pointer-events: auto;
+`;
+
+const EndTopBanner = styled.img`
+  position: relative;
+  width: 35vw;
+  height: auto;
+  margin-bottom: -50px; /* overlap with card */
+  pointer-events: none;
+  z-index: 2;
+`;
+
+const EndCard = styled.div`
+  position: relative;
+  display: inline-block;
+  width: auto;
+  min-width: 32vw;
+  max-width: 60vw;
+  background-color: #E8FAFF;
+  border: 15px solid #C2F0FF;
+  border-radius: 100px;
+  padding: 1rem 1rem 1rem 1rem;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+  pointer-events: auto;
+  z-index: 1;
+`;
+
+// Result components (referenced from Game)
+const EndResultBox = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 0.8rem;
+  flex: 1;
+  justify-content: center;
+  align-items: stretch;
+  margin-top: 0.3rem;
+`;
+
+const EndResultTitle = styled.div`
+  font-size: 18px;
+  font-weight: 500;
+`;
+
+const EndResultValue = styled.div`
+  font-size: 24px;
+  font-weight: 700;
+`;
+
+const EndResultItem1 = styled.div`
+  display: flex;
+  gap: 0.4rem;
+  color: #FF6200;
+  background-color: #FFE37C;
+  border-radius: 10px;
+  padding: 0.8rem;
+  align-items: center;
+  justify-content: space-around;
+  min-width: 160px;
+`;
+
+const EndResultItem2 = styled.div`
+  display: flex;
+  gap: 0.4rem;
+  background-color: #BCE4FF;
+  border-radius: 10px;
+  padding: 0.8rem;
+  color: #478CEE;
+  align-items: center;
+  justify-content: space-around;
+  min-width: 160px;
+`;
+
+const EndQuizResultsContainer = styled.div`
+  text-align: left;
+  margin-top: 0.8rem;
+  max-height: 15rem;
+  overflow-y: auto;
+`;
+
+const EndQuizResultItem = styled.div`
+  margin-bottom: 0.6rem;
+  padding: 0.8rem;
+  font-size: 15px;
+  border-radius: 10px;
+  color: #454545;
+  background-color: #ffffff;
+`;
+
+const EndQuizResultTitle = styled.div`
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  color: #454545;
+`;
+
+const EndQuizResultAnswer = styled.div`
+  font-size: 15px;
+  font-weight: 300;
+  color: #454545;
+`;
+
+const EndQuizResultCorrect = styled.div`
+  width: fit-content;
+  padding: 0.3rem 0.5rem;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: ${props => props.isCorrect ? '#2D7BED' : '#FF4444'};
+  border-radius: 5px;
+`;
+
+const EndQuizResultAnswerContainer = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+`;
+
+const EndNextButton = styled.button`
+  margin-top: 0.8rem;
+  padding: 0.5rem 1.2rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  width: 60%;
+  border: none;
+  border-radius: 5px;
+  background-color: #2D7BED;
+  color: white;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #104EA7;
+  }
+`;
+
 export default function Game2() {
   const { chapterData } = useChapter();
   const chapterId = chapterData?.chapterId;
@@ -413,12 +673,16 @@ export default function Game2() {
   const animationIdRef = useRef(null);
   const playerImageRef = useRef(null);
   const playerAttackImageRef = useRef(null);
+  const playerMove1ImageRef = useRef(null);
+  const playerMove2ImageRef = useRef(null);
   const backgroundImageRef = useRef(null);
   const coinImageRef = useRef(null);
-  const quizAlertImageRef = useRef(null);
   const enemy1ImageRef = useRef(null);
   const enemy2ImageRef = useRef(null);
   const enemy3ImageRef = useRef(null);
+  const enemy1AttackedImageRef = useRef(null);
+  const enemy2AttackedImageRef = useRef(null);
+  const enemy3AttackedImageRef = useRef(null);
   
   const [isGameStarted, setIsGameStarted] = useState(true);
   const [isGameRunning, setIsGameRunning] = useState(false);
@@ -429,11 +693,24 @@ export default function Game2() {
   const [quizList, setQuizList] = useState([]);
   const [quizLoaded, setQuizLoaded] = useState(false);
   const [countdown, setCountdown] = useState(null);
+  const [safeZoneAttacked, setSafeZoneAttacked] = useState(false);
   const [quizAlertY, setQuizAlertY] = useState(-100);
   const [showQuizAlert, setShowQuizAlert] = useState(false);
   const [isQuizActive, setIsQuizActive] = useState(false);
+  const [quizResultFeedback, setQuizResultFeedback] = useState(null); // 'correct' | 'wrong' | null
   const [gameEnded, setGameEnded] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [isPlayerMoving, setIsPlayerMoving] = useState(false);
+  const [showGameEnd, setShowGameEnd] = useState(false);
+  const [gameEndX, setGameEndX] = useState(-100);
+  const [allQuizzesCompleted, setAllQuizzesCompleted] = useState(false);
+  const [weaponsDisabled, setWeaponsDisabled] = useState(false); // 바이러스 중단 2초 후 총알/세이프존 비활성화
+  const [showPauseModal, setShowPauseModal] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
+  const [showCoinEffect, setShowCoinEffect] = useState(false);
+  const virusStopAtRef = useRef(null); // 바이러스 생성 중단 시각
+  const coinEffectTimerRef = useRef(null);
+  const playerCoinEffectImageRef = useRef(null);
   
   const playerRef = useRef({
     x: 0,
@@ -445,13 +722,18 @@ export default function Game2() {
   
   const bulletsRef = useRef([]);
   const virusesRef = useRef([]);
+  const coinsRef = useRef([]);
   const keysRef = useRef({});
   const lastBulletTimeRef = useRef(0);
   const bulletIntervalRef = useRef(300);
+  const bulletSizeRef = useRef({ width: 30, height: 30 }); // 기본값
+  const moveAnimationFrameRef = useRef(0);
   const quizTimerRef = useRef(null);
   const quizResultsRef = useRef([]);
   const virusSpawnTimerRef = useRef(0);
+  const coinSpawnTimerRef = useRef(0);
   const quizAlertYRef = useRef(-100);
+  const gameEndXRef = useRef(-100);
   const initialQuizScheduledRef = useRef(false);
   const touchActiveRef = useRef(false);
   const lastWatchLogRef = useRef(0);
@@ -483,11 +765,39 @@ export default function Game2() {
   useEffect(() => {
     const playerImgEl = new Image();
     playerImgEl.src = playerImg;
+    playerImgEl.onload = () => {
+      // 이미지가 로드되면 원본 비율을 유지하면서 크기 설정
+      const targetHeight = playerImageRef.current.height; // 원하는 높이 설정
+      const aspectRatio = playerImgEl.naturalWidth / playerImgEl.naturalHeight;
+      const targetWidth = targetHeight * aspectRatio;
+      
+      playerRef.current.width = targetWidth;
+      playerRef.current.height = targetHeight;
+    };
     playerImageRef.current = playerImgEl;
     
     const playerAttackImgEl = new Image();
     playerAttackImgEl.src = playerAttackImg;
+    playerAttackImgEl.onload = () => {
+      // 이미지가 로드되면 원본 비율을 유지하면서 크기 설정
+      const targetHeight = 40; // 원하는 높이 설정
+      const aspectRatio = playerAttackImgEl.naturalWidth / playerAttackImgEl.naturalHeight;
+      const targetWidth = targetHeight * aspectRatio;
+      
+      bulletSizeRef.current = {
+        width: targetWidth,
+        height: targetHeight
+      };
+    };
     playerAttackImageRef.current = playerAttackImgEl;
+    
+    const playerMove1ImgEl = new Image();
+    playerMove1ImgEl.src = PlayerMove1;
+    playerMove1ImageRef.current = playerMove1ImgEl;
+    
+    const playerMove2ImgEl = new Image();
+    playerMove2ImgEl.src = PlayerMove2;
+    playerMove2ImageRef.current = playerMove2ImgEl;
     
     const bgImg = new Image();
     bgImg.src = backgroundImg;
@@ -496,22 +806,33 @@ export default function Game2() {
     const coinImgEl = new Image();
     coinImgEl.src = coinImg;
     coinImageRef.current = coinImgEl;
-    
-    const quizAlert = new Image();
-    quizAlert.src = quizAlertImg;
-    quizAlertImageRef.current = quizAlert;
+    const coinEffectImgEl = new Image();
+    coinEffectImgEl.src = PlayerCoin;
+    playerCoinEffectImageRef.current = coinEffectImgEl;
     
     const enemy1Img = new Image();
     enemy1Img.src = PlayerEnemy1;
     enemy1ImageRef.current = enemy1Img;
     
+    const enemy1AttackedImg = new Image();
+    enemy1AttackedImg.src = PlayerEnemy1Attacked;
+    enemy1AttackedImageRef.current = enemy1AttackedImg;
+    
     const enemy2Img = new Image();
     enemy2Img.src = PlayerEnemy2;
     enemy2ImageRef.current = enemy2Img;
     
+    const enemy2AttackedImg = new Image();
+    enemy2AttackedImg.src = PlayerEnemy2Attacked;
+    enemy2AttackedImageRef.current = enemy2AttackedImg;
+    
     const enemy3Img = new Image();
     enemy3Img.src = PlayerEnemy3;
     enemy3ImageRef.current = enemy3Img;
+    
+    const enemy3AttackedImg = new Image();
+    enemy3AttackedImg.src = PlayerEnemy3Attacked;
+    enemy3AttackedImageRef.current = enemy3AttackedImg;
   }, []);
 
   useEffect(() => {
@@ -581,7 +902,7 @@ export default function Game2() {
   }, [chapterId, navigate]);
   
   const startQuizEvent = useCallback(() => {
-    if (isQuizActive || showQuizAlert) return;
+    if (isQuizActive || showQuizAlert || showGameEnd || gameEnded) return;
     if (quizShownCountRef.current >= MAX_QUIZZES) return;
     
     if (!Array.isArray(quizList) || quizList.length === 0) {
@@ -624,7 +945,7 @@ export default function Game2() {
       };
       setCurrentQuiz(normalized);
     }, randomTime);
-  }, [quizList, isQuizActive, showQuizAlert, isGameRunning, isPaused]);
+  }, [quizList, isQuizActive, showQuizAlert, isGameRunning, isPaused, showGameEnd, gameEnded]);
 
   useEffect(() => {
     if (!isGameRunning || isPaused || gameEnded) return;
@@ -634,9 +955,10 @@ export default function Game2() {
         clearTimeout(quizTimerRef.current);
         quizTimerRef.current = null;
       }
-      setGameEnded(true);
-      setIsGameRunning(false);
-      setShowResults(true);
+      // 게임 종료 이미지 표시 시작 (50초 타이머 - 퀴즈 완료와 별개)
+      setShowGameEnd(true);
+      gameEndXRef.current = -window.innerWidth; // 왼쪽 화면 밖에서 시작
+      setGameEndX(-window.innerWidth);
     }, MAX_DURATION_MS);
     return () => clearTimeout(timerId);
   }, [isGameRunning, isPaused, gameEnded]);
@@ -644,39 +966,49 @@ export default function Game2() {
   useEffect(() => {
     if (!showQuizAlert || isQuizActive) return;
     
+    console.log("✅ 퀴즈 알림 깜빡이기 시작! 3초 후 퀴즈 표시");
+    
+    // 3초 깜빡이다가 퀴즈 표시
+    const quizStartTimer = setTimeout(() => {
+      setIsQuizActive(true);
+      setShowQuiz(true);
+      setShowQuizAlert(false);
+      setIsPaused(true);
+      
+      // 중복 방지: 사용한 퀴즈 인덱스 기록 및 카운트 증가
+      if (pendingQuizIndexRef.current !== null) {
+        usedQuizIndexSetRef.current.add(pendingQuizIndexRef.current);
+        pendingQuizIndexRef.current = null;
+      }
+      quizShownCountRef.current += 1;
+    }, 3000);
+    
+    return () => clearTimeout(quizStartTimer);
+  }, [showQuizAlert, isQuizActive]);
+  
+  // 게임 종료 이미지가 화면을 지나가면 게임 종료 처리
+  useEffect(() => {
+    if (!showGameEnd) return;
+    
     const canvas = canvasRef.current;
     if (!canvas) return;
     
-    const checkAlertPassed = () => {
-      if (quizAlertYRef.current > playerRef.current.y + playerRef.current.height) {
-        console.log("✅ 카운트다운 시작!");
-        setCountdown(3);
-        setIsQuizActive(true);
-        
-        const countdownInterval = setInterval(() => {
-          setCountdown((prev) => {
-            if (prev === 1) {
-              clearInterval(countdownInterval);
-              setShowQuiz(true);
-              setShowQuizAlert(false);
-              setIsPaused(true);
-              // 중복 방지: 사용한 퀴즈 인덱스 기록 및 카운트 증가
-              if (pendingQuizIndexRef.current !== null) {
-                usedQuizIndexSetRef.current.add(pendingQuizIndexRef.current);
-                pendingQuizIndexRef.current = null;
-              }
-              quizShownCountRef.current += 1;
-              return null;
-            }
-            return prev - 1;
-          });
-        }, 1000);
+    const checkGameEndPassed = () => {
+      // 게임 종료 이미지가 화면에 꽉 차면 (left가 0 이상) 3초 후 게임 종료
+      if (gameEndXRef.current >= 0) {
+        console.log("✅ 게임 종료 라인 도착! 3초 후 결과 표시");
+        setTimeout(() => {
+          setGameEnded(true);
+          setIsGameRunning(false);
+          setShowGameEnd(false);
+          setShowResults(true);
+        }, 3000);
       }
     };
     
-    const interval = setInterval(checkAlertPassed, 100);
+    const interval = setInterval(checkGameEndPassed, 100);
     return () => clearInterval(interval);
-  }, [showQuizAlert, isQuizActive]);
+  }, [showGameEnd]);
   
   const handleQuizAnswer = (answer) => {
     if (!currentQuiz) return;
@@ -693,7 +1025,15 @@ export default function Game2() {
     
     if (isCorrect) {
       setCoins(prev => prev + 10);
+      setQuizResultFeedback('correct');
+    } else {
+      setQuizResultFeedback('wrong');
     }
+    
+    // 1초 후 피드백 이미지 제거
+    setTimeout(() => {
+      setQuizResultFeedback(null);
+    }, 1000);
     
     setShowQuiz(false);
     setCurrentQuiz(null);
@@ -709,17 +1049,40 @@ export default function Game2() {
         clearTimeout(quizTimerRef.current);
         quizTimerRef.current = null;
       }
+      // 5개 퀴즈 모두 완료
+      if (quizShownCountRef.current >= MAX_QUIZZES && !allQuizzesCompleted) {
+        setAllQuizzesCompleted(true);
+        // 3초 대기 후 바이러스 스폰 중지, 3초 더 대기 후 게임 종료 라인 시작
+        setTimeout(() => {
+          // 3초 더 대기 (바이러스 안 나오는 상태 유지)
+          setTimeout(() => {
+            setShowGameEnd(true);
+            gameEndXRef.current = -window.innerWidth; // 왼쪽 화면 밖에서 시작
+            setGameEndX(-window.innerWidth);
+          }, 3000);
+        }, 3000);
+      }
     }
   };
   
   const updatePlayer = (canvas) => {
     const player = playerRef.current;
+    let isMoving = false;
     
     if (keysRef.current['a'] || keysRef.current['arrowleft']) {
       player.x = Math.max(0, player.x - player.speed);
+      isMoving = true;
     }
     if (keysRef.current['d'] || keysRef.current['arrowright']) {
       player.x = Math.min(canvas.width - player.width, player.x + player.speed);
+      isMoving = true;
+    }
+    
+    setIsPlayerMoving(isMoving);
+    
+    // 움직이는 동안 애니메이션 프레임 카운트
+    if (isMoving) {
+      moveAnimationFrameRef.current += 1;
     }
   };
   
@@ -727,11 +1090,12 @@ export default function Game2() {
     const now = Date.now();
     if (now - lastBulletTimeRef.current >= bulletIntervalRef.current) {
       const player = playerRef.current;
+      const bulletSize = bulletSizeRef.current;
       bulletsRef.current.push({
-        x: player.x + player.width / 2 - 15,
+        x: player.x + player.width / 2 - bulletSize.width / 2,
         y: player.y,
-        width: 30,
-        height: 30,
+        width: bulletSize.width,
+        height: bulletSize.height,
         speed: 9,
       });
       lastBulletTimeRef.current = now;
@@ -739,7 +1103,7 @@ export default function Game2() {
   };
   
   const spawnVirus = () => {
-    if (isQuizActive || showQuizAlert) return;
+    if (isQuizActive || showQuizAlert || showGameEnd || gameEnded || allQuizzesCompleted) return;
     
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -749,24 +1113,97 @@ export default function Game2() {
       const topBarHeight = 80;
       
       const virusTypes = [
-        { type: 'enemy1', image: enemy1ImageRef.current, speed: 3.0, reward: 5 },
-        { type: 'enemy2', image: enemy2ImageRef.current, speed: 2.4, reward: 7 },
-        { type: 'enemy3', image: enemy3ImageRef.current, speed: 1.8, reward: 10 },
+        { 
+          type: 'enemy3', 
+          image: enemy3ImageRef.current, 
+          attackedImage: enemy3AttackedImageRef.current,
+          speed: 3.0, 
+          reward: 3 
+        },
+        { 
+          type: 'enemy2', 
+          image: enemy2ImageRef.current, 
+          attackedImage: enemy2AttackedImageRef.current,
+          speed: 2.4, 
+          reward: 5 
+        },
+        { 
+          type: 'enemy1', 
+          image: enemy1ImageRef.current, 
+          attackedImage: enemy1AttackedImageRef.current,
+          speed: 1.8, 
+          reward: 7 
+        },
       ];
       const chosen = virusTypes[Math.floor(Math.random() * virusTypes.length)];
       
       virusesRef.current.push({
-        x: Math.random() * (canvas.width - 40),
+        x: Math.random() * (canvas.width - 60),
         y: topBarHeight,
-        width: 50,
-        height: 50,
+        width: 60,
+        height: 60,
         speed: chosen.speed,
         image: chosen.image,
+        attackedImage: chosen.attackedImage,
         reward: chosen.reward,
         type: chosen.type,
+        attacked: false,
+        attackedTime: 0,
       });
       virusSpawnTimerRef.current = 0;
     }
+  };
+
+  // 코인 스폰 및 업데이트
+  const spawnCoin = () => {
+    if (isQuizActive || showQuizAlert || showGameEnd || gameEnded || allQuizzesCompleted) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    coinSpawnTimerRef.current += 16;
+    if (coinSpawnTimerRef.current >= 1300) {
+      coinSpawnTimerRef.current = 0;
+      const size = Math.max(32, Math.min(56, Math.floor(window.innerWidth * 0.04)));
+      const x = Math.random() * (canvas.width - size);
+      coinsRef.current.push({
+        x,
+        y: -size,
+        width: size,
+        height: size,
+        speed: 3.5,
+      });
+    }
+  };
+
+  const updateCoins = (canvas) => {
+    const safeZoneHeight = window.innerHeight * 0.15; // 15vh
+    const safeZoneTop = canvas.height - safeZoneHeight;
+    coinsRef.current = coinsRef.current.filter(coin => {
+      // 아래로 이동
+      coin.y += coin.speed;
+
+      // 플레이어 충돌 체크 (획득)
+      const p = playerRef.current;
+      const collide = (
+        coin.x < p.x + p.width &&
+        coin.x + coin.width > p.x &&
+        coin.y < p.y + p.height &&
+        coin.y + coin.height > p.y
+      );
+      if (collide) {
+        setCoins(prev => prev + 5);
+        // 플레이어 코인 획득 효과 잠시 표시
+        setShowCoinEffect(true);
+        if (coinEffectTimerRef.current) clearTimeout(coinEffectTimerRef.current);
+        coinEffectTimerRef.current = setTimeout(() => setShowCoinEffect(false), 400);
+        return false; // 코인 제거
+      }
+
+      // 세이프존 라인 도달 시 소멸
+      if (coin.y + coin.height >= safeZoneTop) {
+        return false;
+      }
+      return true;
+    });
   };
   
   const updateBullets = (canvas) => {
@@ -777,8 +1214,23 @@ export default function Game2() {
   };
   
   const updateViruses = (canvas) => {
+    const safeZoneHeight = window.innerHeight * 0.15; // 15vh
+    const safeZoneTop = canvas.height - safeZoneHeight;
+    
     virusesRef.current = virusesRef.current.filter(virus => {
-      virus.y += virus.speed;
+      // attacked 상태면 이동하지 않음
+      if (!virus.attacked) {
+        virus.y += virus.speed;
+      }
+      
+      // SafeZone에 닿았는지 체크
+      if (virus.y + virus.height >= safeZoneTop && !virus.attacked) {
+        setSafeZoneAttacked(true);
+        // 일정 시간 후 원래 상태로 복구
+        setTimeout(() => setSafeZoneAttacked(false), 500);
+        return false; // 바이러스 제거
+      }
+      
       return virus.y < canvas.height;
     });
   };
@@ -786,6 +1238,7 @@ export default function Game2() {
   const checkCollisions = () => {
     bulletsRef.current = bulletsRef.current.filter(bullet => {
       const hitVirus = virusesRef.current.find(virus => {
+        if (virus.attacked) return false; // 이미 공격받은 바이러스는 무시
         return bullet.x < virus.x + virus.width &&
                bullet.x + bullet.width > virus.x &&
                bullet.y < virus.y + virus.height &&
@@ -793,11 +1246,20 @@ export default function Game2() {
       });
       
       if (hitVirus) {
-        const index = virusesRef.current.indexOf(hitVirus);
-        virusesRef.current.splice(index, 1);
+        // 바로 제거하지 않고 attacked 상태로 변경
+        hitVirus.attacked = true;
+        hitVirus.attackedTime = Date.now();
         const gain = typeof hitVirus.reward === 'number' ? hitVirus.reward : 1;
         setCoins(prev => prev + gain);
-        return false;
+        return false; // 총알 제거
+      }
+      return true;
+    });
+    
+    // attacked 상태의 바이러스를 300ms 후에 제거
+    virusesRef.current = virusesRef.current.filter(virus => {
+      if (virus.attacked && Date.now() - virus.attackedTime > 300) {
+        return false; // 제거
       }
       return true;
     });
@@ -820,24 +1282,66 @@ export default function Game2() {
     }
     
     updatePlayer(canvas);
-    shootBullet(canvas);
-    spawnVirus();
-    updateBullets(canvas);
+    // 바이러스 생성 중단 상태 감지
+    const virusBlocked = (showGameEnd || gameEnded || allQuizzesCompleted);
+    if (virusBlocked) {
+      if (virusStopAtRef.current === null) virusStopAtRef.current = Date.now();
+    } else {
+      virusStopAtRef.current = null;
+      if (weaponsDisabled) setWeaponsDisabled(false);
+    }
+
+    // 2초 경과 시 무기 비활성화 전환
+    if (!weaponsDisabled && virusStopAtRef.current && Date.now() - virusStopAtRef.current >= 2000) {
+      setWeaponsDisabled(true);
+    }
+
+    // 바이러스/총알/코인 처리: 무기 비활성화 전까지는 정상 동작 (코인은 총알 무관)
+    if (!weaponsDisabled) {
+      shootBullet(canvas);
+      spawnVirus();
+      spawnCoin();
+      updateBullets(canvas);
+    } else {
+      // 총알 즉시 제거하여 화면에서 사라지게
+      bulletsRef.current = [];
+    }
     updateViruses(canvas);
+    updateCoins(canvas);
     checkCollisions();
     
-    if (showQuizAlert && !isQuizActive) {
-      quizAlertYRef.current += 6;
-      setQuizAlertY(quizAlertYRef.current);
+    if (showGameEnd && gameEndXRef.current < 0) {
+      gameEndXRef.current += 8;
+      setGameEndX(gameEndXRef.current);
     }
     
-    if (playerImageRef.current) {
+    // 플레이어 이미지 선택 (움직이면 move 이미지, 멈추면 기본 이미지)
+    let currentPlayerImg = playerImageRef.current;
+    if (isPlayerMoving) {
+      // 10프레임마다 move1, move2 번갈아가며 표시 (걷는 애니메이션)
+      const animFrame = Math.floor(moveAnimationFrameRef.current / 10) % 2;
+      currentPlayerImg = animFrame === 0 ? playerMove1ImageRef.current : playerMove2ImageRef.current;
+    }
+    
+    const p = playerRef.current;
+    if (showCoinEffect && playerCoinEffectImageRef.current) {
+      // 효과 이미지를 플레이어 자리에 잠시 대체 표시 (원본 비율 유지)
+      const effectImg = playerCoinEffectImageRef.current;
+      const aspect = effectImg.naturalWidth > 0 && effectImg.naturalHeight > 0
+        ? effectImg.naturalWidth / effectImg.naturalHeight
+        : 1;
+      const targetHeight = p.height * 1.1; // 플레이어 높이에 맞춤
+      const targetWidth = targetHeight * aspect; // 비율 유지
+      const drawX = p.x + (p.width - targetWidth) / 2; // 중앙 정렬
+      const drawY = p.y;
+      ctx.drawImage(effectImg, drawX, drawY, targetWidth, targetHeight);
+    } else if (currentPlayerImg) {
       ctx.drawImage(
-        playerImageRef.current,
-        playerRef.current.x,
-        playerRef.current.y,
-        playerRef.current.width,
-        playerRef.current.height
+        currentPlayerImg,
+        p.x,
+        p.y,
+        p.width,
+        p.height
       );
     }
     
@@ -853,10 +1357,25 @@ export default function Game2() {
       }
     });
     
-    virusesRef.current.forEach(virus => {
-      if (virus.image) {
+    // 코인 렌더링
+    if (coinImageRef.current) {
+      coinsRef.current.forEach(coin => {
         ctx.drawImage(
-          virus.image,
+          coinImageRef.current,
+          coin.x,
+          coin.y,
+          coin.width,
+          coin.height
+        );
+      });
+    }
+    
+    virusesRef.current.forEach(virus => {
+      // attacked 상태면 attackedImage 사용, 아니면 일반 image 사용
+      const currentVirusImg = virus.attacked ? virus.attackedImage : virus.image;
+      if (currentVirusImg) {
+        ctx.drawImage(
+          currentVirusImg,
           virus.x,
           virus.y,
           virus.width,
@@ -864,7 +1383,7 @@ export default function Game2() {
         );
       }
     });
-  }, [isGameRunning, isPaused, showQuizAlert, isQuizActive]);
+  }, [isGameRunning, isPaused, showQuizAlert, isQuizActive, isPlayerMoving, showGameEnd, gameEnded, allQuizzesCompleted, weaponsDisabled, showCoinEffect]);
   
   useEffect(() => {
     if (!isGameRunning || isPaused) return;
@@ -889,14 +1408,14 @@ export default function Game2() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
-    const safeZoneHeight = 100;
+    const safeZoneHeight = window.innerHeight * 0.15; // 15vh
     
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     
     if (!isGameRunning) {
       playerRef.current.x = canvas.width / 2 - playerRef.current.width / 2;
-      playerRef.current.y = canvas.height - safeZoneHeight - playerRef.current.height - 20;
+      playerRef.current.y = canvas.height - safeZoneHeight - playerRef.current.height;
     }
     
     setIsGameRunning(true);
@@ -916,14 +1435,14 @@ export default function Game2() {
 
   // 퀴즈 스케줄 워치독: 2초마다 조건 확인 후 스케줄 보장
   useEffect(() => {
-    if (!isGameRunning || isPaused || gameEnded) return;
+    if (!isGameRunning || isPaused || gameEnded || showGameEnd) return;
     const intervalId = setInterval(() => {
       const now = Date.now();
       if (now - lastWatchLogRef.current > 5000) {
-        console.log('[Game2 Watchdog]', { isGameRunning, isPaused, isQuizActive, showQuizAlert, hasTimer: !!quizTimerRef.current, quizListLen: quizList?.length });
+        console.log('[Game2 Watchdog]', { isGameRunning, isPaused, isQuizActive, showQuizAlert, showGameEnd, hasTimer: !!quizTimerRef.current, quizListLen: quizList?.length });
         lastWatchLogRef.current = now;
       }
-      if (!isQuizActive && !showQuizAlert && quizShownCountRef.current < MAX_QUIZZES) {
+      if (!isQuizActive && !showQuizAlert && !showGameEnd && quizShownCountRef.current < MAX_QUIZZES) {
         // 타이머가 없으면 새로 등록
         if (!quizTimerRef.current) {
           startQuizEvent();
@@ -956,7 +1475,7 @@ export default function Game2() {
       }
     }, 2000);
     return () => clearInterval(intervalId);
-  }, [isGameRunning, isPaused, gameEnded, isQuizActive, showQuizAlert, quizList, startQuizEvent]);
+  }, [isGameRunning, isPaused, gameEnded, isQuizActive, showQuizAlert, showGameEnd, quizList, startQuizEvent]);
   
   const handleExit = async () => {
     if (coins > 0) {
@@ -998,91 +1517,164 @@ export default function Game2() {
     return (
     <>
       <GlobalFonts />
-      <GameCanvas ref={canvasRef} />
-      
-      {showQuizAlert && (
-        <QuizAlertLine style={{ top: `${quizAlertY}px` }} />
-      )}
-      
-      {countdown && (
-        <CountdownOverlay>{countdown}</CountdownOverlay>
-      )}
-      
-      {showQuiz && currentQuiz && (
-        <>
-          <ModalOverlay>
-            <QuizModal>
-              <QuizTitleBanner>
-                <img src={gameQuizTitle} alt="quiz-title" />
-              </QuizTitleBanner>
-              <QuizContent>
-                <QuizQuestion>{currentQuiz.question}</QuizQuestion>
-                <QuizButtonContainer>
-                  {currentQuiz.options.map((option, index) => (
-                    <QuizButton
-                      key={index}
-                      isOdd={index % 2 === 0}
-                      onClick={() => handleQuizAnswer(option)}
-                    >
-                      {option}
-                    </QuizButton>
-                  ))}
-                </QuizButtonContainer>
-              </QuizContent>
-            </QuizModal>
-          </ModalOverlay>
-        </>
-      )}
+      <GameWrapper>
+        <GameCanvas ref={canvasRef} />
+        
+        {showQuizAlert && (
+          <QuizAlertLine src={quizAlertImg} alt="quiz alert" />
+        )}
+        
+        {showGameEnd && (
+          <GameEndLine src={GameEndImg} alt="game end" style={{ left: `${gameEndX}px` }} />
+        )}
 
-      {/* 결과 모달 */}
-      {showResults && (
-        <ModalOverlay>
-          <PauseModal>
-            <h2>게임 종료</h2>
-            <div style={{ margin: '1rem 0' }}>
-              <div>획득 코인: <b>{coins}</b></div>
-              <div>퀴즈 정답: <b>{quizResultsRef.current.filter(r => r.isCorrect).length}</b> / {quizResultsRef.current.length}</div>
-            </div>
-            <PauseButton onClick={handleFinishAndExit}>나가기</PauseButton>
-          </PauseModal>
-        </ModalOverlay>
-      )}
-      
-      <TopBar>
-        <CoinDisplay>
-          <img src={coinImg} alt="coin" />
-          <span>{coins}</span>
-        </CoinDisplay>
-      </TopBar>
-      
-      <SafeZone />
-      
-      <GameControls>
-        <ControlButton
-          src={pause_btn}
-          alt="pause"
-          onClick={() => setIsPaused(true)}
-        />
-        <ControlButton
-          src={exit_btn}
-          alt="exit"
-          onClick={handleExit}
-        />
-      </GameControls>
-      
-      {isPaused && !showQuiz && (
-        <ModalOverlay>
-          <PauseModal>
-            <h2>게임 일시정지</h2>
-            <PauseButton onClick={() => setIsPaused(false)}>
-              계속하기
-            </PauseButton>
-            <PauseButton onClick={handleExit}>
-              나가기
-            </PauseButton>
-          </PauseModal>
-        </ModalOverlay>
-      )}
+        {quizResultFeedback && (
+          <QuizResultImage 
+            src={quizResultFeedback === 'correct' ? CorrectImg : WrongImg} 
+            alt={quizResultFeedback} 
+          />
+        )}
+
+        {countdown && (
+          <CountdownOverlay>{countdown}</CountdownOverlay>
+        )}
+        
+        {showQuiz && currentQuiz && (
+          <>
+            <ModalOverlay>
+              <ModalCenter>
+                <QuizModalWrapper>
+                  <QuizTopBanner src={GameBoxTop} alt="quiz top" />
+                  <QuizCard>
+                    <QuizContent>
+                      <QuizQuestion>{currentQuiz.question}</QuizQuestion>
+                      {(() => {
+                        const cols = (currentQuiz?.options?.length || 0) >= 3 ? 2 : 1;
+                        return (
+                          <QuizButtonContainer>
+                            {currentQuiz.options.map((option, index) => (
+                              <QuizButton
+                                key={index}
+                                $odd={index % 2 === 0}
+                                onClick={() => handleQuizAnswer(option)}
+                              >
+                                {option}
+                              </QuizButton>
+                            ))}
+                          </QuizButtonContainer>
+                        );
+                      })()}
+                    </QuizContent>
+                  </QuizCard>
+                </QuizModalWrapper>
+              </ModalCenter>
+            </ModalOverlay>
+          </>
+        )}
+
+        {/* 결과 모달 */}
+        {showResults && (
+          <ModalOverlay>
+            <ModalCenter>
+              <EndModalWrapper>
+                <EndTopBanner src={GameEndTop} alt="game end top" />
+                <EndCard>
+                  <QuizContent>
+                    <QuizQuestion style={{ marginBottom: '1rem' }}>완주완료!!</QuizQuestion>
+
+                    <EndResultBox>
+                      <EndResultItem1>
+                        <EndResultTitle>퀴즈 결과</EndResultTitle>
+                        <EndResultValue>
+                          {quizResultsRef.current.filter(r => r.isCorrect).length}/{quizResultsRef.current.length}
+                        </EndResultValue>
+                      </EndResultItem1>
+                      <EndResultItem2>
+                        <EndResultTitle>획득 코인</EndResultTitle>
+                        <EndResultValue>{coins}P</EndResultValue>
+                      </EndResultItem2>
+                    </EndResultBox>
+
+                    <EndQuizResultsContainer>
+                      {quizResultsRef.current.map((result, index) => (
+                        <EndQuizResultItem key={index}>
+                          <EndQuizResultTitle>Q{index + 1}. {result.question}</EndQuizResultTitle>
+                          <EndQuizResultAnswerContainer>
+                            <EndQuizResultAnswer>답 : {result.correctAnswer}</EndQuizResultAnswer>
+                            <EndQuizResultCorrect isCorrect={result.isCorrect}>{result.isCorrect ? '정답' : '오답'}</EndQuizResultCorrect>
+                          </EndQuizResultAnswerContainer>
+                        </EndQuizResultItem>
+                      ))}
+                    </EndQuizResultsContainer>
+
+                    <EndNextButton onClick={handleFinishAndExit}>다음단계로</EndNextButton>
+                  </QuizContent>
+                </EndCard>
+              </EndModalWrapper>
+            </ModalCenter>
+          </ModalOverlay>
+        )}
+        
+        <TopBar>
+          <CoinDisplay>
+            <img src={coinImg} alt="coin" />
+            <CoinText>{coins}</CoinText>
+          </CoinDisplay>
+
+          <GameControls>
+            <ControlButton
+              src={pause_btn}
+              alt="pause"
+              onClick={(e) => { e.stopPropagation(); setShowPauseModal(true); setIsPaused(true); if (animationIdRef.current) cancelAnimationFrame(animationIdRef.current); }}
+            />
+            <ControlButton
+              src={exit_btn}
+              alt="exit"
+              onClick={(e) => { e.stopPropagation(); setShowExitModal(true); setIsPaused(true); if (animationIdRef.current) cancelAnimationFrame(animationIdRef.current); }}
+            />
+          </GameControls>
+        </TopBar>
+        
+        {!weaponsDisabled && (
+          <SafeZone src={safeZoneAttacked ? safeZoneAttackedImg : safeZoneImg} alt="safe fence" />
+        )}
+        
+        {showPauseModal && !showQuiz && (
+          <ModalOverlay onClick={(e) => e.stopPropagation()}>
+            <PauseModal>
+              <ModalTitle>게임이 잠시 멈췄어요.</ModalTitle>
+              <ModalDescription>{`게임을 종료하게 되면
+지금까지의 학습 기록과 포인트가 초기화됩니다.`}</ModalDescription>
+              <ModalButtonContainer>
+                <PauseButton onClick={() => { setShowPauseModal(false); setIsPaused(false); }}>
+                  이어하기
+                </PauseButton>
+                <PauseButton primary onClick={() => { setShowPauseModal(false); setShowExitModal(true); }}>
+                  종료하기
+                </PauseButton>
+              </ModalButtonContainer>
+            </PauseModal>
+          </ModalOverlay>
+        )}
+
+        {showExitModal && !showQuiz && (
+          <ModalOverlay onClick={(e) => e.stopPropagation()}>
+            <PauseModal>
+              <ModalTitle>게임을 종료하시겠습니까?</ModalTitle>
+              <ModalDescription>{`게임을 종료하게 되면
+지금까지의 학습 기록과 포인트가 초기화됩니다.`}</ModalDescription>
+              <ModalButtonContainer>
+                <PauseButton onClick={() => { setShowExitModal(false); setIsPaused(false); }}>
+                  이어하기
+                </PauseButton>
+                <PauseButton primary onClick={handleExit}>
+                  종료하기
+                </PauseButton>
+              </ModalButtonContainer>
+            </PauseModal>
+          </ModalOverlay>
+        )}
+      </GameWrapper>
     </>
   );
 }

@@ -29,7 +29,7 @@ export const useActivityTracker = (chapterId, level, userId, bookId, minusFocusi
 
     try {
       console.log('🎬 레벨 시작 API 호출:', { level, chapterId, bookId });
-      const response = await api.post('/api/session/start-level', null, {
+      const response = await api.post('/api/session/', null, {
         params: {
           level,
           chapterId,
@@ -352,8 +352,8 @@ export const useActivityTracker = (chapterId, level, userId, bookId, minusFocusi
   useEffect(() => {
     console.log('🎬 활동 감지 시작:', { chapterId, level });
     
-    // 1. 먼저 레벨 시작 API 호출
-    startLevel();
+    // 1. start-level 호출 제거됨 (/api/session GET 로직으로 대체됨)
+    // startLevel();
     
     // 활동 감지 이벤트들
     const events = [
@@ -441,7 +441,7 @@ export const useActivityTracker = (chapterId, level, userId, bookId, minusFocusi
       // - COMPLETED: completeSession()에서 처리
       console.log('🛑 컴포넌트 언마운트: 상태 전송 없음 (현재 상태:', currentStatusRef.current, ')');
     };
-  }, [handleActivity, handleVisibilityChange, handleBeforeUnload, handlePageHide, updateSessionStatus, startLevel, chapterId, level, INACTIVITY_THRESHOLD, ACTIVITY_CHECK_INTERVAL]);
+  }, [handleActivity, handleVisibilityChange, handleBeforeUnload, handlePageHide, updateSessionStatus, chapterId, level, INACTIVITY_THRESHOLD, ACTIVITY_CHECK_INTERVAL]);
 
   return { completeSession, sendExit };
 };

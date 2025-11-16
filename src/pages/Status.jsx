@@ -12,6 +12,7 @@ import Book from "../assets/book.svg";
 import Graph from "../assets/graph.svg";
 import Pencil from "../assets/pencil.svg";
 import CircleGraph from "../assets/circle_graph.svg";
+import { fetchCurrentSituation } from "../api/status/currentSituation";
 
 const Wrapper = styled.div`
   background-color: #ffffff;
@@ -131,7 +132,6 @@ const StatusBoxGrid = styled.div`
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
   width: 100%;
-  margin-top: 2rem;
 `;
 
 const SectionTitle = styled.div`
@@ -145,102 +145,51 @@ const SectionTitle = styled.div`
 
 
 const Status = ({user, login, setLogin}) => {
-  console.log('REDIRECT_URI:', process.env.REACT_APP_KAKAO_REDIRECT_URI);
-  console.log('현재 NODE_ENV:', process.env.NODE_ENV);
-
   const navigate = useNavigate();
   const [statusBoxes, setStatusBoxes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [overall, setOverall] = useState({ percent: 0, total: 0, completed: 0 });
 
-  // 백엔드에서 받을 데이터 예시 (실제로는 API 호출)
   useEffect(() => {
-    // 임시 데이터 - 실제로는 API에서 받아올 데이터
-    const mockData = [
-      {
-        id: 1,
-        title: "돈이란 무엇일까?",
-        status: "completed",
-        progress: 100,
-        description: "돈에 대한 이해도가 높아요!",
-        stickers: [
-          { type: "review", name: "복습왕 스티커" },
-          { type: "learning", name: "학습왕 스티커" },
-          { type: "focus", name: "집중왕 스티커" }
-        ]
-      },
-      {
-        id: 2,
-        title: "돈이란 무엇일까?",
-        status: "completed",
-        progress: 100,
-        description: "돈에 대한 이해도가 높아요!",
-        stickers: [
-          { type: "review", name: "복습왕 스티커" },
-          { type: "learning", name: "학습왕 스티커" },
-          { type: "focus", name: "집중왕 스티커" }
-        ]
-      },
-      {
-        id: 3,
-        title: "돈이란 무엇일까?",
-        status: "in_progress",
-        progress: 65,
-        description: "돈에 대한 이해도가 높아요!",
-        stickers: [
-          { type: "review", name: "복습왕 스티커" },
-          { type: "learning", name: "학습왕 스티커" },
-          { type: "focus", name: "집중왕 스티커" }
-        ]
-      },
-      {
-        id: 4,
-        title: "돈이란 무엇일까?",
-        status: "not_started",
-        progress: 0,
-        description: "돈에 대한 이해도가 높아요!",
-        stickers: []
-      },
-      {
-        id: 5,
-        title: "돈이란 무엇일까?",
-        status: "not_started",
-        progress: 0,
-        description: "돈에 대한 이해도가 높아요!",
-        stickers: []
-      },
-      {
-        id: 6,
-        title: "돈이란 무엇일까?",
-        status: "not_started",
-        progress: 0,
-        description: "돈에 대한 이해도가 높아요!",
-        stickers: []
+    const load = async () => {
+      try {
+        const page = await fetchCurrentSituation(0);
+        const list = Array.isArray(page?.content) ? page.content : [];
+
+        const mapped = list.map((item, idx) => ({
+          id: item.chapterId || idx,
+          title: item.chapterTitle,
+          status: item.status === 'COMPLETED' 
+            ? 'completed' 
+            : (item.status === 'IN_PROGRESS' || item.status === 'STUDYING') 
+              ? 'in_progress' 
+              : 'not_started',
+          progress: typeof item.progress === 'number' ? item.progress : 0,
+          description: '',
+          stickers: Array.isArray(item.badgeType) ? item.badgeType.map(b => ({ type: b, name: b })) : []
+        }));
+
+        const total = list.length;
+        const completed = list.filter(i => i.status === 'COMPLETED').length;
+        const avgProgress = total > 0 
+          ? Math.round(list.reduce((s, i) => s + (i.progress || 0), 0) / total)
+          : 0;
+
+        setStatusBoxes(mapped);
+        setOverall({ percent: avgProgress, total, completed });
+      } catch (e) {
+        console.error('학습 현황 로드 실패:', e);
+      } finally {
+        setLoading(false);
       }
-    ];
-
-    // 실제 API 호출 시뮬레이션
-    setTimeout(() => {
-      setStatusBoxes(mockData);
-      setLoading(false);
-    }, 1000);
+    };
+    load();
   }, []);
-
-  // 실제 API 호출 함수 (예시)
-  const fetchStatusBoxes = async () => {
-    try {
-      // const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/status/boxes`, {
-      //   credentials: 'include'
-      // });
-      // const data = await response.json();
-      // setStatusBoxes(data);
-    } catch (error) {
-      console.error('StatusBoxes 데이터 로드 실패:', error);
-    }
-  };
 
   const handleStatusBoxClick = (data) => {
     navigate('/status/detail', { 
       state: { 
+        chapterId: data.chapterId,
         title: data.title,
         status: data.status,
         progress: data.progress,
@@ -282,15 +231,15 @@ const Status = ({user, login, setLogin}) => {
                                 strokeWidth="13"
                                 strokeLinecap="round"
                                 strokeDasharray={`${2 * Math.PI * 50}`}
-                                strokeDashoffset={`${2 * Math.PI * 50 * (1 - 65 / 100)}`}
+                                strokeDashoffset={`${2 * Math.PI * 50 * (1 - (overall.percent || 0) / 100)}`}
                                 transform="rotate(-90 60 60)"
                             />
                         </svg>
-                        <ProgressText><NumberText>65%</NumberText>완료</ProgressText>
+                        <ProgressText><NumberText>{Math.round(overall.percent || 0)}%</NumberText>완료</ProgressText>
                     </CircularProgress>
                     <ProgressTextWrapper>
-                        <ProgressTitle>총 6개 단원 중 2개를 완료했어요!</ProgressTitle>
-                        <ProgressSubtitle>전체 진행률은 65%로 평균 수준입니다.</ProgressSubtitle>
+                        <ProgressTitle>총 {overall.total}개 단원 중 {overall.completed}개를 완료했어요!</ProgressTitle>
+                        <ProgressSubtitle>전체 진행률은 {Math.round(overall.percent || 0)}% 입니다.</ProgressSubtitle>
                     </ProgressTextWrapper>
                 </ProgressWrapper>
                 
@@ -303,6 +252,7 @@ const Status = ({user, login, setLogin}) => {
                         {statusBoxes.map((box) => (
                             <StatusBox
                                 key={box.id}
+                                chapterId={box.id}
                                 title={box.title}
                                 status={box.status}
                                 progress={box.progress}

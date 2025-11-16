@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import StatusBox from "../components/StatusBox";
 import Crown from "../assets/crown.svg";
+import { fetchQuizListByChapter } from "../api/status/currentSituation";
 
 const Wrapper = styled.div`
     background-color: #ffffff;
@@ -335,119 +336,44 @@ console.log('현재 NODE_ENV:', process.env.NODE_ENV);
 
 const navigate = useNavigate();
 const location = useLocation();
-const [statusBoxes, setStatusBoxes] = useState([]);
 const [loading, setLoading] = useState(true);
 
 // 전달받은 데이터
-const selectedItem = location.state || {};
-const itemTitle = selectedItem.title || "돈이란 무엇일까?";
-const itemDescription = selectedItem.description || "";
-const itemStickers = selectedItem.stickers || [];
+const { chapterId, title: itemTitle = "돈이란 무엇일까?", description: itemDescription = "", stickers: itemStickers = [] } = location.state || {};
 
 // 퀴즈 데이터
-const quizData = [
-    {
-        id: 1,
-        question: "우리나라의 돈(동전, 지폐)에는 우리나라를 대표하는 역사적 인물이나 문화재가 그려져 있다.",
-        answer: "답: O (맞다)",
-        isCorrect: false
-    },
-    {
-        id: 2,
-        question: "우리가 사용하는 돈은 물건을 사고팔 때 편리하게 사용할 수 있도록 OO에서 만든 것이다.",
-        answer: "답: 나라",
-        isCorrect: true
-    },
-    {
-        id: 3,
-        question: "우리가 사용하는 돈은 물건을 사고팔 때 편리하게 사용할 수 있도록 OO에서 만든 것이다.",
-        answer: "답: 나라",
-        isCorrect: true
-    },
-    {
-        id: 4,
-        question: "우리나라의 돈(동전, 지폐)에는 우리나라를 대표하는 역사적 인물이나 문화재가 그려져 있다.",
-        answer: "답: O (맞다)",
-        isCorrect: false
-    }
-];
+const [quizRecords, setQuizRecords] = useState([]);
+const [correctRate, setCorrectRate] = useState(0);
+const [noQuizMessage, setNoQuizMessage] = useState("");
 
-const correctCount = quizData.filter(q => q.isCorrect).length;
-const totalCount = quizData.length;
-const correctRate = Math.round((correctCount / totalCount) * 100);
-
-// 백엔드에서 받을 데이터 예시 (실제로는 API 호출)
 useEffect(() => {
-    // 임시 데이터 - 실제로는 API에서 받아올 데이터
-    const mockData = [
-    {
-        id: 1,
-        title: "돈이란 무엇일까?",
-        status: "completed",
-        progress: 100,
-        description: "돈에 대한 이해도가 높아요!",
-        stickers: [
-        { type: "review", name: "복습왕 스티커" },
-        { type: "learning", name: "학습왕 스티커" },
-        { type: "focus", name: "집중왕 스티커" }
-        ]
-    },
-    {
-        id: 2,
-        title: "돈이란 무엇일까?",
-        status: "completed",
-        progress: 100,
-        description: "돈에 대한 이해도가 높아요!",
-        stickers: [
-        { type: "review", name: "복습왕 스티커" },
-        { type: "learning", name: "학습왕 스티커" },
-        { type: "focus", name: "집중왕 스티커" }
-        ]
-    },
-    {
-        id: 3,
-        title: "돈이란 무엇일까?",
-        status: "in_progress",
-        progress: 65,
-        description: "돈에 대한 이해도가 높아요!",
-        stickers: [
-        { type: "review", name: "복습왕 스티커" },
-        { type: "learning", name: "학습왕 스티커" },
-        { type: "focus", name: "집중왕 스티커" }
-        ]
-    },
-    {
-        id: 4,
-        title: "돈이란 무엇일까?",
-        status: "not_started",
-        progress: 0,
-        description: "돈에 대한 이해도가 높아요!",
-        stickers: []
-    },
-    {
-        id: 5,
-        title: "돈이란 무엇일까?",
-        status: "not_started",
-        progress: 0,
-        description: "돈에 대한 이해도가 높아요!",
-        stickers: []
-    },
-    {
-        id: 6,
-        title: "돈이란 무엇일까?",
-        status: "not_started",
-        progress: 0,
-        description: "돈에 대한 이해도가 높아요!",
-        stickers: []
-    }
-    ];
-
-    // 실제 API 호출 시뮬레이션
-    setTimeout(() => {
-    setStatusBoxes(mockData);
-    setLoading(false);
-    }, 1000);
-}, []);
+    const load = async () => {
+        try {
+            setNoQuizMessage("");
+            if (!chapterId) {
+                setQuizRecords([]);
+                setCorrectRate(0);
+                return;
+            }
+            const data = await fetchQuizListByChapter(chapterId);
+            if (data?.code === 'QUIZ_NOTES_NOT_FOUND') {
+                setNoQuizMessage('퀴즈를 아직 풀지 않았어요');
+                setQuizRecords([]);
+                setCorrectRate(0);
+                return;
+            }
+            setQuizRecords(Array.isArray(data?.quizRecords) ? data.quizRecords : []);
+            const rate = Number(data?.correctRate) || 0;
+            const rounded = Math.round(rate * 10) / 10;
+            setCorrectRate(rounded);
+        } catch (e) {
+            console.error('퀴즈 리스트 로드 실패:', e);
+        } finally {
+            setLoading(false);
+        }
+    };
+    load();
+}, [chapterId]);
 
 const handleClose=()=>{
     navigate("/status");
@@ -491,27 +417,33 @@ return (
                 <QuizWrapper>
                     <QuizHeader>
                         <QuizTitle>퀴즈 학습 내역</QuizTitle>
-                        <ProgressText>정답률 {correctRate}%</ProgressText>
+                        <ProgressText>정답률 {Math.round(Number(correctRate) || 0)}%</ProgressText>
 
                     </QuizHeader>
 
                     <QuizProgressWrapper>
                         <ProgressBarWrapper>
-                            <ProgressFill percentage={correctRate} />
+                            <ProgressFill percentage={Math.min(100, Math.max(0, Math.round(Number(correctRate) || 0)))} />
                         </ProgressBarWrapper>
                     </QuizProgressWrapper>
 
-                    {quizData.map((quiz, index) => (
-                        <QuizCard key={quiz.id}>
-                            <QuizQuestion>Q{index + 1}. {quiz.question}</QuizQuestion>
-                            <QuizAnswerContainer>
-                                <QuizAnswer>{quiz.answer}</QuizAnswer>
-                                <QuizBadge isCorrect={quiz.isCorrect}>
-                                    {quiz.isCorrect ? '정답' : '오답'}
-                                </QuizBadge>
-                            </QuizAnswerContainer>
-                        </QuizCard>
-                    ))}
+                    {loading ? (
+                        <div>로딩 중...</div>
+                    ) : noQuizMessage ? (
+                        <div>{noQuizMessage}</div>
+                    ) : (
+                        quizRecords.map((quiz, index) => (
+                            <QuizCard key={quiz.quizId || index}>
+                                <QuizQuestion>Q{index + 1}. {quiz.question}</QuizQuestion>
+                                <QuizAnswerContainer>
+                                    <QuizAnswer>답: {quiz.userAnswer}</QuizAnswer>
+                                    <QuizBadge isCorrect={!!quiz.isCorrect}>
+                                        {quiz.isCorrect ? '정답' : '오답'}
+                                    </QuizBadge>
+                                </QuizAnswerContainer>
+                            </QuizCard>
+                        ))
+                    )}
                 </QuizWrapper>
             </ContentContainer>
         </MainWrapper>
