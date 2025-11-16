@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import logo from '../../assets/finnol-logo.png';
 import kakaologin from "../../assets/kakaologin.png";
 import hopin from "../../assets/hopin.svg";
@@ -164,8 +164,69 @@ const LoginContent = styled.div`
   margin-bottom: 2rem;
 `
 
+const MobileBlockOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 2rem;
+  text-align: center;
+`;
+
+const BlockTitle = styled.div`
+  font-size: 24px;
+  font-weight: 700;
+  color: #191919;
+  margin-bottom: 1rem;
+`;
+
+const BlockMessage = styled.div`
+  font-size: 16px;
+  font-weight: 400;
+  color: #666666;
+  line-height: 1.6;
+  white-space: pre-line;
+`;
+
+const BlockIcon = styled.div`
+  font-size: 80px;
+  margin-bottom: 2rem;
+`;
+
 function Login(){
   console.log(process.env.REACT_APP_API_BASE_URL);
+  
+  const [isMobile, setIsMobile] = useState(false);
+
+  // 모바일 환경 감지
+  useEffect(() => {
+    const checkMobile = () => {
+      const width = window.innerWidth;
+      // 768px 미만은 모바일로 간주 (태블릿은 768px 이상)
+      const isMobileDevice = width < 768;
+      setIsMobile(isMobileDevice);
+      
+      console.log('📱 디바이스 체크:', {
+        width,
+        isMobile: isMobileDevice
+      });
+    };
+    
+    // 초기 체크
+    checkMobile();
+    
+    // 화면 크기 변경 시 재체크
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // 메인페이지 이미지 미리 로드
   useEffect(() => {
@@ -203,6 +264,21 @@ function Login(){
   };
 
       
+
+    // 모바일 환경이면 차단 화면 표시
+    if (isMobile) {
+      return (
+        <MobileBlockOverlay>
+          <BlockIcon>📱</BlockIcon>
+          <BlockTitle>모바일 환경은 지원하지 않습니다</BlockTitle>
+          <BlockMessage>{`FINNOL은 태블릿 이상의 화면에서
+최적화되어 있습니다.
+
+태블릿, 노트북 또는 데스크톱에서
+접속해주세요!`}</BlockMessage>
+        </MobileBlockOverlay>
+      );
+    }
 
     return(
         <Wrapper>

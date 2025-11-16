@@ -1,0 +1,184 @@
+import styled, { createGlobalStyle } from 'styled-components';
+import readybackgroundImg from '../../assets/game2/Ready_Background.png';
+import startBtn from '../../assets/game2/Ready_Btn_GameStart.png';
+import PlayerEnemy1 from '../../assets/game2/PlayerEnemy1.png';
+import PlayerEnemy2 from '../../assets/game2/PlayerEnemy2.png';
+import PlayerEnemy3 from '../../assets/game2/PlayerEnemy3.png';
+import Coin from '../../assets/game2/Coin.png';
+import GumiRomanceFont from '../../assets/game2/Gumi-Romance.otf';
+import { useNavigate } from 'react-router-dom';
+
+const GlobalFonts = createGlobalStyle`
+  @font-face {
+    font-family: 'GumiRomance';
+    src: url(${GumiRomanceFont}) format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+  }
+`;
+
+const Wrapper = styled.div`
+  width: 100vw;
+  height: 100vh;
+  background-image: url(${readybackgroundImg});
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+`;
+
+const ContentWrapper = styled.div`
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    line-height: 1.5;
+`;
+
+const TitleText = styled.div`
+    font-family: 'GumiRomance', sans-serif !important;
+    font-size: 40px;
+    font-weight: bold;
+    color: #333333;
+`;
+
+const ContentText = styled.div`
+  font-family: 'GumiRomance', sans-serif !important;
+  font-size: 18px;
+  color: #333333;
+  font-weight: 500;
+  text-align: center;
+  white-space: pre-line;
+`;
+
+const DescribeWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+`;
+
+const DescribeItem = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 2rem;
+`;
+
+const DescribeItemWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap:0.5rem;
+`;
+
+const DescribeText = styled.div`
+  font-family: 'GumiRomance', sans-serif !important;
+  font-size: 18px;
+  color: #333333;
+  font-weight: 500;
+  text-align: center;
+`;
+
+const EnemyImage = styled.img`
+  width: 50px;
+  height: 50px;
+`;
+
+const CoinWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+`;
+
+const CoinImage = styled.img`
+  width: 40px;
+  height: 40px;
+`;
+
+const CoinText = styled.div`
+  font-family: 'GumiRomance', sans-serif !important;
+  font-size: 18px;
+  color: #333333;
+  font-weight: 500;
+  text-align: center;
+`;
+
+const StartButton = styled.button`
+  background-image: url(${startBtn});
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  width: 50vw;
+  height: 80px;
+  margin-top: 2rem;
+
+  &:hover {
+    transform: scale(1.05);
+    transition: transform 0.3s ease;
+  }
+`;
+
+export default function Game2Ready() {
+    const navigate = useNavigate();
+  return (
+      <>
+      <GlobalFonts />
+      <Wrapper>
+        <ContentWrapper>
+            <TitleText>바이러스를 퇴치하라!</TitleText>
+            <ContentText>{`바이러스가 울타리 안으로 들어오지 못하게 퇴치하라!\n불시에 내려오는 코인은 울타리 안으로 들어와야 획득 가능`}</ContentText>
+            <DescribeWrapper>
+                <DescribeItem>
+                    <DescribeItemWrapper>
+                        <EnemyImage src={PlayerEnemy1} alt="player enemy 1" />
+                        <DescribeText>바이러스1</DescribeText>
+                    </DescribeItemWrapper>
+
+                    <CoinWrapper>
+                        <CoinImage src={Coin} alt="coin" />
+                        <CoinText>+ 3</CoinText>
+                    </CoinWrapper>
+                </DescribeItem>
+                <DescribeItem>
+                    <DescribeItemWrapper>
+                        <EnemyImage src={PlayerEnemy2} alt="player enemy 2" />
+                        <DescribeText>바이러스2</DescribeText>
+                    </DescribeItemWrapper>
+                    <CoinWrapper>
+                        <CoinImage src={Coin} alt="coin" />
+                        <CoinText>+ 5</CoinText>
+                    </CoinWrapper>
+                </DescribeItem>
+                <DescribeItem>
+                    <DescribeItemWrapper>
+                        <EnemyImage src={PlayerEnemy3} alt="player enemy 3" />
+                        <DescribeText>바이러스3</DescribeText>
+                    </DescribeItemWrapper>
+                    <CoinWrapper>
+                        <CoinImage src={Coin} alt="coin" />
+                        <CoinText>+ 7</CoinText>
+                    </CoinWrapper>
+                </DescribeItem>
+            </DescribeWrapper>
+            <ContentText>{`방향키로 좌우로 이동할 수 있어요.\n이동하면서 바이러스를 공격하세요!`}</ContentText>
+            <StartButton onClick={() => {
+                navigate('/game2');
+            }}>
+            </StartButton>
+            </ContentWrapper>
+        </Wrapper>
+        </>
+    );
+}

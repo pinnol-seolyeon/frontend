@@ -144,7 +144,8 @@ const CardHeaderContent = styled.div`
   font-size: 15px;
   font-weight: 700;
   color: #191919;
-  margin-bottom: 0.8rem;
+  flex: 1;
+  line-height: 1.6;
 `;
 
 const CardHeaderContainer = styled.div`
@@ -156,12 +157,12 @@ const CardHeaderContainer = styled.div`
 const CardHeader = styled.div`
   font-weight: 500;
   color: #ffffff;
-  margin-bottom: 0.8rem;
   font-size: 14px;
   width: fit-content;
   padding: 0.3rem 1.2rem;
   border-radius: 10px;
   background-color: #454545;
+  flex-shrink: 0;
 `;
 
 const CardContent = styled.div`
@@ -242,9 +243,12 @@ export default function QnAViewer() {
     }
   };
 
-  // 날짜를 API 형식으로 변환 (YYYY-MM-DD)
+  // 날짜를 API 형식으로 변환 (YYYY-MM-DD) - 로컬 타임존 기준
   const formatDateForAPI = (date) => {
-    return date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   // 월 이동 함수
@@ -310,16 +314,37 @@ export default function QnAViewer() {
   const calendarDays = generateCalendarDays(currentYear, currentMonth);
 
   // API 데이터를 컴포넌트 형식으로 변환
+  // questions와 answers 배열을 같은 인덱스끼리 매칭하여 쌍으로 변환
   const transformApiDataToQnA = (apiData) => {
-    return apiData.map(item => ({
-      id: item.id,
-      type: 'question',
-      header: '오늘의 학습 질문',
-      content: item.questions && item.questions.length > 0 ? item.questions.join('\n') : '질문이 없습니다.',
-      answers: item.answers || [],
-      date: item.date,
-      chapterId: item.chapterId
-    }));
+    if (!apiData || !Array.isArray(apiData)) {
+      return [];
+    }
+    
+    const result = [];
+    
+    // 각 아이템(날짜별 데이터) 처리
+    apiData.forEach((item, itemIndex) => {
+      const questions = item.questions || [];
+      const answers = item.answers || [];
+      
+      // questions와 answers 배열의 길이 중 더 긴 것 기준으로 처리
+      const maxLength = Math.max(questions.length, answers.length);
+      
+      // 각 질문/답변 쌍을 개별 카드로 생성
+      for (let i = 0; i < maxLength; i++) {
+        result.push({
+          id: item.id ? `${item.id}-${i}` : `${itemIndex}-${i}`,
+          type: 'question',
+          header: `질문 ${i + 1}`,
+          question: questions[i] || '질문이 없습니다.',
+          answer: answers[i] || '답변이 없습니다.',
+          date: item.date,
+          chapterId: item.chapterId
+        });
+      }
+    });
+    
+    return result;
   };
 
   const handleDateClick = async (dayData) => {
@@ -382,13 +407,11 @@ export default function QnAViewer() {
               <QnACard key={item.id || index}>
                 <CardHeaderContainer>
                   <CardHeader>질문</CardHeader>
-                  <CardHeaderContent>{item.header}</CardHeaderContent>
+                  <CardHeaderContent>{item.question}</CardHeaderContent>
                 </CardHeaderContainer>
-                <CardContent>{item.content}</CardContent>
-                {item.answers && item.answers.length > 0 && (
-                  <CardContent style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #E0E0E0' }}>
-                    <strong>답변:</strong><br />
-                    {item.answers.join('\n')}
+                {item.answer && (
+                  <CardContent style={{ marginTop: '1rem' }}>
+                    {item.answer}
                   </CardContent>
                 )}
               </QnACard>

@@ -4,9 +4,10 @@ import Box from "../../../components/Box";
 import tigerPencil from "../../../assets/tiger-pencil.png";
 import Button from "../../../components/Button";
 import MiniHeader from "../../../components/study/MiniHeader";
-import Sidebar from "../../../components/Sidebar";
+import { fetchChapterContents } from "../../../api/study/level3API";
+import { useActivityTracker } from "../../../hooks/useActivityTracker";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import React,{useState,useEffect} from "react";
 import { useChapter } from "../../../context/ChapterContext";
 import background from "../../../assets/study_background.png";
@@ -25,13 +26,9 @@ const Wrapper=styled.div`
     position: relative;
 `;
 
-const ContentWrapper = styled.div`
-  display: flex;
+const MainWrapper = styled.div`
   width: 100%;
   min-height: 100vh;
-`;
-
-const MainWrapper = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -220,53 +217,96 @@ export const Popup = styled.div`
 function StudyLevel6_2({ user, login, setLogin }){
 
     const navigate=useNavigate();
-    const {chapterData,clearChapterData}=useChapter();
+    const [searchParams] = useSearchParams();
+    const {chapterData, setChapterData, clearChapterData}=useChapter();
     const [topic,setTopic]=useState();
     const [loading,setLoading]=useState(true);
 
-      // ✅ useEffect 단순화
-      useEffect(() => {
-        if (chapterData?.topic) {
-          setTopic(chapterData.topic);
-          setLoading(false);
-        } else {
-          // setTopic("❌ 전달받은 내용이 없어요");
-          setLoading(false);
-        }
-      }, [chapterData]);
+    // 활동 감지 Hook 사용 (level 6)
+    const { completeSession } = useActivityTracker(
+        chapterData?.chapterId, 
+        6, // level 6
+        user?.userId,
+        chapterData?.bookId
+    );
+
+    // Level 6 데이터 가져오기 (토론 주제)
+    useEffect(() => {
+        const loadLevel6Data = async () => {
+            const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+            
+            if (!chapterId) {
+                console.error("❌ chapterId가 없습니다.");
+                setTopic("❌ 단원 정보가 없습니다. 다시 돌아가주세요.");
+                setLoading(false);
+                return;
+            }
+
+            try {
+                setLoading(true);
+                console.log("🔄 Level 6 (토론 주제) 데이터 로딩 중... chapterId:", chapterId, "bookId:", chapterData?.bookId);
+                const level6Data = await fetchChapterContents(6, chapterId, chapterData?.bookId);
+                console.log("✅ Level 6 데이터:", level6Data);
+                
+                // Context 업데이트 (bookId 보존)
+                setChapterData({
+                    ...level6Data,
+                    bookId: chapterData?.bookId
+                });
+
+                const topicText = level6Data?.topic;
+                console.log("💬 토론 주제:", topicText);
+                
+                if (topicText) {
+                    setTopic(topicText);
+                } else {
+                    setTopic("토론 주제를 불러올 수 없습니다.");
+                }
+            } catch (error) {
+                console.error("❌ Level 6 데이터 로딩 실패:", error);
+                setTopic("❌ 내용을 불러오는데 실패했습니다. 다시 시도해주세요.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadLevel6Data();
+    }, [searchParams]);
 
 
     const handleComplete=async()=>{
-         try {
-            console.log("📦 현재 저장된 chapterData:", chapterData);
+        //  try {
+        //     console.log("📦 현재 저장된 chapterData:", chapterData);
 
-            // ✅ 여기에 실제 완료 처리 API 호출
-            const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/finish?chapterId=${chapterData?.chapterId}`, {
-                method: 'POST',
-                credentials:'include', //쿠키 인증 시 필요
-         });
+        //     // Level 6 완료 상태 전송
+            await completeSession();
 
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(errorText);
-          }
+        //     // ✅ 전체 학습 완료 처리 API 호출
+        //     const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/finish?chapterId=${chapterData?.chapterId}`, {
+        //         method: 'POST',
+        //         credentials:'include', //쿠키 인증 시 필요
+        //  });
 
-        const message=await response.text();
-        console.log("✅학습완료 메시지:",message);
+        //   if (!response.ok) {
+        //     const errorText = await response.text();
+        //     throw new Error(errorText);
+        //   }
 
-         clearChapterData(); //localstorage + 상태 모두 초기화
-         navigate('/study/level6/complete'); // 완료 페이지로 이동
+        // const message=await response.text();
+        // console.log("✅학습완료 메시지:",message);
+
+        //  clearChapterData(); //localstorage + 상태 모두 초기화
+        //  navigate('/study/level6/complete'); // 완료 페이지로 이동
          
-        } catch(e){
-            console.error('학습 완료 처리 중 오류',e);
-        }
+        // } catch(e){
+        //     console.error('학습 완료 처리 중 오류',e);
+        // }
+        navigate('/review')
       };
     
     return(
     <>
         <Wrapper>
-            <ContentWrapper>
-                <Sidebar user={user} login={login} setLogin={setLogin} defaultCollapsed={true} />
                 <MainWrapper>
                     <ImageWithSpeechWrapper>
                         <ImageWrapper>
@@ -309,7 +349,6 @@ function StudyLevel6_2({ user, login, setLogin }){
                         </SpeechBubble>
                     </ImageWithSpeechWrapper>
                 </MainWrapper>
-            </ContentWrapper>
         </Wrapper>
     </>
     );

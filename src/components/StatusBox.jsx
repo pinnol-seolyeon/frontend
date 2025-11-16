@@ -268,11 +268,12 @@ const StatusBox = ({
   progress = 0,
   description = "돈에 대한 이해도가 높아요!",
   stickers = [],
+  chapterId,
   onClick
 }) => {
   const handleClick = () => {
     if (status !== 'not_started' && onClick) {
-      onClick({ title, status, progress, description, stickers });
+      onClick({ chapterId, title, status, progress, description, stickers });
     }
   };
 
@@ -306,7 +307,7 @@ const StatusBox = ({
           <ProgressContainer>
             <ProgressContent>
                 <ProgressLabel>진행률</ProgressLabel>
-                <ProgressText>{progress}%</ProgressText>
+                <ProgressText>{Math.round(Number(progress) || 0)}%</ProgressText>
             </ProgressContent>
 
             <ProgressBar>

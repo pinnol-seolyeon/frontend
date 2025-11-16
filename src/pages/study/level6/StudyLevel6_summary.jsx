@@ -6,9 +6,10 @@ import testImage from "../../../assets/testImage.png";
 import nextButton from "../../../assets/nextButton.png";
 import MiniHeader from "../../../components/study/MiniHeader";
 import Button from "../../../components/Button";
-import Sidebar from "../../../components/Sidebar";
+import { fetchChapterContents } from "../../../api/study/level3API";
+import { useActivityTracker } from "../../../hooks/useActivityTracker";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import React,{useState,useEffect} from "react";
 import { useChapter } from "../../../context/ChapterContext";
 import TtsPlayer from "../../../components/TtsPlayer";
@@ -29,13 +30,9 @@ const Wrapper=styled.div`
     position: relative;
 `;
 
-const ContentWrapper = styled.div`
-  display: flex;
+const MainWrapper = styled.div`
   width: 100%;
   min-height: 100vh;
-`;
-
-const MainWrapper = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -247,58 +244,97 @@ const RightSection = styled.div`
 function StudyPage({ user, login, setLogin }){
 
     const navigate=useNavigate();
+    const [searchParams] = useSearchParams();
     
     const[image,setImage]=useState();
-    const{chapterData}=useChapter();
+    const{chapterData, setChapterData}=useChapter();
     const[summary,setSummary]=useState();
     const [currentIndex,setCurrentIndex]=useState(0);
     const [sentences,setSentences]=useState([]);
     const [preloadDone, setPreloadDone] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    useEffect(()=>{
-            console.log("📦 현재 저장된 chapterData:", chapterData);
-            if(chapterData){
+    // 활동 감지 Hook 사용 (level 5)
+    const { completeSession } = useActivityTracker(
+        chapterData?.chapterId, 
+        5, // level 5
+        user?.userId,
+        chapterData?.bookId
+    );
+
+    // Level 5 데이터 가져오기 (요약)
+    useEffect(() => {
+        const loadLevel5Data = async () => {
+            const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+            
+            if (!chapterId) {
+                console.error("❌ chapterId가 없습니다.");
+                setSentences(["❌ 단원 정보가 없습니다. 다시 돌아가주세요."]);
+                return;
+            }
+
+            try {
+                setLoading(true);
+                console.log("🔄 Level 5 (요약) 데이터 로딩 중... chapterId:", chapterId, "bookId:", chapterData?.bookId);
+                const level5Data = await fetchChapterContents(5, chapterId, chapterData?.bookId);
+                console.log("✅ Level 5 데이터:", level5Data);
+                
+                // Context 업데이트 (bookId 보존)
+                setChapterData({
+                    ...level5Data,
+                    bookId: chapterData?.bookId
+                });
 
                 //요약 네컷 만화 제공
-                const img=chapterData?.summaryImgUrl;
-                console.log("📷chapterData.summaryImgUrl",img);
-                setImage(img);
+                const img = level5Data?.summaryImgUrl;
+                console.log("📷 summaryImgUrl:", img);
+                setImage(img || undefined);
 
                 //요약 네컷 만화에 대한 설명(질답형식 X)
-                const summary=chapterData?.summary;
-                console.log("🎙️summary:",summary);
-                setSummary(summary);
+                const summaryText = level5Data?.summary;
+                console.log("🎙️ summary:", summaryText);
+                setSummary(summaryText);
 
-                const baseSentences = summary
-                    .split(/(?<=[.?!])\s+/)
-                    .filter((s) => s.trim() !== "");
+                if (summaryText) {
+                    const baseSentences = summaryText
+                        .split(/(?<=[.?!])\s+/)
+                        .filter((s) => s.trim() !== "");
 
-                //긴 문장 분할 함수(질문 제외)
-                const breakLongSentence = (sentence, max = 50) => {
-                if (sentence.length <= max) return [sentence];
+                    //긴 문장 분할 함수(질문 제외)
+                    const breakLongSentence = (sentence, max = 50) => {
+                        if (sentence.length <= max) return [sentence];
 
-                const mid = Math.floor(sentence.length / 2);
-                let splitIndex = sentence.lastIndexOf(" ", mid);
-                if (splitIndex === -1) splitIndex = mid;
-                const first = sentence.slice(0, splitIndex).trim();
-                const second = sentence.slice(splitIndex).trim();
-                return [first, second];
-            };
+                        const mid = Math.floor(sentence.length / 2);
+                        let splitIndex = sentence.lastIndexOf(" ", mid);
+                        if (splitIndex === -1) splitIndex = mid;
+                        const first = sentence.slice(0, splitIndex).trim();
+                        const second = sentence.slice(splitIndex).trim();
+                        return [first, second];
+                    };
 
-            //문장분해
-            const splitSentences=baseSentences
-                .map((s)=>breakLongSentence(s))
-                .flat();
-            console.log("🐋분할된 최종 문장 배열:",splitSentences);
+                    //문장분해
+                    const splitSentences = baseSentences
+                        .map((s) => breakLongSentence(s))
+                        .flat();
+                    console.log("🐋분할된 최종 문장 배열:", splitSentences);
 
-                setSentences(splitSentences);
+                    setSentences(splitSentences);
+                } else {
+                    setSentences(["요약 내용이 없습니다."]);
+                }
+                
                 setCurrentIndex(0);
                 setPreloadDone(false);
-            }else{
-                setSentences(["❌전달받은 내용이 없어요"]);
-                setPreloadDone(false);
+            } catch (error) {
+                console.error("❌ Level 5 데이터 로딩 실패:", error);
+                setSentences(["❌ 내용을 불러오는데 실패했습니다. 다시 시도해주세요."]);
+            } finally {
+                setLoading(false);
             }
-        },[chapterData]);
+        };
+
+        loadLevel5Data();
+    }, [searchParams]);
 
 
     //다음 버튼
@@ -311,9 +347,10 @@ function StudyPage({ user, login, setLogin }){
       }
     };
 
-    const handleComplete=()=>{
+    const handleComplete = async () => {
       alert("✅ 좋아요! 이제 마지막 단계로 넘어가볼까요?");
-      navigate(`/study/level6/2`);
+      await completeSession(); // Level 5 완료 상태 전송
+      navigate(`/study/level6/2?chapterId=${chapterData?.chapterId}`);
     };
    
         
@@ -321,8 +358,6 @@ function StudyPage({ user, login, setLogin }){
     return(
     <>
         <Wrapper>
-            <ContentWrapper>
-                <Sidebar user={user} login={login} setLogin={setLogin} defaultCollapsed={true} />
                 <MainWrapper>
                     <ImageWithSpeechWrapper>
                       <ContentContainer>
@@ -332,12 +367,6 @@ function StudyPage({ user, login, setLogin }){
 
                         <RightSection>
                           <SummaryImage src={image} alt="요약 이미지" />
-                          <QuestionButton onClick={() => navigate('/question', {
-                                state: { from: '/study/level6/summary' }
-                            })}>
-                                <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
-                                질문하기
-                            </QuestionButton>
                         </RightSection>
                       </ContentContainer>
                         <TtsPlayer
@@ -372,7 +401,6 @@ function StudyPage({ user, login, setLogin }){
                         )}
                     </ImageWithSpeechWrapper>
                 </MainWrapper>
-            </ContentWrapper>
         </Wrapper>
     </>
     );

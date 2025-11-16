@@ -9,6 +9,7 @@ import Sidebar from "../components/Sidebar";
 import mic from "../assets/mic_img.svg";
 import background from "../assets/background_question.png";
 import hopin from "../assets/hopin_face.png";
+import { connectSSE } from "../api/question/sseClient";
 
 /*질문 버튼 눌렀을 때*/
 
@@ -317,10 +318,12 @@ function Question({ user, login, setLogin }){
     const[isListening,setIsListening]=useState(false);
     const[transcript,setTranscript]=useState(''); //음성 인식 결과
     const recognitionRef=useRef(null); //recognition 매번 호출 비효율 문제 해결
+    const sseCleanupRef=useRef(null); // SSE 연결 cleanup 함수 저장
     const navigate=useNavigate();
     const location=useLocation(); //이전 페이지 정보를 받기 위해
     const [returnToIndex,setReturnToIndex]=useState(0);
     const [previousPage,setPreviousPage]=useState('/main'); // 기본값은 메인 페이지
+    const [chapterId, setChapterId]=useState(null); // chapterId 저장
 
 
     //컴포넌트가 처음 마운트될 때 한 번만 실행됨 
@@ -340,6 +343,15 @@ function Question({ user, login, setLogin }){
         // 이전 페이지 정보 저장
         if(location.state?.from){
             setPreviousPage(location.state.from);
+        }
+        
+        // chapterId 저장
+        console.log('📖 Question - location.state:', location.state);
+        if(location.state?.chapterId){
+            console.log('✅ Question - chapterId 설정:', location.state.chapterId);
+            setChapterId(location.state.chapterId);
+        } else {
+            console.error('⚠️ Question - chapterId가 없습니다!');
         }
 
         //사용자가 말하는 내용을 실시간으로 transcript에 저장 
@@ -387,7 +399,7 @@ function Question({ user, login, setLogin }){
 
     const handleMessage=async(newMessage)=>{
         console.log("input:",newMessage);
-        if(newMessage){
+        if(newMessage && newMessage.trim()){
             //보낸 메시지 추가
             setMessages(prevMessages=>[ //기존에 쌓여 있던 메시지 배열인 prevMessages 맨 뒤에 새로운 메시지 추가 
                 ...prevMessages,
@@ -395,29 +407,88 @@ function Question({ user, login, setLogin }){
             ]);
             // 입력 필드 초기화
             setTranscript('');
+            
             try{
                 setLoading(true);
-                //메시지를 서버로 POST 요청 //await: 비동기 처리로 서버 응답 기다림
-                const response=await axios.post(`${process.env.REACT_APP_API_BASE_URL}/api/question`,{
-                    question:newMessage
-                },{
-                    withCredentials:true,
-                    headers:{
-                        "Content-Type":"application/json"
-                    }
+                
+                // 응답을 누적할 변수
+                let accumulatedResponse = '';
+                
+                // 이전 SSE 연결이 있다면 종료
+                if (sseCleanupRef.current) {
+                    sseCleanupRef.current();
                 }
-            
+                
+                // SSE 연결
+                const cleanup = await connectSSE(
+                    newMessage,
+                    // onMessage: delta 텍스트 조각을 받을 때마다 호출
+                    (delta) => {
+                        console.log("📩 받은 조각:", delta);
+                        accumulatedResponse += delta;
+                        
+                        // 메시지 업데이트 (누적된 텍스트로)
+                        setMessages(prevMessages => {
+                            const newMessages = [...prevMessages];
+                            // 마지막 메시지가 received 타입인지 확인
+                            if (newMessages.length > 0 && newMessages[newMessages.length - 1].type === 'received') {
+                                // 기존 메시지 업데이트
+                                newMessages[newMessages.length - 1] = {
+                                    text: accumulatedResponse,
+                                    type: 'received'
+                                };
+                            } else {
+                                // 새 메시지 추가
+                                newMessages.push({
+                                    text: accumulatedResponse,
+                                    type: 'received'
+                                });
+                            }
+                            return newMessages;
+                        });
+                    },
+                    // onEnd: 스트림 종료
+                    () => {
+                        console.log("✅ 스트림 완료, 최종 응답:", accumulatedResponse);
+                        setLoading(false);
+                        sseCleanupRef.current = null;
+                        
+                        // 질문/답변을 sessionStorage에 저장
+                        if (chapterId && newMessage && accumulatedResponse) {
+                            try {
+                                const storageKey = `questionData_${chapterId}`;
+                                const existingData = sessionStorage.getItem(storageKey);
+                                const questionData = existingData ? JSON.parse(existingData) : [];
+                                
+                                // 질문/답변 쌍 추가
+                                questionData.push({
+                                    question: newMessage,
+                                    answer: accumulatedResponse,
+                                    timestamp: new Date().toISOString()
+                                });
+                                
+                                sessionStorage.setItem(storageKey, JSON.stringify(questionData));
+                                console.log("💾 질문/답변 sessionStorage에 저장 완료:", {
+                                    chapterId,
+                                    questionCount: questionData.length
+                                });
+                            } catch (error) {
+                                console.error("❌ sessionStorage 저장 실패:", error);
+                            }
+                        }
+                    },
+                    // onError: 에러 발생
+                    (error) => {
+                        console.error("❌ SSE 에러:", error);
+                        alert("메시지 전송 실패");
+                        setLoading(false);
+                        sseCleanupRef.current = null;
+                    }
                 );
-
-                const serverResponse=response.data.result; //서버의 응답 메시지
-                console.log('서버 응답:',serverResponse);
-
-                //서버 응답 메시지 추가
-                setMessages(prevMessages=>[
-                    ...prevMessages,
-                    {text:serverResponse,type:'received'} //받은 메시지는 'received' 타입
-                ]);
-                setLoading(false);
+                
+                // cleanup 함수 저장
+                sseCleanupRef.current = cleanup;
+                
             }catch(error){
                 console.error("메시지 전송 실패",error);
                 alert("메시지 전송 실패");
@@ -451,24 +522,41 @@ function Question({ user, login, setLogin }){
         };
 
         fetchDummyData();
+        
+        // cleanup: 컴포넌트 언마운트 시 SSE 연결 종료
+        return () => {
+            if (sseCleanupRef.current) {
+                console.log('🧹 Question 언마운트 - SSE 연결 종료');
+                sseCleanupRef.current();
+                sseCleanupRef.current = null;
+            }
+        };
     },[]);
     
     //질문 닫기 -> 이전 페이지로 이동 
     const handleClose=()=>{
         console.log("✅returnToIndex:",returnToIndex);
         console.log("✅previousPage:",previousPage);
+        console.log("✅chapterId:", chapterId);
         
         // 이전 페이지가 study 페이지인 경우 returnToIndex와 함께 이동
         if(previousPage.includes('/study/level3')){
-            navigate("/study/level3",{
+            if (!chapterId) {
+                console.error('⚠️⚠️⚠️ chapterId가 null입니다! 돌아가기 실패');
+                alert('오류가 발생했습니다. 메인 페이지로 이동합니다.');
+                navigate('/main');
+                return;
+            }
+            console.log('🔙 Level 3로 돌아가기:', `/study/level3?chapterId=${chapterId}`);
+            navigate(`/study/level3?chapterId=${chapterId}`,{
                 state:{
                     returnToIndex
                 },
             });
         } else if(previousPage.includes('/study/level2-img')){
-            navigate("/study/level2-img");
+            navigate(`/study/level2-img?chapterId=${chapterId}`);
         } else if(previousPage.includes('/study/level6/summary')){
-            navigate("/study/level6/summary");
+            navigate(`/study/level6/summary?chapterId=${chapterId}`);
         } else {
             // 다른 페이지인 경우 그냥 이동
             navigate(previousPage);

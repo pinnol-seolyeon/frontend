@@ -5,16 +5,17 @@ import Header from "../../../components/Header";
 import Box from "../../../components/Box";
 import tiger from "../../../assets/tiger-upperbody1.png";
 import Button from "../../../components/Button";
-import { useNavigate,useLocation } from "react-router-dom";
-import { fetchFeedback } from "../../../api/study/level3API";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { fetchFeedback, fetchChapterContents } from "../../../api/study/level3API";
 import MiniHeader from "../../../components/study/MiniHeader";
-import Sidebar from "../../../components/Sidebar";
 import { useChapter } from "../../../context/ChapterContext";
 import background from "../../../assets/study_background.png";
 import hoppin from "../../../assets/hopin.svg";
 import questionIcon from "../../../assets/question_icon.svg";
 import TtsPlayer from "../../../components/TtsPlayer";
 import api from "../../../api/login/axiosInstance";
+import { useActivityTracker } from "../../../hooks/useActivityTracker";
+import ladybugImage from "../../../assets/ladybug.png";
 
 
 /*학습하기-3단계-1*/
@@ -41,13 +42,9 @@ const Wrapper=styled.div`
     position: relative;
 `;
 
-const ContentWrapper = styled.div`
-  display: flex;
+const MainWrapper = styled.div`
   width: 100%;
   min-height: 100vh;
-`;
-
-const MainWrapper = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -349,16 +346,47 @@ const SendButton = styled.button`
   }
 `;
 
+// 무당벌레 스타일
+const Ladybug = styled.div`
+    position: fixed;
+    font-size: 60px;
+    cursor: pointer;
+    z-index: 9999;
+    transition: transform 0.3s ease;
+    animation: float 3s ease-in-out infinite;
+    user-select: none;
+    
+    &:hover {
+        transform: scale(1.2);
+    }
+    
+    @keyframes float {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-20px);
+        }
+    }
+`;
+
+const LadybugImage = styled.img`
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+`;
+
 
 function StudyPage({ user, login, setLogin }){
 
     const navigate=useNavigate();
     const location=useLocation();
+    const [searchParams] = useSearchParams();
     const [sentences,setSentences]=useState([]);
     const [currentIndex,setCurrentIndex]=useState(0);
 
     
-    const {chapterData}=useChapter();
+    const {chapterData, setChapterData}=useChapter();
     const [questionIndexes, setQuestionIndexes] = useState([]);
     const [isFinished,setIsFinished]=useState(false);
 
@@ -370,69 +398,176 @@ function StudyPage({ user, login, setLogin }){
     const [isRecording, setIsRecording] = useState(false);
     const [recognizedText, setRecognizedText] = useState("");
     const [isVoiceRecognitionComplete, setIsVoiceRecognitionComplete] = useState(false);
+    const [loading, setLoading] = useState(false);
     const ttsSentences = useMemo(() => sentences, [sentences]);
     const nextContext=sentences[currentIndex+1]||"다음 학습 내용 없음";
     const returnToIndex=location.state?.returnToIndex??0;
 
+    // 무당벌레 관련 상태
+    const [ladybugs, setLadybugs] = useState([]); // [{id, x, y, createdAt}]
+    const [ladybugCount, setLadybugCount] = useState(0); // 총 나타난 무당벌레 수
+    const [questionClickTime, setQuestionClickTime] = useState(null); // 질문하기 클릭 시간
+
+    // 활동 감지 Hook 사용 (level 3)
+    const { completeSession } = useActivityTracker(
+        chapterData?.chapterId, 
+        3, // level 3
+        user?.userId,
+        chapterData?.bookId
+    );
+
+    // 무당벌레 생성 함수
+    const spawnLadybug = () => {
+        if (ladybugCount >= 3) return; // 최대 3마리
+
+        const id = Date.now();
+        const x = Math.random() * (window.innerWidth - 100); // 화면 너비 내 랜덤
+        const y = Math.random() * (window.innerHeight - 100); // 화면 높이 내 랜덤
+
+        setLadybugs(prev => [...prev, { id, x, y, createdAt: Date.now() }]);
+        setLadybugCount(prev => prev + 1);
+
+        console.log('🐞 무당벌레 생성:', { id, x, y, count: ladybugCount + 1 });
+
+        // 5초 후 자동 제거
+        setTimeout(() => {
+            setLadybugs(prev => prev.filter(lb => lb.id !== id));
+            console.log('⏱️ 무당벌레 자동 제거 (5초 경과):', id);
+        }, 5000);
+    };
+
+    // 무당벌레 클릭 핸들러
+    const handleLadybugClick = (id) => {
+        // 질문하기 클릭 2초 이내인지 확인
+        if (questionClickTime && Date.now() - questionClickTime < 2000) {
+            console.log('❌ 무당벌레 클릭 무효 (질문하기 클릭 2초 이내)');
+            return;
+        }
+
+        setLadybugs(prev => prev.filter(lb => lb.id !== id));
+        console.log('✅ 무당벌레 클릭 제거:', id);
+    };
+
+    // 무당벌레 랜덤 생성 (10~30초마다)
+    useEffect(() => {
+        if (ladybugCount >= 3 || loading) return;
+
+        const randomDelay = Math.random() * 20000 + 10000; // 10~30초
+        console.log(`⏰ 다음 무당벌레 생성까지: ${Math.floor(randomDelay / 1000)}초`);
+
+        const timer = setTimeout(() => {
+            spawnLadybug();
+        }, randomDelay);
+
+        return () => clearTimeout(timer);
+    }, [ladybugCount, loading, ladybugs.length]);
+
    const navigateToQuestion=()=>{
-        console.log("🐛question에게 보내는 returnToIndex:",currentIndex)
+        // 질문하기 클릭 시간 기록
+        setQuestionClickTime(Date.now());
+        
+        // URL에서 직접 chapterId 가져오기 (chapterData보다 더 신뢰할 수 있음)
+        const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+        
+        console.log("🔀 질문하기로 이동 - 전달 데이터:", {
+            returnToIndex: currentIndex,
+            from: "/study/level3",
+            chapterId: chapterId,
+            fromURL: searchParams.get('chapterId'),
+            fromContext: chapterData?.chapterId
+        });
+        
+        if (!chapterId) {
+            console.error('⚠️⚠️⚠️ chapterId를 찾을 수 없습니다!');
+            alert('오류가 발생했습니다. chapterId를 찾을 수 없습니다.');
+            return;
+        }
+        
         navigate("/question",{
             state:{
                 returnToIndex:currentIndex,
-                from: "/study/level3"
+                from: "/study/level3",
+                chapterId: chapterId
             }
         });
    }
 
+   // Level 3 데이터 가져오기
    useEffect(() => {
-
-        //chapterData를 사용하려면 직접 url 열면 안됨.. navigate로 url이동해야 (Context는 메모리에만 존재하기 때문에 초기화됨)
-        console.log("📦 현재 저장된 chapterData:", chapterData);
-        if (chapterData?.content) {
-            const contents = chapterData.content;
-            console.log("✅ Chapter content:", contents);
+        const loadLevel3Data = async () => {
+            const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
             
-            //문장 분리
-            const baseSentences = contents
-            .split(/(?<=[.?!])\s+/)
-            .filter((s) => s.trim() !== ""); //공백만 있는 문장 등을 제거
-            
-            //질문 감지 함수
-            const isQuestion = (s) => s.includes("?");
+            if (!chapterId) {
+                console.error("❌ chapterId가 없습니다.");
+                setSentences(["❌ 단원 정보가 없습니다. 다시 돌아가주세요."]);
+                return;
+            }
 
-            //긴 문장 분할 함수(질문 제외)
-            const breakLongSentence = (sentence, max = 50) => {
-                if (isQuestion(sentence)) return [sentence]; // ✅ 질문이면 그대로
-                if (sentence.length <= max) return [sentence];
+            try {
+                setLoading(true);
+                console.log("🔄 Level 3 데이터 로딩 중... chapterId:", chapterId, "bookId:", chapterData?.bookId);
+                const level3Data = await fetchChapterContents(3, chapterId, chapterData?.bookId);
+                console.log("✅ Level 3 데이터:", level3Data);
+                
+                // Context 업데이트 (bookId 보존)
+                setChapterData({
+                    ...level3Data,
+                    bookId: chapterData?.bookId
+                });
+                
+                const contents = level3Data?.content;
+                
+                if (contents) {
+                    console.log("✅ Chapter content:", contents);
+                    
+                    //문장 분리
+                    const baseSentences = contents
+                        .split(/(?<=[.?!])\s+/)
+                        .filter((s) => s.trim() !== ""); //공백만 있는 문장 등을 제거
+                    
+                    //질문 감지 함수
+                    const isQuestion = (s) => s.includes("?");
 
-                const mid = Math.floor(sentence.length / 2);
-                let splitIndex = sentence.lastIndexOf(" ", mid);
-                if (splitIndex === -1) splitIndex = mid;
-                const first = sentence.slice(0, splitIndex).trim();
-                const second = sentence.slice(splitIndex).trim();
-                return [first, second];
-            };
+                    //긴 문장 분할 함수(질문 제외)
+                    const breakLongSentence = (sentence, max = 50) => {
+                        if (isQuestion(sentence)) return [sentence]; // ✅ 질문이면 그대로
+                        if (sentence.length <= max) return [sentence];
 
-            //문장분해
-            const splitSentences=baseSentences
-                .map((s)=>breakLongSentence(s))
-                .flat();
-            console.log("🐋분할된 최종 문장 배열:",splitSentences);
+                        const mid = Math.floor(sentence.length / 2);
+                        let splitIndex = sentence.lastIndexOf(" ", mid);
+                        if (splitIndex === -1) splitIndex = mid;
+                        const first = sentence.slice(0, splitIndex).trim();
+                        const second = sentence.slice(splitIndex).trim();
+                        return [first, second];
+                    };
 
-            //질문이 포함된 문장의 인덱스만 추출
-            const questionIndexes=splitSentences
-                .map((s,i)=>isQuestion(s)?i:null)
-                .filter((i)=>i!=null);
-            console.log("🧠 질문 문장 인덱스:", questionIndexes);
+                    //문장분해
+                    const splitSentences=baseSentences
+                        .map((s)=>breakLongSentence(s))
+                        .flat();
+                    console.log("🐋분할된 최종 문장 배열:",splitSentences);
 
-            setSentences(splitSentences);
-            setQuestionIndexes(questionIndexes);
-            
+                    //질문이 포함된 문장의 인덱스만 추출
+                    const questionIndexes=splitSentences
+                        .map((s,i)=>isQuestion(s)?i:null)
+                        .filter((i)=>i!=null);
+                    console.log("🧠 질문 문장 인덱스:", questionIndexes);
 
-        } else {
-            setSentences(["❌ 내용이 없습니다. 다시 돌아가주세요."]);
-        }
-    }, [chapterData]);
+                    setSentences(splitSentences);
+                    setQuestionIndexes(questionIndexes);
+                } else {
+                    setSentences(["❌ 내용이 없습니다."]);
+                }
+            } catch (error) {
+                console.error("❌ Level 3 데이터 로딩 실패:", error);
+                setSentences(["❌ 내용을 불러오는데 실패했습니다. 다시 시도해주세요."]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadLevel3Data();
+    }, [searchParams]);
 
 
     //질문 버튼 누른 후 다시 학습하기 3단계로 돌아온 경우 포함
@@ -445,27 +580,47 @@ function StudyPage({ user, login, setLogin }){
 
     //질문 문장인 경우 -> 사용자 입력 UI 노출 + 답변 수집
     //질문이 끝나면 답변 버튼이 생성되도록 함 
-    const goToNextSentence=()=>{
+    const goToNextSentence = async () => {
     if (!preloadDone) return;
     
-    // 기존 코드: 모든 문장을 다 본 후에 완료
-    // if (currentIndex<sentences.length-1){
-    //     console.log("✅currentIndex:",currentIndex);
-    //     setCurrentIndex(currentIndex+1);
-    // }else{
-    //     setIsQuestionFinished(true);
-    //     setIsFinished(true);
-    //     alert("✅학습을 모두 완료했어요! 다음 단계로 이동해볼까요? 오른 쪽의 다음 단계로 버튼을 클릭해주세요 ")
-    // }
-
-    // 수정된 코드: 2-3개 문장만 보고 완료
-    if (currentIndex < 2) { // 0, 1 인덱스까지만
+    // 모든 문장을 다 본 후에 완료
+    if (currentIndex < sentences.length - 1){
         console.log("✅currentIndex:",currentIndex);
         setCurrentIndex(currentIndex+1);
     } else {
         setIsQuestionFinished(true); //질문 끝났다는 상태
         setIsFinished(true);
+        
+        // Level 3 완료 시 질문/답변 저장 API 호출
+        const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+        if (chapterId) {
+            try {
+                console.log("💾 질문/답변 저장 API 호출 시작 - chapterId:", chapterId);
+                const response = await api.post(`/api/question/save-all`, null, {
+                    params: {
+                        chapterId: chapterId
+                    }
+                });
+                console.log("✅ 질문/답변 저장 성공:", response.data);
+                
+                // sessionStorage에서 해당 chapterId의 질문 데이터 삭제 (선택적)
+                try {
+                    const storageKey = `questionData_${chapterId}`;
+                    sessionStorage.removeItem(storageKey);
+                    console.log("🧹 sessionStorage 질문 데이터 삭제 완료");
+                } catch (error) {
+                    console.error("⚠️ sessionStorage 삭제 실패 (무시):", error);
+                }
+            } catch (error) {
+                console.error("❌ 질문/답변 저장 API 호출 실패:", error);
+                // 에러가 발생해도 학습 완료는 진행 (사용자 경험을 위해)
+            }
+        } else {
+            console.error("⚠️ chapterId가 없어서 질문/답변 저장 API를 호출할 수 없습니다.");
+        }
+        
         alert("✅학습을 모두 완료했어요! 게임 단계로 이동해볼까요?")
+        await completeSession(); // Level 3 완료 상태 전송
         navigate("/game")
     }
    };
@@ -636,9 +791,21 @@ const stopVoiceRecognition = () => {
 
     return(
     <>
+        {/* 무당벌레 렌더링 */}
+        {ladybugs.map(ladybug => (
+            <Ladybug
+                key={ladybug.id}
+                style={{
+                    left: `${ladybug.x}px`,
+                    top: `${ladybug.y}px`,
+                }}
+                onClick={() => handleLadybugClick(ladybug.id)}
+            >
+                <LadybugImage src={ladybugImage} alt="무당벌레" />
+            </Ladybug>
+        ))}
+        
         <Wrapper> 
-            <ContentWrapper>
-                <Sidebar user={user} login={login} setLogin={setLogin} defaultCollapsed={true} />
                 <MainWrapper>
                 {/* <MiniHeader
                     left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
@@ -661,12 +828,7 @@ const stopVoiceRecognition = () => {
                 </LeftSection>
 
                 <RightSection>
-                  <QuestionButton onClick={()=>navigate('/question', {
-                        state: { 
-                            returnToIndex: currentIndex,
-                            from: "/study/level3" 
-                        }
-                    })}>
+                  <QuestionButton onClick={navigateToQuestion}>
                         <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
                         질문하기
                     </QuestionButton>
@@ -765,7 +927,6 @@ const stopVoiceRecognition = () => {
                </ImageWithSpeechWrapper>
                     
                 </MainWrapper>
-            </ContentWrapper>
         </Wrapper>
     </>
     );

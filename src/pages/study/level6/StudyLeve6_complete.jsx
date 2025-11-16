@@ -1,5 +1,4 @@
 import styled from "styled-components";
-import Sidebar from "../../../components/Sidebar";
 
 import { useNavigate } from "react-router-dom";
 import React from "react";
@@ -20,13 +19,9 @@ const Wrapper=styled.div`
     position: relative;
 `;
 
-const ContentWrapper = styled.div`
-  display: flex;
+const MainWrapper = styled.div`
   width: 100%;
   min-height: 100vh;
-`;
-
-const MainWrapper = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -134,8 +129,6 @@ function StudyLevel6_Complete({ user, login, setLogin }){
     return(
     <>
         <Wrapper>
-            <ContentWrapper>
-                <Sidebar user={user} login={login} setLogin={setLogin} defaultCollapsed={true} />
                 <MainWrapper>
                     <ImageWithSpeechWrapper>
                         <ImageWrapper>
@@ -172,7 +165,6 @@ function StudyLevel6_Complete({ user, login, setLogin }){
                         </SpeechBubble>
                     </ImageWithSpeechWrapper>
                 </MainWrapper>
-            </ContentWrapper>
         </Wrapper>
     </>
     );

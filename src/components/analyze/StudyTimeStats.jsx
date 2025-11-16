@@ -125,7 +125,7 @@ const ContentWrapper = styled.div`
 `;
 
 export default function StudyTimeStats() {
-  const [preferredType, setPreferredType] = useState('');
+  const [preferredType, setPreferredType] = useState(null);
   const [weeklyStats, setWeeklyStats] = useState({});
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -172,7 +172,7 @@ export default function StudyTimeStats() {
           return;
         }
         
-        setPreferredType(data.preferredType || '');
+        setPreferredType(data.preferredType); // null을 그대로 유지
         setWeeklyStats(data.weeklyStats || {});
         
         console.log('📊 StudyTimeStats 데이터 처리:', {
@@ -286,13 +286,12 @@ export default function StudyTimeStats() {
 
           <TypeContainer>
             <TypeButton>
-              {preferredType || '언제든지좋아형'}
+              {preferredType === null ? '학습시작하기' : (preferredType || '언제든지좋아형')}
             </TypeButton>
             <TypeText>
-              {getCurrentTypeText()}
+              {preferredType === null ? '학습을 진행하지 않았어요. 학습을 시작해볼까요?' : getCurrentTypeText()}
             </TypeText>
           </TypeContainer>
-
         </ContentWrapper>
       )}
     </TimeCard>

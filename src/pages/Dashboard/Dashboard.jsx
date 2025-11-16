@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import StudyTimeStats from '../../components/analyze/StudyTimeStats';
 import RadarGraph from '../../components/analyze/RadarChart';
 import QnAViewer from '../../components/analyze/QnAViewer';
-import { fetchStudyStats, fetchRadarScore } from '../../api/analyze/analytics';
+import { fetchStudyStats, fetchStudyNowStats, fetchRadarScore, fetchTotalProgress } from '../../api/analyze/analytics';
 import Sidebar from '../../components/Sidebar';
 
 const Wrapper = styled.div`
@@ -65,11 +65,11 @@ const SubTitleText = styled.div`
 
 const ContentBox = styled.div`
   width: 100%;
-  max-width: 1200px;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  align-self: center;
+  align-self: flex-start;
   border-radius: 20px;
 `;
 
@@ -175,19 +175,19 @@ export default function Dashboard({ user, login, setLogin }) {
   const [progress, setProgress] = useState(80);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const [noStudy, setNoStudy] = useState(false);
+  const [nowStudying, setNowStudying] = useState(null);
+  const [totalProgress, setTotalProgress] = useState(null);
   useEffect(() => {
-    if (studyStats && studyStats.totalCompleted !== undefined) {
-      // Assuming max progress is 100, adjust as needed
-      const calculatedProgress = Math.min((studyStats.totalCompleted / 10) * 100, 100);
-      setProgress(Math.round(calculatedProgress));
-      console.log('📊 진행률 계산:', {
-        totalCompleted: studyStats.totalCompleted,
-        calculatedProgress,
-        finalProgress: Math.round(calculatedProgress)
+    if (totalProgress !== null && totalProgress !== undefined) {
+      // totalProgress는 API에서 바로 퍼센트 값으로 옴 (33.3)
+      setProgress(Math.round(totalProgress));
+      console.log('📊 진행률 설정:', {
+        totalProgress,
+        finalProgress: Math.round(totalProgress)
       });
     }
-  }, [studyStats]);
+  }, [totalProgress]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -195,14 +195,54 @@ export default function Dashboard({ user, login, setLogin }) {
         setLoading(true);
         setError(null);
         
-        const [statsData, radarData] = await Promise.all([
+        const [statsData, nowStudyingResponse, radarData, totalProgressData] = await Promise.all([
           fetchStudyStats(),
-          fetchRadarScore()
+          fetchStudyNowStats(),
+          fetchRadarScore(),
+          fetchTotalProgress()
         ]);
         
-        setStudyStats(statsData);
-        setThisWeek(radarData.thisWeek);
-        setLastWeek(radarData.lastWeek);
+        console.log('📊 now-studying API 응답:', nowStudyingResponse);
+        
+        console.log('📊 statsData:', statsData);
+        console.log('📊 totalProgressData:', totalProgressData);
+        console.log('📊 radarData 원본:', radarData);
+        
+        if (statsData === 0) {
+          setNoStudy(true);
+          setStudyStats({ totalCompleted: 0 });
+        } else {
+          setNoStudy(false);
+          // API 응답: { totalCompleted: 2 }
+          setStudyStats(statsData);
+        }
+        
+        // now-studying API의 새로운 구조 사용
+        if (nowStudyingResponse && nowStudyingResponse.data) {
+          setNowStudying(nowStudyingResponse.data);
+          console.log('✅ 현재 학습 중:', nowStudyingResponse.data);
+        } else {
+          setNowStudying(null);
+          console.log('⚠️ 현재 학습 중인 데이터 없음');
+        }
+        
+        // totalProgressData는 숫자 (33.3)
+        setTotalProgress(totalProgressData);
+        
+        // radarData가 { data: { thisWeek, lastWeek } } 형식인지 확인
+        if (radarData && radarData.data) {
+          console.log('✅ radarData.data 사용:', radarData.data);
+          setThisWeek(radarData.data.thisWeek || {});
+          setLastWeek(radarData.data.lastWeek || {});
+        } else if (radarData) {
+          console.log('✅ radarData 직접 사용:', radarData);
+          setThisWeek(radarData.thisWeek || {});
+          setLastWeek(radarData.lastWeek || {});
+        } else {
+          console.log('⚠️ radarData 없음');
+          setThisWeek({});
+          setLastWeek({});
+        }
       } catch (err) {
         console.error("❌ 데이터 불러오기 실패:", err);
         setError(err.message);
@@ -243,9 +283,9 @@ export default function Dashboard({ user, login, setLogin }) {
             <TopBox>
               <ProgressContainer>
                 <ContainerWrapper>
-                  <ContainerTitle>지난주 대비 진행률</ContainerTitle>
-                  <PlusContainer>+{studyStats?.weeklyCompleted || 0}</PlusContainer>
-                  <ContainerText>{`이번 주에 ${studyStats?.weeklyCompleted || 0}개의 단원을 완료했어요!
+                  <ContainerTitle>전체 진행률</ContainerTitle>
+                  <PlusContainer>+{studyStats?.totalCompleted || 0}</PlusContainer>
+                  <ContainerText>{noStudy ? '아직 학습을 진행 안했어 학습을 시작해볼까?' : `이번 주에 ${studyStats?.totalCompleted || 0}개의 단원을 완료했어요!
   앞으로도 지금처럼 열심해 해봐요!`}</ContainerText>
                 </ContainerWrapper>
                 <CircularProgress>
@@ -269,7 +309,7 @@ export default function Dashboard({ user, login, setLogin }) {
                       strokeWidth="10"
                       strokeLinecap="round"
                       strokeDasharray={`${2 * Math.PI * 40}`}
-                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - progress / 100)}`}
+                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - (totalProgress || 0) / 100)}`}
                       transform="rotate(-90 48 48)"
                     />
                   </svg>
@@ -279,7 +319,7 @@ export default function Dashboard({ user, login, setLogin }) {
               <ProgressContainer>
               <ContainerWrapper>
                   <ContainerTitle>학습 완료한 단원 수</ContainerTitle>
-                  <ContainerText>{`지금까지 ${studyStats?.totalCompleted || 0}개의 레벨을 학습 완료했어요!
+                  <ContainerText>{noStudy ? '아직 학습을 진행 안했어 학습을 시작해볼까?' : `지금까지 ${studyStats?.totalCompleted || 0}개의 레벨을 학습 완료했어요!
   앞으로도 열심히 해봐요!`}</ContainerText>
                 </ContainerWrapper>
                 <CircleWrapper>
@@ -288,12 +328,17 @@ export default function Dashboard({ user, login, setLogin }) {
               </ProgressContainer>
               <ProgressContainer>
               <ContainerWrapper>
-                  <ContainerTitle>현재 교재 레벨</ContainerTitle>
-                  <ContainerText>{`현재 학습 단원은 Lv.${(studyStats?.level || 0) + 1}
-  돈의 여러가지 모습을 학습하고 있어요!`}</ContainerText>
+                  <ContainerTitle>현재 학습 중</ContainerTitle>
+                  <ContainerText>
+                    {noStudy || !nowStudying ? '아직 학습을 진행 안했어 학습을 시작해볼까?' : 
+                    `${nowStudying.bookTitle} - ${nowStudying.chapterTitle}
+Level ${nowStudying.currentLevel}을 학습하고 있어요!`}
+                  </ContainerText>
                 </ContainerWrapper>
                 <CircleWrapper>
-                  <CircleText>Lv.{(studyStats?.level || 0) + 1}</CircleText>
+                  <CircleText>
+                    {nowStudying ? `Lv.${nowStudying.currentLevel}` : 'Lv.0'}
+                  </CircleText>
                 </CircleWrapper>
               </ProgressContainer> 
 

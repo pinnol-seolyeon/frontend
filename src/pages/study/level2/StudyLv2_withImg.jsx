@@ -6,10 +6,10 @@ import testImage from "../../../assets/testImage.png";
 import MiniHeader from "../../../components/study/MiniHeader";
 import Button from "../../../components/Button";
 import nextButton from "../../../assets/nextButton.png";
-import Sidebar from "../../../components/Sidebar";
 import { useChapter } from "../../../context/ChapterContext";
+import { useActivityTracker } from "../../../hooks/useActivityTracker";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import React, { useState, useEffect, useRef } from "react";
 import TtsPlayer from "../../../components/TtsPlayer";
 import background from "../../../assets/study_background.png";
@@ -31,12 +31,6 @@ const Wrapper=styled.div`
     position: relative;
 `;
 
-const ContentWrapper = styled.div`
-  display: flex;
-  width: 100%;
-  min-height: 100vh;
-`;
-
 const MainWrapper = styled.div`
   flex: 1;
   display: flex;
@@ -49,6 +43,8 @@ const MainWrapper = styled.div`
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  width: 100%;
+  min-height: 100vh;
   
   @media (max-width: 768px) {
     padding: 1rem;
@@ -91,6 +87,7 @@ const ObjectiveImage = styled.img`
   max-height: 380px;
   height: auto;
   object-fit: contain;
+  margin-bottom: 1rem;
 `;
 
 const ImageWithSpeechWrapper = styled.div`
@@ -348,15 +345,12 @@ const NextStepButton = styled(Button)`
 `;
 
 
-
-
-
-
 //물어보고 대답하면 그에 따른 반응을 해줘야함.. 그러려면 AI와 연결할필요있음.. 
 function StudyLv2_withImg({ user, login, setLogin }){
 
     const navigate=useNavigate();
-    const {chapterData}=useChapter();
+    const [searchParams] = useSearchParams();
+    const {chapterData, setChapterData}=useChapter();
     const [sentences,setSentences]=useState([]);
     const [answers,setAnswers]=useState([]);
     const [currentIndex,setCurrentIndex]=useState(0);
@@ -376,34 +370,55 @@ function StudyLv2_withImg({ user, login, setLogin }){
     const [isRecording, setIsRecording] = useState(false);
     const [recognizedText, setRecognizedText] = useState("");
     const [isVoiceRecognitionComplete, setIsVoiceRecognitionComplete] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-    useEffect(()=>{
-        console.log("📦 현재 저장된 chapterData:", chapterData);
-        if(chapterData){
-            // const question=chapterData.question; //질문 필드 추가해야함
-            const question=chapterData?.objectiveQuestion;
-            const img=chapterData.imgUrl; //이미지 불러올 수 있는지 확인해보기
-            console.log("📷chapterData.imgUrl",img);
-            console.log("✅chapterData.objectiveQuestion")
-            setImage(img);
+    // 활동 감지 Hook 사용 (level 2, start-level 스킵)
+    // FIXME: 백엔드 start-level API 401 에러로 임시 스킵
+    const { completeSession } = useActivityTracker(
+        chapterData?.chapterId, 
+        2, // level 2
+        user?.userId,
+        chapterData?.bookId,
+        0, // minusFocusingScore
+        true // skipStartLevel: 백엔드 이슈로 임시 스킵
+    );
 
-           const splitSentences = question
-            .split(/(?<=[.?!])\s+/)
-            .filter((s) => s.trim() !== "");
+    // Level 2 데이터는 context에서 가져오기 (StudyPage2에서 이미 로드됨)
+    useEffect(() => {
+        if (chapterData) {
+            console.log("✅ Level 2 데이터 사용 (context):", chapterData);
+            
+            const question = chapterData?.objectiveQuestion;
+            const img = chapterData?.imgUrl;
+            console.log("📷 imgUrl:", img);
+            console.log("✅ objectiveQuestion:", question);
+            
+            // imgUrl이 있으면 설정, 없으면 undefined (onError로 fallback 처리)
+            setImage(img || undefined);
 
-            setSentences(splitSentences);
+            if (question) {
+                const splitSentences = question
+                    .split(/(?<=[.?!])\s+/)
+                    .filter((s) => s.trim() !== "");
+                setSentences(splitSentences);
+            } else {
+                setSentences(["질문이 없습니다."]);
+            }
+            
             setCurrentIndex(0);
             setPreloadDone(false);
-            
-        }else{
-            setSentences(["❌ 내용이 없습니다. 다시 돌아가주세요."])
+            setLoading(false);
+        } else {
+            console.error("❌ chapterData가 없습니다!");
+            setSentences(["❌ 데이터를 불러올 수 없습니다."]);
+            setLoading(false);
         }
-    },[chapterData]);
+    }, [chapterData]);
 
 
 
 
-   const handleAnswer=()=>{
+   const handleAnswer = async () => {
     if(!aiResponse){
       if(currentIndex<sentences.length-1){
         setCurrentIndex(currentIndex+1);
@@ -415,7 +430,8 @@ function StudyLv2_withImg({ user, login, setLogin }){
         setCurrentIndex(currentIndex+1);
       }else{
         // 답변을 맞추는 화면이 아니면 다음 단계로 이동
-        navigate('/study/level3');
+        await completeSession(); // Level 2 완료 상태 전송
+        navigate(`/study/level3?chapterId=${chapterData?.chapterId}`);
       }
     }
    };
@@ -428,9 +444,9 @@ function StudyLv2_withImg({ user, login, setLogin }){
         // 실제로는 여기에 AI 호출 로직이 들어감 (예: fetch("/chat", { method: POST ... }))
         console.log("🙋 유저 입력:", userAnswer);
 
-        // 임시 응답 시뮬레이션 //AI 모델 추후에 연결.. 
-        const response=chapterData?.objectiveAnswer;
-        const fullResponse=`${response}. 그럼 이제 본격적으로 수업을 들어가볼까?`;
+        // objectiveAnswer가 있으면 사용, 없으면 기본 응답 사용
+        const response = chapterData?.objectiveAnswer || "좋은 답변이에요";
+        const fullResponse = `${response}. 그럼 이제 본격적으로 수업을 들어가볼까?`;
         // setNextResponse(`그럼 이제 본격적으로 수업을 들어가볼까?`);
         setAiResponse(fullResponse);
 
@@ -505,8 +521,6 @@ function StudyLv2_withImg({ user, login, setLogin }){
     
     return(
         <Wrapper>
-            <ContentWrapper>
-                <Sidebar user={user} login={login} setLogin={setLogin} defaultCollapsed={true} />
                 <MainWrapper>
                         {/* <MiniHeader
                     left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
@@ -515,7 +529,7 @@ function StudyLv2_withImg({ user, login, setLogin }){
                         $active={!!aiResponse} //깜빡이는 스타일을 위한 props 전달
                         onClick={()=>{
                             if(aiResponse){
-                                navigate('/study/level3');
+                                navigate(`/study/level3?chapterId=${chapterData?.chapterId}`);
                             }
                         }}
                         >다음 단계로</NextStepButton>
@@ -535,12 +549,6 @@ function StudyLv2_withImg({ user, login, setLogin }){
                       alt="학습 이미지" 
                       onError={(e)=>e.target.src=testImage}
                   />
-                  <QuestionButton onClick={()=>navigate('/question', {
-                      state: { from: '/study/level2-img' }
-                  })}>
-                     <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
-                     질문하기
-                  </QuestionButton>
                 </RightSection>
               </ContentContainer>
 
@@ -599,7 +607,6 @@ function StudyLv2_withImg({ user, login, setLogin }){
                 )}
                </ImageWithSpeechWrapper>
                 </MainWrapper>
-            </ContentWrapper>
         </Wrapper>
     );
 }

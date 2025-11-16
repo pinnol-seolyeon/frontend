@@ -4,9 +4,10 @@ import Box from "../../../components/Box";
 import tigerPencil from "../../../assets/tiger-pencil.png";
 import Button from "../../../components/Button";
 import MiniHeader from "../../../components/study/MiniHeader";
-import Sidebar from "../../../components/Sidebar";
+import { fetchChapterContents } from "../../../api/study/level3API";
+import { useActivityTracker } from "../../../hooks/useActivityTracker";
 
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import React, { useState, useEffect, useMemo } from "react";
 import { useChapter } from "../../../context/ChapterContext";
 import TtsPlayer from "../../../components/TtsPlayer";
@@ -193,40 +194,64 @@ const SecondWrapper=styled.div`
 function StudyPage({ user, login, setLogin }){
 
     const navigate=useNavigate();
+    const [searchParams] = useSearchParams();
     const[objective,setObjective]=useState("");
-    const {chapterData}=useChapter();
+    const {chapterData, setChapterData}=useChapter();
     const [loading,setLoading]=useState(true);
     const [preloadDone, setPreloadDone] = useState(false);
     const [step, setStep] = useState(0);
 
+    // 활동 감지 Hook 사용 (level 2)
+    // FIXME: 백엔드 start-level API 401 에러로 임시 스킵
+    const { completeSession } = useActivityTracker(
+        chapterData?.chapterId, 
+        2, // level 2
+        user?.userId,
+        chapterData?.bookId,
+        0, // minusFocusingScore
+        true // skipStartLevel: 백엔드 이슈로 임시 스킵
+    );
 
-
+    // Level 2 데이터 가져오기 (학습 목표)
     useEffect(() => {
-
-        //chapterData를 사용하려면 직접 url 열면 안됨.. navigate로 url이동해야 (Context는 메모리에만 존재하기 때문에 초기화됨)
-        console.log("📦 현재 저장된 chapterData:", chapterData);
-        try{
-            if (chapterData?.objective) {
-                
-                setObjective(chapterData.objective);
-                console.log("✅ Chapter content:", chapterData.objective);
-
-                // const splitSentences = contents
-                // .split(/(?<=[.?!])\s+/)
-                // .filter((s) => s.trim() !== "");
-
-                // setSentences(splitSentences);
-                // setCurrentIndex(0);
-            } else {
-                setObjective(["❌ 내용이 없습니다. 다시 돌아가주세요."]);
+        const loadObjective = async () => {
+            const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+            
+            if (!chapterId) {
+                console.error("❌ chapterId가 없습니다.");
+                setObjective("❌ 단원 정보가 없습니다.");
+                setLoading(false);
+                return;
             }
-        }catch(err){
-            console.error("🚨",err);
-            setObjective("데이터를 불러오지 못함⚠️");
-        }finally{
-            setLoading(false);
-        }
-    }, [chapterData]);
+
+            try {
+                setLoading(true);
+                console.log("🔄 Level 2 학습 목표 로딩 중... chapterId:", chapterId, "bookId:", chapterData?.bookId);
+                const level2Data = await fetchChapterContents(2, chapterId, chapterData?.bookId);
+                console.log("✅ Level 2 데이터:", level2Data);
+                
+                // Context 업데이트 (bookId 보존)
+                setChapterData({
+                    ...level2Data,
+                    bookId: chapterData?.bookId
+                });
+                
+                if (level2Data?.objective) {
+                    setObjective(level2Data.objective);
+                    console.log("✅ 학습 목표:", level2Data.objective);
+                } else {
+                    setObjective("학습 목표를 불러올 수 없습니다.");
+                }
+            } catch (err) {
+                console.error("❌ Level 2 데이터 로딩 실패:", err);
+                setObjective("❌ 학습 목표를 불러오는데 실패했습니다.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadObjective();
+    }, [searchParams]);
     
 
     const textToRead = useMemo(() => {
@@ -242,11 +267,13 @@ function StudyPage({ user, login, setLogin }){
     return(
         <Wrapper>
             <ContentWrapper>
-                <Sidebar user={user} login={login} setLogin={setLogin} defaultCollapsed={true} />
                 <MainWrapper>
                         {/* <MiniHeader
                             left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
-                            right={<Button onClick={()=>navigate(`/study/level2-img`)}>다음 단계로</Button>}
+                            right={<Button onClick={async () => {
+                                await completeSession(); // COMPLETED 상태 전송
+                                navigate(`/study/level2-img?chapterId=${chapterData?.chapterId}`);
+                            }}>다음 단계로</Button>}
                         >
                         1/6 : 학습 목표
                         </MiniHeader> */}
@@ -280,10 +307,9 @@ function StudyPage({ user, login, setLogin }){
 
                             </TextBox>
                              <ButtonWrapper>
-                                 <BackButton onClick={() => navigate(-1)}>
-                                     뒤로
-                                 </BackButton>
-                                  <BubbleButton onClick={() => navigate(`/study/level2-img`)}>
+                                  <BubbleButton onClick={() => {
+                                      navigate(`/study/level2-img?chapterId=${chapterData?.chapterId}`);
+                                  }}>
                                          다음
                                   </BubbleButton>
                              </ButtonWrapper>

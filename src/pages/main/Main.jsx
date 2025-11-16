@@ -191,7 +191,10 @@ const Main = ({user, login, setLogin}) => {
                   description={`이전 학습 내용을 복습하고
                       퀴즈를 받아보자!`}
                   backgroundColor = "#6FC3FB"
-                  onButtonClick={() => console.log('클릭!')}
+                  onButtonClick={() => {
+                    console.log('클릭!');
+                    navigate('/review');
+                  }}
                 />
                 <Card
                   icon={CircleGraph}
@@ -199,7 +202,10 @@ const Main = ({user, login, setLogin}) => {
                   description={`전체 학습 진도와
                     획득 포인트를 확인해보자!`}
                   backgroundColor = "#FFC43C"
-                  onButtonClick={() => console.log('클릭!')}
+                  onButtonClick={() => {
+                    console.log('클릭!');
+                    navigate('/status');
+                  }}
                 />
               </CardWrapper>
             </CardsContainer>

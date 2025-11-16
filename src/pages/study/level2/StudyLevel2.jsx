@@ -9,8 +9,9 @@ import MiniHeader from "../../../components/study/MiniHeader";
 
 const Wrapper=styled.div`
     width:100%;
-    height:100vh;
-
+    min-height:100vh;
+    height:auto;
+    
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -19,18 +20,12 @@ const Wrapper=styled.div`
 `;
 
 const Image=styled.img`
-    display:flex;
     width:80%; 
     height:auto;
     object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    max-width:300px;
     display:block;
     margin:0 auto; /*가로 중앙 정렬*/
     padding:50px;
-
-    // position:absolute;
-    // left:20px;
-    // bottom:20px;
 `;
 
 

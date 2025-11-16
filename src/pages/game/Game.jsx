@@ -10,8 +10,9 @@ import flagImg from '../../assets/game_end.svg';
 import playerEndImg from '../../assets/game_character_2.png';
 import { saveCoinToDB } from '../../api/analyze/saveCoinToDB';
 import { useChapter } from "../../context/ChapterContext";
-import { fetchQuizByChapterId } from '../../api/study/fetchQuiz';
+import { fetchChapterContents } from '../../api/study/level3API';
 import { useNavigate } from "react-router-dom";
+import { useActivityTracker } from "../../hooks/useActivityTracker";
 import bgmSrc from '../../assets/Tiki_Bar_Mixer.mp3';
 import { sendQuizResults } from '../../api/analyze/sendQuizResults';
 import gameStartTitle from '../../assets/game_startoverlay_title.svg';
@@ -21,7 +22,8 @@ import gameStartQuiz from '../../assets/game_quiz_start.svg';
 import gameStartBtn from '../../assets/game_start_btn.svg';
 import gameQuizTitle from '../../assets/game_quizoverlay_title.svg';
 import gameEndTitle from '../../assets/game_endoverlay_title.svg';
-
+import pause_btn from '../../assets/pause_btn.svg';
+import exit_btn from '../../assets/exit_btn.svg';
 // 폰트 import
 const fontFace = `
   @font-face {
@@ -62,6 +64,104 @@ const LoadingOverlay = styled.div`
   align-items: center;
   color: white;
   font-size: 2rem;
+`;
+
+const GameControls = styled.div`
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  display: flex;
+  gap: 1rem;
+  z-index: 5;
+  pointer-events: auto;
+`;
+
+const ControlButton = styled.img`
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  transition: transform 0.2s;
+  
+  &:hover {
+    transform: scale(1.1);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const ModalBox = styled.div`
+  background-color: #ffffff;
+  padding: 3rem 2rem;
+  border-radius: 20px;
+  text-align: center;
+  min-width: 450px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+`;
+
+const ModalTitle = styled.div`
+  font-size: 32px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 1.5rem;
+`;
+
+const ModalDescription = styled.div`
+  font-size: 16px;
+  color: #333;
+  font-weight: 400;
+  white-space: pre-line;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+`
+
+const ModalButtonContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+`;
+
+const ModalButton = styled.button`
+  padding: 0.8rem 2rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  
+  ${props => props.primary ? `
+    background-color: #ffffff;
+    color: #2D7BED;
+    border: 1px solid #2D7BED;
+
+    &:hover {
+      background-color: rgb(242, 242, 246);
+    }
+  ` : `
+    background-color: #2D7BED;
+    color: #ffffff;
+    
+    &:hover {
+      background-color:#104EA7;
+    }
+  `}
 `;
 
 const QuizOverlay = styled.div`
@@ -541,18 +641,26 @@ const GameResultItem2 = styled.div`
   flex: 1;
 `;
 
-export default function Game() {
+export default function Game({ user }) {
   const { chapterData } = useChapter();
   const chapterId = chapterData?.chapterId;
   const navigate = useNavigate();
   
+  // 활동 감지 Hook 사용 (level 4 - 게임)
+  const { completeSession, sendExit } = useActivityTracker(
+      chapterId, 
+      4, // level 4 (게임)
+      user?.userId,
+      chapterData?.bookId
+  );
+  
   // chapterId가 없으면 메인 페이지로 리다이렉트
-  useEffect(() => {
-    if (!chapterId) {
-      alert("학습을 한 뒤, 게임을 시작해주세요.");
-      navigate('/');
-    }
-  }, [chapterId, navigate]);
+  // useEffect(() => {
+  //   if (!chapterId) {
+  //     alert("학습을 한 뒤, 게임을 시작해주세요.");
+  //     navigate('/');
+  //   }
+  // }, [chapterId, navigate]);
   
   const canvasRef = useRef(null);
   const animationIdRef = useRef(null);
@@ -562,7 +670,7 @@ export default function Game() {
   const [imagesLoaded, setImagesLoaded] = useState(false);
 
   const frameRef = useRef(0);
-  const gameSpeedRef = useRef(6); // 속도 감소 (화면 크기와 무관)
+  const gameSpeedRef = useRef(8); // 속도 증가 (6 -> 8, 게임 길이 단축)
   const backgroundXRef = useRef(0);
   const entitiesRef = useRef([]);
   const playerRef = useRef({});
@@ -608,6 +716,10 @@ export default function Game() {
 
   const [isGameStarted, setIsGameStarted] = useState(false);
   const bgmRef = useRef(null);
+  
+  // Pause/Exit 모달 상태
+  const [showPauseModal, setShowPauseModal] = useState(false);
+  const [showExitModal, setShowExitModal] = useState(false);
 
   // 퀴즈 푸는 시간
   const quizStartTimeRef = useRef(null);
@@ -615,12 +727,12 @@ export default function Game() {
 
   // 퀴즈 만났을 때 화면 정지 위함
   function snapshotState() {
-    const quizFilteredEntities = entitiesRef.current.filter(e => e.type !== 'quiz');
+    // 모든 엔티티를 저장 (퀴즈 포함)
     pausedSnapshotRef.current = {
       frame: frameRef.current,
       gameSpeed: gameSpeedRef.current,
       backgroundX: backgroundXRef.current,
-      entities: JSON.parse(JSON.stringify(quizFilteredEntities)),
+      entities: JSON.parse(JSON.stringify(entitiesRef.current)),
       player: JSON.parse(JSON.stringify(playerRef.current)),
     };
   }
@@ -659,6 +771,7 @@ export default function Game() {
 
     // 퀴즈 결과 기록
     quizResultsRef.current.push({
+      quizId: quiz.quizId, // ★ quizId 기록
       question: quiz.question,
       options: quiz.options,
       correctAnswer: quiz.answer,
@@ -768,16 +881,21 @@ export default function Game() {
     loadImages();
   }, []);
 
-  // 챕터 별 퀴즈 불러오기
+  // 챕터 별 퀴즈 불러오기 (level 4 API 사용)
   useEffect(() => {
     // chapterId가 없으면 퀴즈 로딩 시도하지 않음 (리다이렉트됨)
     if (!chapterId) return;
     
     async function loadQuiz() {
       try {
-        const data = await fetchQuizByChapterId(chapterId);
-        console.log("✅ 퀴즈 응답:", data);
-        setQuizList(data);
+        console.log("🎮 Level 4 (퀴즈) 데이터 로딩 중... chapterId:", chapterId, "bookId:", chapterData?.bookId);
+        const level4Data = await fetchChapterContents(4, chapterId, chapterData?.bookId);
+        console.log("✅ Level 4 (퀴즈) 응답:", level4Data);
+        
+        // quiz 배열 추출
+        const quizData = level4Data?.quiz || [];
+        console.log("✅ 퀴즈 데이터:", quizData);
+        setQuizList(quizData);
         setQuizLoaded(true); // 퀴즈 로딩 완료 상태 설정
       } catch (err) {
         console.error("❌ 퀴즈 불러오기 실패:", err);
@@ -822,8 +940,22 @@ export default function Game() {
     if (!quizLoaded || !isGameStarted || !imagesLoaded) return;
     
     if (gameOver) {
-        saveCoinToDB(scoreRef.current);
-        sendQuizResults(quizResultsRef.current);
+        saveCoinToDB(scoreRef.current, chapterId);
+        
+        // API 형식에 맞게 데이터 변환
+        const formattedResults = quizResultsRef.current.map(result => ({
+          quizId: result.quizId,
+          question: result.question,
+          options: result.options,
+          correctAnswer: result.correctAnswer,
+          userAnswer: result.userAnswer,
+          responseTime: result.responseTime,
+          userId: user?.userId || '',
+          quizDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD 형식
+          isCorrect: result.isCorrect
+        }));
+        
+        sendQuizResults(formattedResults);
       }
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -904,7 +1036,10 @@ export default function Game() {
 
       quizStartTimeRef.current = Date.now();
 
+      const derivedQuizId = nextQuiz?.quizId ?? nextQuiz?.id ?? nextQuiz?._id ?? nextQuiz?.questionId;
+
       setQuiz({
+        quizId: derivedQuizId, // robust quizId
         question: nextQuiz.quiz,
         options: nextQuiz.options,
         answer: nextQuiz.answer,
@@ -913,7 +1048,37 @@ export default function Game() {
     }
 
     let lastQuizFrame = -1000;
-    const quizSpawnInterval = 900;
+    const quizSpawnInterval = 700; // 900 -> 700으로 감소 (게임 길이 단축)
+    
+    // 고정 시드를 사용한 랜덤 생성기 (모두에게 동일한 코인/장애물)
+    let seed = chapterId ? parseInt(chapterId.slice(-8), 16) : 12345; // chapterId 기반 시드
+    const seededRandom = () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
+    
+    // 고정된 개수의 코인과 장애물 위치 미리 생성
+    const TOTAL_COINS = 10;
+    const TOTAL_HURDLES = 15;
+    const GAME_DURATION_FRAMES = 1200; // 게임 예상 길이 (프레임 수) - 2000에서 1200으로 감소 (약 40% 단축)
+    
+    const coinSpawnFrames = [];
+    const hurdleSpawnFrames = [];
+    
+    // 코인 생성 위치 미리 결정
+    for (let i = 0; i < TOTAL_COINS; i++) {
+      coinSpawnFrames.push(Math.floor(seededRandom() * GAME_DURATION_FRAMES) + 100);
+    }
+    coinSpawnFrames.sort((a, b) => a - b);
+    
+    // 장애물 생성 위치 미리 결정
+    for (let i = 0; i < TOTAL_HURDLES; i++) {
+      hurdleSpawnFrames.push(Math.floor(seededRandom() * GAME_DURATION_FRAMES) + 100);
+    }
+    hurdleSpawnFrames.sort((a, b) => a - b);
+    
+    let coinIndex = 0;
+    let hurdleIndex = 0;
 
     function spawnEntities() {
       if (flagShown) return;
@@ -926,7 +1091,7 @@ export default function Game() {
 
       // 퀴즈가 로드된 경우에만 퀴즈 박스 생성
       if (frameRef.current - lastQuizFrame > quizSpawnInterval && 
-          Math.random() < 0.2 && 
+          seededRandom() < 0.25 && // Math.random() 대신 seededRandom() 사용
           quizCountRef.current < 5 && 
           quizList.length > 0) { // 퀴즈 리스트가 있을 때만
         candidates.push('quiz');
@@ -934,15 +1099,24 @@ export default function Game() {
         lastQuizFrame = frameRef.current;          
       }
 
-      if (Math.random() < 0.4) candidates.push('coin');
-      if (Math.random() < 0.8) candidates.push('hurdle');
+      // 코인을 고정된 프레임에 생성
+      if (coinIndex < TOTAL_COINS && frameRef.current >= coinSpawnFrames[coinIndex]) {
+        candidates.push('coin');
+        coinIndex++;
+      }
+      
+      // 장애물을 고정된 프레임에 생성
+      if (hurdleIndex < TOTAL_HURDLES && frameRef.current >= hurdleSpawnFrames[hurdleIndex]) {
+        candidates.push('hurdle');
+        hurdleIndex++;
+      }
 
       candidates.forEach(type => {
         let width, height, y, img;
         const player = playerRef.current;
 
         if (type === 'hurdle') {
-          const idx = Math.floor(Math.random() * hurdleImagesRef.current.length);
+          const idx = Math.floor(seededRandom() * hurdleImagesRef.current.length); // Math.random() 대신 seededRandom() 사용
           img = hurdleImagesRef.current[idx];
           // 원본 이미지 비율 유지하면서 크기 축소
           const baseWidth = canvas.width * 0.04; // 기본 너비를 더 작게 (8% -> 4%)
@@ -1037,8 +1211,8 @@ export default function Game() {
         if (ent.type === 'quiz' && !quiz && ent.x + ent.width < player.x) {
             console.log("퀴즈 박스와 충돌 감지!"); // 디버그 로그 추가
             cancelAnimationFrame(animationIdRef.current);
-            snapshotState();
-            entities.splice(i, 1);
+            entities.splice(i, 1); // 퀴즈를 먼저 제거
+            snapshotState(); // 그 다음에 스냅샷 저장
             setIsPaused(true);
             showQuiz();
             return;
@@ -1075,9 +1249,10 @@ export default function Game() {
         }
       }
 
-      ctx.font = `${canvas.width * 0.02}px Arial`;
-      ctx.fillStyle = 'black';
-      ctx.fillText('Score: ' + scoreRef.current, canvas.width - 200, 50);
+      // 점수 표시 (나중에 사용)
+      // ctx.font = `${canvas.width * 0.02}px Arial`;
+      // ctx.fillStyle = 'black';
+      // ctx.fillText('Score: ' + scoreRef.current, canvas.width - 200, 50);
 
       if (!isPaused) {
         frameRef.current++;
@@ -1178,6 +1353,54 @@ export default function Game() {
   };
 }, []);
 
+  // Pause 버튼 핸들러
+  const handlePauseClick = (e) => {
+    e.stopPropagation();
+    setShowPauseModal(true);
+    setIsPaused(true);
+    cancelAnimationFrame(animationIdRef.current);
+    snapshotState();
+  };
+
+  // Exit 버튼 핸들러
+  const handleExitClick = (e) => {
+    e.stopPropagation();
+    setShowExitModal(true);
+    setIsPaused(true);
+    cancelAnimationFrame(animationIdRef.current);
+    snapshotState();
+  };
+
+  // Pause 모달 - 게임 재개 (EXIT 상태 전송 안 함)
+  const handleResume = () => {
+    console.log('▶️ 게임 재개 - EXIT 상태 전송하지 않음');
+    setShowPauseModal(false);
+    setIsPaused(false);
+    restoreSnapshot();
+    animationIdRef.current = requestAnimationFrame(updateRef.current);
+  };
+
+  // Pause 모달 - 게임 종료 (EXIT 상태 전송)
+  const handleExitFromPause = async () => {
+    await sendExit(); // EXIT 상태 전송
+    navigate('/main');
+  };
+
+  // Exit 모달 - 확인 (EXIT 상태 전송)
+  const handleConfirmExit = async () => {
+    await sendExit(); // EXIT 상태 전송
+    navigate('/main');
+  };
+
+  // Exit 모달 - 취소 (EXIT 상태 전송 안 함)
+  const handleCancelExit = () => {
+    console.log('🚫 Exit 취소 - EXIT 상태 전송하지 않음');
+    setShowExitModal(false);
+    setIsPaused(false);
+    restoreSnapshot();
+    animationIdRef.current = requestAnimationFrame(updateRef.current);
+  };
+
   // 로딩 화면 표시 (게임이 시작되지 않았을 때는 시작 화면을 보여줌)
   if (!quizLoaded || !imagesLoaded) {
     return (
@@ -1193,6 +1416,14 @@ export default function Game() {
       
       <GameCanvas ref={canvasRef} onClick={triggerJump} onTouchStart={triggerJump} /> 
       <audio ref={bgmRef} src={bgmSrc} loop />
+      
+      {/* Pause/Exit 버튼 */}
+      {isGameStarted && !gameOver && (
+        <GameControls>
+          <ControlButton src={pause_btn} alt="일시정지" onClick={handlePauseClick} />
+          <ControlButton src={exit_btn} alt="나가기" onClick={handleExitClick} />
+        </GameControls>
+      )}
 
       {quiz && (
         <QuizOverlay>
@@ -1250,6 +1481,45 @@ export default function Game() {
           완주 완료!
         </EndNotification>
       )}
+      
+      {/* Pause 모달 */}
+      {showPauseModal && (
+        <ModalOverlay onClick={(e) => e.stopPropagation()}>
+          <ModalBox>
+            <ModalTitle>게임이 잠시 멈췄어요.</ModalTitle>
+            <ModalDescription>{`게임을 종료하게 되면
+            지금까지의 학습 기록과 포인트가 초기화됩니다.`}</ModalDescription>
+
+            <ModalButtonContainer>
+              <ModalButton primary onClick={handleResume}>
+                이어하기
+              </ModalButton>
+              <ModalButton onClick={handleExitFromPause}>
+                종료하기
+              </ModalButton>
+            </ModalButtonContainer>
+          </ModalBox>
+        </ModalOverlay>
+      )}
+      
+      {/* Exit 모달 */}
+      {showExitModal && (
+        <ModalOverlay onClick={(e) => e.stopPropagation()}>
+          <ModalBox>
+            <ModalTitle>게임을 종료하시겠습니까?</ModalTitle>
+            <ModalDescription>{`게임을 종료하게 되면
+            지금까지의 학습 기록과 포인트가 초기화됩니다.`}</ModalDescription>
+            <ModalButtonContainer>
+              <ModalButton onClick={handleCancelExit}>
+                이어하기
+              </ModalButton>
+              <ModalButton primary onClick={handleConfirmExit}>
+                종료하기
+              </ModalButton>
+            </ModalButtonContainer>
+          </ModalBox>
+        </ModalOverlay>
+      )}
 
       {gameOver && (
         <GameOverOverlay>
@@ -1290,9 +1560,10 @@ export default function Game() {
                 ))}
               </QuizResultsContainer>
 
-              <NextButton onClick={(e) => { 
+              <NextButton onClick={async (e) => { 
                 e.stopPropagation(); // 이벤트 전파 방지
-                navigate("/study/level6/summary"); 
+                await completeSession(); // Level 4 (게임) 완료 상태 전송
+                navigate(`/study/level6/summary?chapterId=${chapterId}`); 
               }}>
                 다음단계로
               </NextButton>

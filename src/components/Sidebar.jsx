@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 import finnolLogo from '../assets/finnol-logo.png';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import userimg from '../assets/user.svg';
 import point from '../assets/point_img.svg';
@@ -221,18 +221,7 @@ const UserParent = styled.div`
   color: #4C4C4C;
 `;
 
-const PointSection = styled.div`
-  display: flex;
-  align-items: center;
-  background-color: #ffffff;
-  border-radius: 25px;
-  padding: 0.8rem 1rem;
-  margin-bottom: 2rem;
-  justify-content: space-between;
-  position: relative;
-  overflow: visible;
-`;
-
+// Point 관련 스타일 컴포넌트들 (참조 순서 중요!)
 const PointTextWrapper = styled.div`
   display: flex;
   align-items: flex-start;
@@ -242,6 +231,7 @@ const PointTextWrapper = styled.div`
 const PointIcon = styled.img`
   width: 1.1rem;
   height: 1.1rem;
+  transition: all 0.2s ease;
 `;
 
 const PointText = styled.div`
@@ -295,6 +285,46 @@ const PointValue = styled.div`
   color: #478CEE;
   align-items: flex-end;
   display: ${props => props.collapsed ? 'none' : 'block'};
+`;
+
+// PointSection은 위의 컴포넌트들을 참조하므로 마지막에 선언
+const PointSection = styled.div`
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border-radius: 25px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 2rem;
+  justify-content: space-between;
+  position: relative;
+  overflow: visible;
+  cursor: pointer;
+
+  ${props => props.active && `
+    background-color: #478CEE;
+    ${PointText} {
+      color: white;
+    }
+    ${PointValue} {
+      color: white;
+    }
+    ${PointIcon} {
+      filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%);
+    }
+  `}
+
+  &:hover {
+    background-color: #478CEE;
+    ${PointText} {
+      color: white;
+    }
+    ${PointValue} {
+      color: white;
+    }
+    ${PointIcon} {
+      filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%);
+    }
+  }
 `;
 
 const NavigationMenu = styled.div`
@@ -386,11 +416,15 @@ const LogoutText = styled.div`
 
 function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultCollapsed = false }) {
     const navigate = useNavigate();
+    const location = useLocation();
     const [collapsed, setCollapsed] = useState(defaultCollapsed);
     const [showTooltip, setShowTooltip] = useState(false);
     const [tooltipPosition, setTooltipPosition] = useState({ left: 0, top: 0 });
     const pointIconRef = useRef(null);
     const isUserReady = !!user;
+    
+    // 현재 경로가 포인트 페이지인지 확인
+    const isPointPage = location.pathname === '/point';
     
     // 현재 페이지가 학습 페이지인지 확인
     const isStudyPage = () => {
@@ -402,12 +436,12 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
     useEffect(() => {
       const handleResize = () => {
         const currentPath = window.location.pathname;
-        const isStudyPage = currentPath.includes('/study') || currentPath.includes('/book/chapter');
+        const isStudyPage = currentPath.includes('/study') && !currentPath.includes('/book');
         
         if (window.innerWidth <= 768) {
           setCollapsed(true); // 모바일에서는 기본적으로 접힌 상태
         } else {
-          // 웹에서는 학습하기 페이지면 접힌 상태, 다른 페이지면 펼친 상태
+          // 웹에서는 학습하기 페이지(/study)만 접힌 상태, 다른 페이지면 펼친 상태
           setCollapsed(isStudyPage);
         }
       };
@@ -424,7 +458,7 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
     // 경로 변경 시 사이드바 상태 업데이트
     useEffect(() => {
       const currentPath = window.location.pathname;
-      const isStudyPage = currentPath.includes('/study');
+      const isStudyPage = currentPath.includes('/study') && !currentPath.includes('/book');
       
       if (window.innerWidth > 768) {
         setCollapsed(isStudyPage);
@@ -448,6 +482,10 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
 
     const handleMouseLeave = () => {
       setShowTooltip(false);
+    };
+
+    const handlePointClick = () => {
+      navigate('/point');
     };
 
     const logout = async () => {
@@ -559,7 +597,7 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
           )}
 
             {isUserReady && (
-            <PointSection collapsed={collapsed}>
+            <PointSection collapsed={collapsed} active={isPointPage} onClick={handlePointClick}>
               <PointTextWrapper>
                 <PointIconContainer 
                   collapsed={collapsed}
@@ -569,14 +607,14 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
                 >
                   <PointIcon src={point} alt="Points" />
                 </PointIconContainer>
-                <PointText collapsed={collapsed}>피넛</PointText>
+                <PointText collapsed={collapsed}>피넛(FINUT)</PointText>
               </PointTextWrapper>
               <PointValue collapsed={collapsed}>{(user?.coin ?? 0).toLocaleString()}</PointValue>
             </PointSection>
             )}
             
             <PointTooltip show={showTooltip} position={tooltipPosition}>
-              포인트 {user?.coin ?? 0}P
+              피넛(FINUT) {user?.coin ?? 0}F
             </PointTooltip>
 
           <NavigationMenu>
