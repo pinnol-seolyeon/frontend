@@ -695,8 +695,10 @@ export default function Game({ user }) {
   const flagImageRef = useRef(null);
   const coinSpawnFramesRef = useRef([]);
   const hurdleSpawnFramesRef = useRef([]);
+  const quizSpawnFramesRef = useRef([]);
   const coinIndexRef = useRef(0);
   const hurdleIndexRef = useRef(0);
+  const quizIndexRef = useRef(0);
   const itemsInitializedRef = useRef(false);
 
   const [flagShown, setFlagShown] = useState(false);
@@ -1005,6 +1007,7 @@ export default function Game({ user }) {
     // 고정된 개수 및 게임 길이 설정
     const TOTAL_COINS = 25;
     const TOTAL_HURDLES = 20;
+    const TOTAL_QUIZZES = 5;
     const GAME_TOTAL_FRAMES = 2400;
     const SPAWN_START_FRAME = 120;
     const FLAG_BUFFER_FRAMES = 120;
@@ -1017,18 +1020,22 @@ export default function Game({ user }) {
       const endFrame = SPAWN_END_FRAME;
       const segmentCoin = (endFrame - startFrame) / (TOTAL_COINS + 1);
       const segmentHurdle = (endFrame - startFrame) / (TOTAL_HURDLES + 1);
+      const segmentQuiz = (endFrame - startFrame) / (TOTAL_QUIZZES + 1);
 
       coinSpawnFramesRef.current = Array.from({ length: TOTAL_COINS }, (_, i) =>
         Math.floor(startFrame + segmentCoin * (i + 1)));
       hurdleSpawnFramesRef.current = Array.from({ length: TOTAL_HURDLES }, (_, i) =>
         Math.floor(startFrame + segmentHurdle * (i + 1)));
+      quizSpawnFramesRef.current = Array.from({ length: TOTAL_QUIZZES }, (_, i) =>
+        Math.floor(startFrame + segmentQuiz * (i + 1)));
 
       coinIndexRef.current = 0;
       hurdleIndexRef.current = 0;
+      quizIndexRef.current = 0;
       flagSpawnFrameRef.current = GAME_TOTAL_FRAMES;
       itemsInitializedRef.current = true;
 
-      console.log(`🎮 아이템 초기화: 코인 ${TOTAL_COINS}개, 장애물 ${TOTAL_HURDLES}개, 게임 프레임 ${GAME_TOTAL_FRAMES}`);
+      console.log(`🎮 아이템 초기화: 코인 ${TOTAL_COINS}개, 장애물 ${TOTAL_HURDLES}개, 퀴즈 ${TOTAL_QUIZZES}개, 게임 프레임 ${GAME_TOTAL_FRAMES}`);
     };
     
     const pushFlagEntity = () => {
@@ -1061,30 +1068,7 @@ export default function Game({ user }) {
     initializeItems();
     
     function spawnEntities() {
-      if (flagShown) return;
-      if (flagPushedRef.current) return;
-
-      const canvas = canvasRef.current;
-      const x = canvas.width;
-      const yBase = canvas.height - groundHeightRatioRef.current * canvas.height;
-
-      if (frameRef.current - lastQuizFrame > quizSpawnInterval && 
-          seededRandom() < 0.25 &&
-          quizCountRef.current < 5 && 
-          quizList.length > 0) {
-        
-        const img = quizBoxImageRef.current;
-        const baseWidth = canvas.width * 0.04;
-        const aspectRatio = img.naturalWidth / img.naturalHeight;
-        const width = baseWidth;
-        const height = width / aspectRatio;
-        const player = playerRef.current;
-        const y = yBase - height - player.height * 0.5;
-
-        entitiesRef.current.push({ type: 'quiz', x, y, width, height, img });
-        quizCountRef.current++;
-        lastQuizFrame = frameRef.current;          
-      }
+      // 퀴즈는 update 함수에서 고정된 프레임에 생성하므로 여기서는 제거
     }
 
     function update() {
@@ -1158,9 +1142,30 @@ export default function Game({ user }) {
           entitiesRef.current.push({ type: 'hurdle', x, y, width, height, img });
           hurdleIndexRef.current++;
         }
+        
+        // 퀴즈 생성 체크 (고정된 프레임에 생성)
+        while (quizIndexRef.current < quizSpawnFramesRef.current.length &&
+               frameRef.current >= quizSpawnFramesRef.current[quizIndexRef.current] &&
+               quizList.length > 0) {
+          const canvas = canvasRef.current;
+          const x = canvas.width;
+          const yBase = canvas.height - groundHeightRatioRef.current * canvas.height;
+          
+          const img = quizBoxImageRef.current;
+          const baseWidth = canvas.width * 0.04;
+          const aspectRatio = img.naturalWidth / img.naturalHeight;
+          const width = baseWidth;
+          const height = width / aspectRatio;
+          const player = playerRef.current;
+          const y = yBase - height - player.height * 0.5;
+          
+          entitiesRef.current.push({ type: 'quiz', x, y, width, height, img });
+          quizIndexRef.current++;
+          quizCountRef.current++;
+        }
       }
       
-      // 퀴즈는 60프레임마다 체크
+      // 퀴즈는 60프레임마다 체크 (더 이상 사용하지 않지만 호환성을 위해 유지)
       if (frameRef.current % 60 === 0 && !isPaused && !endingRef.current) {
         spawnEntities();
       }
@@ -1251,8 +1256,10 @@ export default function Game({ user }) {
       itemsInitializedRef.current = false;
       coinSpawnFramesRef.current = [];
       hurdleSpawnFramesRef.current = [];
+      quizSpawnFramesRef.current = [];
       coinIndexRef.current = 0;
       hurdleIndexRef.current = 0;
+      quizIndexRef.current = 0;
     };
     
   }, [gameOver, quizLoaded, quizList, isGameStarted, imagesLoaded]);
