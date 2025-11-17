@@ -24,6 +24,7 @@ import gameQuizTitle from '../../assets/game_quizoverlay_title.svg';
 import gameEndTitle from '../../assets/game_endoverlay_title.svg';
 import pause_btn from '../../assets/pause_btn.svg';
 import exit_btn from '../../assets/exit_btn.svg';
+
 // 폰트 import
 const fontFace = `
   @font-face {
@@ -190,7 +191,7 @@ const QuizModalBox = styled.div`
   z-index: 1;
   overflow: visible;
   margin-top: 40px;
-  pointer-events: auto; /* 모달 내부 클릭 이벤트 허용 */
+  pointer-events: auto;
   word-break: keep-all;
   white-space: pre-wrap;
   
@@ -231,8 +232,6 @@ const QuizButtonContainer = styled.div`
   justify-content: center;
   margin-bottom: 1rem;
 `;
-
-
 
 const QuizButton = styled.button`
   flex: 1;
@@ -367,7 +366,7 @@ const GameOverBox = styled.div`
   z-index: 1;
   overflow: visible;
   margin-top: 40px;
-  pointer-events: auto; /* 모달 내부 클릭 이벤트 허용 */
+  pointer-events: auto;
 `;
 
 const GameOverTitleBanner = styled.div`
@@ -452,7 +451,6 @@ const GameOverTitle = styled.div`
           drop-shadow(1px -1px 0px #333333) 
           drop-shadow(-1px -1px 0px #333333);
 `;
-
 
 const NextButton = styled.button`
   margin-top: 1rem;
@@ -646,31 +644,21 @@ export default function Game({ user }) {
   const chapterId = chapterData?.chapterId;
   const navigate = useNavigate();
   
-  // 활동 감지 Hook 사용 (level 4 - 게임)
   const { completeSession, sendExit } = useActivityTracker(
       chapterId, 
-      4, // level 4 (게임)
+      4,
       user?.userId,
       chapterData?.bookId
   );
-  
-  // chapterId가 없으면 메인 페이지로 리다이렉트
-  // useEffect(() => {
-  //   if (!chapterId) {
-  //     alert("학습을 한 뒤, 게임을 시작해주세요.");
-  //     navigate('/');
-  //   }
-  // }, [chapterId, navigate]);
   
   const canvasRef = useRef(null);
   const animationIdRef = useRef(null);
   const updateRef = useRef(null);
   
-  // 이미지 미리 로드
   const [imagesLoaded, setImagesLoaded] = useState(false);
 
   const frameRef = useRef(0);
-  const gameSpeedRef = useRef(8); // 속도 증가 (6 -> 8, 게임 길이 단축)
+  const gameSpeedRef = useRef(8);
   const backgroundXRef = useRef(0);
   const entitiesRef = useRef([]);
   const playerRef = useRef({});
@@ -684,9 +672,9 @@ export default function Game({ user }) {
   const [quizList, setQuizList] = useState([]);
   const currentQuizIndexRef = useRef(0);
 
-  const [quizLoaded, setQuizLoaded] = useState(false); // 퀴즈 로딩 상태 추가
+  const [quizLoaded, setQuizLoaded] = useState(false);
   const quizCountRef = useRef(0);
-  const quizResultsRef = useRef([]);  // 전체 퀴즈 결과 저장
+  const quizResultsRef = useRef([]);
 
   const [gameOver, setGameOver] = useState(false);
   const [quiz, setQuiz] = useState(null);
@@ -702,32 +690,31 @@ export default function Game({ user }) {
   const [wrongVisible, setWrongVisible] = useState(false);
   const [endVisible, setEndVisible] = useState(false);
 
-  //모바일 화면에서
   const [touchX,setTouchX]=useState(0);
 
   const flagImageRef = useRef(null);
+  const coinSpawnFramesRef = useRef([]);
+  const hurdleSpawnFramesRef = useRef([]);
+  const coinIndexRef = useRef(0);
+  const hurdleIndexRef = useRef(0);
+  const itemsInitializedRef = useRef(false);
 
-  const [flagScheduled, setFlagScheduled] = useState(false);
   const [flagShown, setFlagShown] = useState(false);
   const [ending, setEnding] = useState(false);
   const endingRef = useRef(false);
 
   const flagPushedRef = useRef(false);
+  const flagSpawnFrameRef = useRef(null);
 
   const [isGameStarted, setIsGameStarted] = useState(false);
   const bgmRef = useRef(null);
   
-  // Pause/Exit 모달 상태
   const [showPauseModal, setShowPauseModal] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
 
-  // 퀴즈 푸는 시간
   const quizStartTimeRef = useRef(null);
 
-
-  // 퀴즈 만났을 때 화면 정지 위함
   function snapshotState() {
-    // 모든 엔티티를 저장 (퀴즈 포함)
     pausedSnapshotRef.current = {
       frame: frameRef.current,
       gameSpeed: gameSpeedRef.current,
@@ -737,7 +724,6 @@ export default function Game({ user }) {
     };
   }
 
-  // 퀴즈 후 화면 복구 위함
   function restoreSnapshot() {
     const snap = pausedSnapshotRef.current;
     if (!snap) return;
@@ -752,7 +738,6 @@ export default function Game({ user }) {
       if (e.type === 'coin') newEntity.img = coinImageRef.current;
       else if (e.type === 'quiz') newEntity.img = quizBoxImageRef.current;
       else if (e.type === 'hurdle') {
-        // hurdle 이미지 참조 복원 - 현재는 하나의 이미지만 사용
         newEntity.img = hurdleImagesRef.current[0];
       }
       return newEntity;
@@ -762,16 +747,13 @@ export default function Game({ user }) {
     pausedSnapshotRef.current = null;
   }
 
-  // 퀴즈 정답 처리
   function handleQuizAnswer(answer) {
     if (!quiz) return;
 
-    // 정답 누른 시간
     const responseTime = Date.now() - quizStartTimeRef.current;
 
-    // 퀴즈 결과 기록
     quizResultsRef.current.push({
-      quizId: quiz.quizId, // ★ quizId 기록
+      quizId: quiz.quizId,
       question: quiz.question,
       options: quiz.options,
       correctAnswer: quiz.answer,
@@ -780,30 +762,6 @@ export default function Game({ user }) {
       responseTime,
     });
   
-    if (quizCountRef.current === 5 && !flagScheduled) {
-        setFlagScheduled(true);
-        setTimeout(() => {
-          setFlagShown(true);
-          const canvas = canvasRef.current; 
-
-          const yBase = canvas.height - groundHeightRatioRef.current * canvas.height;
-          // 원본 이미지 비율 유지
-          const baseHeight = canvas.height * 0.2;
-          const aspectRatio = flagImageRef.current.naturalWidth / flagImageRef.current.naturalHeight;
-          const flagHeight = baseHeight;
-          const flagWidth = flagHeight * aspectRatio;
-          entitiesRef.current.push({
-            type: 'flag',
-            x: canvas.width,
-            y: yBase - flagHeight,
-            width: flagWidth,
-            height: flagHeight,
-            img: flagImageRef.current
-          });
-          flagPushedRef.current = true;
-        }, 5000);
-      }
-
     if (answer === quiz.answer) {
       setQuiz(null);
       restoreSnapshot();
@@ -817,7 +775,7 @@ export default function Game({ user }) {
     } else {
       setQuiz(null);
       restoreSnapshot();
-      scoreRef.current = 0;
+      scoreRef.current = Math.max(0, scoreRef.current - 10);
       setIsPaused(false);
       bgmRef.current?.play();
       setWrongVisible(true);
@@ -826,25 +784,21 @@ export default function Game({ user }) {
     }
   }
 
-  // 퀴즈 틀렸을 때 화면 효과
   function showPenaltyEffect() {
     setPenaltyVisible(true);
     setTimeout(() => setPenaltyVisible(false), 800);
   }
 
-  // 코인 먹었을 때 화면 효과
   function showGainEffect() {
     setGainVisible(true);
     setTimeout(() => setGainVisible(false), 800);
   }
 
-  // 게임 끝날 때 화면 효과
   function showEndEffect() {
     setEndVisible(true);
     setTimeout(() => setEndVisible(false), 800);
   }
 
-  // 이미지 미리 로드
   useEffect(() => {
     const loadImages = () => {
       const images = [
@@ -881,9 +835,7 @@ export default function Game({ user }) {
     loadImages();
   }, []);
 
-  // 챕터 별 퀴즈 불러오기 (level 4 API 사용)
   useEffect(() => {
-    // chapterId가 없으면 퀴즈 로딩 시도하지 않음 (리다이렉트됨)
     if (!chapterId) return;
     
     async function loadQuiz() {
@@ -892,22 +844,20 @@ export default function Game({ user }) {
         const level4Data = await fetchChapterContents(4, chapterId, chapterData?.bookId);
         console.log("✅ Level 4 (퀴즈) 응답:", level4Data);
         
-        // quiz 배열 추출
         const quizData = level4Data?.quiz || [];
         console.log("✅ 퀴즈 데이터:", quizData);
         setQuizList(quizData);
-        setQuizLoaded(true); // 퀴즈 로딩 완료 상태 설정
+        setQuizLoaded(true);
       } catch (err) {
         console.error("❌ 퀴즈 불러오기 실패:", err);
-        setQuizList([]); // 실패 시 빈 배열로 설정
-        setQuizLoaded(true); // 실패해도 게임은 진행되도록
+        setQuizList([]);
+        setQuizLoaded(true);
       }
     }
 
     loadQuiz();
   }, [chapterId]);
 
-  // 화면 크기 변경 감지 및 캐릭터 크기 조정
   useEffect(() => {
     const handleResize = () => {
       if (canvasRef.current && playerImageRef.current) {
@@ -917,7 +867,6 @@ export default function Game({ user }) {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         
-        // 캐릭터 크기 재조정
         const baseHeight = canvas.height * 0.22;
         if (playerImageRef.current && playerImageRef.current.naturalWidth > 0) {
           const aspectRatio = playerImageRef.current.naturalWidth / playerImageRef.current.naturalHeight;
@@ -936,13 +885,11 @@ export default function Game({ user }) {
   }, []);
 
   useEffect(() => {
-    // 퀴즈와 이미지가 모두 로드되지 않았으면 게임 시작하지 않음
     if (!quizLoaded || !isGameStarted || !imagesLoaded) return;
     
     if (gameOver) {
         saveCoinToDB(scoreRef.current, chapterId);
         
-        // API 형식에 맞게 데이터 변환
         const formattedResults = quizResultsRef.current.map(result => ({
           quizId: result.quizId,
           question: result.question,
@@ -951,7 +898,7 @@ export default function Game({ user }) {
           userAnswer: result.userAnswer,
           responseTime: result.responseTime,
           userId: user?.userId || '',
-          quizDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD 형식
+          quizDate: new Date().toISOString().split('T')[0],
           isCorrect: result.isCorrect
         }));
         
@@ -965,15 +912,15 @@ export default function Game({ user }) {
     const bgImg = new Image(); bgImg.src = backgroundImg;
     const playerImage = new Image(); 
     playerImage.onload = () => {
-      // 이미지 로드 완료 후 캐릭터 크기 재조정
       resizeCanvas();
     };
     playerImage.src = playerImg;
     playerImageRef.current = playerImage;
 
-    const hurdleImages = [new Image(), new Image()]; 
-    hurdleImages[0].src = hurdle1Img;
-    // hurdleImages[1].src = hurdle2Img;
+    const hurdleImages = [];
+    const hurdleImage1 = new Image();
+    hurdleImage1.src = hurdle1Img;
+    hurdleImages.push(hurdleImage1);
     hurdleImagesRef.current = hurdleImages;
     const coinImage = new Image(); coinImage.src = coinImg; coinImageRef.current = coinImage;
     const quizBoxImage = new Image(); quizBoxImage.src = quizBoxImg; quizBoxImageRef.current = quizBoxImage;
@@ -992,16 +939,14 @@ export default function Game({ user }) {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
       const player = playerRef.current;
-      // 원본 이미지 비율 유지 - 이미지가 로드되었을 때만
       const baseHeight = canvas.height * 0.22;
       if (playerImageRef.current && playerImageRef.current.naturalWidth > 0) {
         const aspectRatio = playerImageRef.current.naturalWidth / playerImageRef.current.naturalHeight;
         player.height = baseHeight;
         player.width = player.height * aspectRatio;
       } else {
-        // 이미지가 로드되지 않았을 때는 기본값 사용
         player.height = baseHeight;
-        player.width = baseHeight * 0.6; // 임시 비율
+        player.width = baseHeight * 0.6;
       }
       player.y = canvas.height - groundHeightRatio * canvas.height - player.height;
     }
@@ -1019,7 +964,7 @@ export default function Game({ user }) {
     }
 
     function showQuiz() {
-      console.log("퀴즈 표시 시도, quizList 길이:", quizList.length); // 디버그 로그 추가
+      console.log("퀴즈 표시 시도, quizList 길이:", quizList.length);
       
       if (quizList.length === 0) {
         console.warn("⚠️ 퀴즈 없음 - 게임 계속 진행");
@@ -1039,7 +984,7 @@ export default function Game({ user }) {
       const derivedQuizId = nextQuiz?.quizId ?? nextQuiz?.id ?? nextQuiz?._id ?? nextQuiz?.questionId;
 
       setQuiz({
-        quizId: derivedQuizId, // robust quizId
+        quizId: derivedQuizId,
         question: nextQuiz.quiz,
         options: nextQuiz.options,
         answer: nextQuiz.answer,
@@ -1048,38 +993,73 @@ export default function Game({ user }) {
     }
 
     let lastQuizFrame = -1000;
-    const quizSpawnInterval = 700; // 900 -> 700으로 감소 (게임 길이 단축)
+    const quizSpawnInterval = 700;
     
-    // 고정 시드를 사용한 랜덤 생성기 (모두에게 동일한 코인/장애물)
-    let seed = chapterId ? parseInt(chapterId.slice(-8), 16) : 12345; // chapterId 기반 시드
+    // 고정 시드를 사용한 랜덤 생성기
+    let seed = chapterId ? parseInt(chapterId.slice(-8), 16) : 12345;
     const seededRandom = () => {
       seed = (seed * 9301 + 49297) % 233280;
       return seed / 233280;
     };
     
-    // 고정된 개수의 코인과 장애물 위치 미리 생성
-    const TOTAL_COINS = 10;
-    const TOTAL_HURDLES = 15;
-    const GAME_DURATION_FRAMES = 1200; // 게임 예상 길이 (프레임 수) - 2000에서 1200으로 감소 (약 40% 단축)
+    // 고정된 개수 및 게임 길이 설정
+    const TOTAL_COINS = 25;
+    const TOTAL_HURDLES = 20;
+    const GAME_TOTAL_FRAMES = 2400;
+    const SPAWN_START_FRAME = 120;
+    const FLAG_BUFFER_FRAMES = 120;
+    const SPAWN_END_FRAME = GAME_TOTAL_FRAMES - FLAG_BUFFER_FRAMES;
     
-    const coinSpawnFrames = [];
-    const hurdleSpawnFrames = [];
-    
-    // 코인 생성 위치 미리 결정
-    for (let i = 0; i < TOTAL_COINS; i++) {
-      coinSpawnFrames.push(Math.floor(seededRandom() * GAME_DURATION_FRAMES) + 100);
-    }
-    coinSpawnFrames.sort((a, b) => a - b);
-    
-    // 장애물 생성 위치 미리 결정
-    for (let i = 0; i < TOTAL_HURDLES; i++) {
-      hurdleSpawnFrames.push(Math.floor(seededRandom() * GAME_DURATION_FRAMES) + 100);
-    }
-    hurdleSpawnFrames.sort((a, b) => a - b);
-    
-    let coinIndex = 0;
-    let hurdleIndex = 0;
+    const initializeItems = () => {
+      if (itemsInitializedRef.current) return;
 
+      const startFrame = SPAWN_START_FRAME;
+      const endFrame = SPAWN_END_FRAME;
+      const segmentCoin = (endFrame - startFrame) / (TOTAL_COINS + 1);
+      const segmentHurdle = (endFrame - startFrame) / (TOTAL_HURDLES + 1);
+
+      coinSpawnFramesRef.current = Array.from({ length: TOTAL_COINS }, (_, i) =>
+        Math.floor(startFrame + segmentCoin * (i + 1)));
+      hurdleSpawnFramesRef.current = Array.from({ length: TOTAL_HURDLES }, (_, i) =>
+        Math.floor(startFrame + segmentHurdle * (i + 1)));
+
+      coinIndexRef.current = 0;
+      hurdleIndexRef.current = 0;
+      flagSpawnFrameRef.current = GAME_TOTAL_FRAMES;
+      itemsInitializedRef.current = true;
+
+      console.log(`🎮 아이템 초기화: 코인 ${TOTAL_COINS}개, 장애물 ${TOTAL_HURDLES}개, 게임 프레임 ${GAME_TOTAL_FRAMES}`);
+    };
+    
+    const pushFlagEntity = () => {
+      const canvas = canvasRef.current;
+      if (!canvas || !flagImageRef.current) return;
+      const yBase = canvas.height - groundHeightRatioRef.current * canvas.height;
+      const baseHeight = canvas.height * 0.2;
+      const aspectRatio = flagImageRef.current.naturalWidth / flagImageRef.current.naturalHeight || 1;
+      const flagHeight = baseHeight;
+      const flagWidth = flagHeight * aspectRatio;
+      entitiesRef.current.push({
+        type: 'flag',
+        x: canvas.width,
+        y: yBase - flagHeight,
+        width: flagWidth,
+        height: flagHeight,
+        img: flagImageRef.current
+      });
+      setFlagShown(true);
+      flagPushedRef.current = true;
+    };
+
+    const maybeSpawnFlag = () => {
+      if (flagPushedRef.current) return;
+      if (frameRef.current < flagSpawnFrameRef.current) return;
+      pushFlagEntity();
+    };
+    
+    // 게임 시작 시 바로 초기화
+    initializeItems();
+    
     function spawnEntities() {
       if (flagShown) return;
       if (flagPushedRef.current) return;
@@ -1087,63 +1067,24 @@ export default function Game({ user }) {
       const canvas = canvasRef.current;
       const x = canvas.width;
       const yBase = canvas.height - groundHeightRatioRef.current * canvas.height;
-      const candidates = [];
 
-      // 퀴즈가 로드된 경우에만 퀴즈 박스 생성
       if (frameRef.current - lastQuizFrame > quizSpawnInterval && 
-          seededRandom() < 0.25 && // Math.random() 대신 seededRandom() 사용
+          seededRandom() < 0.25 &&
           quizCountRef.current < 5 && 
-          quizList.length > 0) { // 퀴즈 리스트가 있을 때만
-        candidates.push('quiz');
+          quizList.length > 0) {
+        
+        const img = quizBoxImageRef.current;
+        const baseWidth = canvas.width * 0.04;
+        const aspectRatio = img.naturalWidth / img.naturalHeight;
+        const width = baseWidth;
+        const height = width / aspectRatio;
+        const player = playerRef.current;
+        const y = yBase - height - player.height * 0.5;
+
+        entitiesRef.current.push({ type: 'quiz', x, y, width, height, img });
         quizCountRef.current++;
         lastQuizFrame = frameRef.current;          
       }
-
-      // 코인을 고정된 프레임에 생성
-      if (coinIndex < TOTAL_COINS && frameRef.current >= coinSpawnFrames[coinIndex]) {
-        candidates.push('coin');
-        coinIndex++;
-      }
-      
-      // 장애물을 고정된 프레임에 생성
-      if (hurdleIndex < TOTAL_HURDLES && frameRef.current >= hurdleSpawnFrames[hurdleIndex]) {
-        candidates.push('hurdle');
-        hurdleIndex++;
-      }
-
-      candidates.forEach(type => {
-        let width, height, y, img;
-        const player = playerRef.current;
-
-        if (type === 'hurdle') {
-          const idx = Math.floor(seededRandom() * hurdleImagesRef.current.length); // Math.random() 대신 seededRandom() 사용
-          img = hurdleImagesRef.current[idx];
-          // 원본 이미지 비율 유지하면서 크기 축소
-          const baseWidth = canvas.width * 0.04; // 기본 너비를 더 작게 (8% -> 4%)
-          const aspectRatio = img.naturalWidth / img.naturalHeight; // 원본 비율
-          width = baseWidth;
-          height = width / aspectRatio; // 비율에 맞춰 높이 계산
-          y = yBase - height - 30; // 허들을 잔디밭에서 20px 위에 떠있게
-        } else if (type === 'coin') {
-          img = coinImageRef.current;
-          width = canvas.width * 0.04;
-          height = width;
-          y = yBase - height - player.height * 1.3;
-        } else if (type === 'quiz') {
-          img = quizBoxImageRef.current;
-          // 원본 이미지 비율 유지하면서 크기 축소
-          const baseWidth = canvas.width * 0.04; // 기본 너비를 더 작게 (15% -> 6%)
-          const aspectRatio = img.naturalWidth / img.naturalHeight; // 원본 비율
-          width = baseWidth;
-          height = width / aspectRatio; // 비율에 맞춰 높이 계산
-          y = yBase - height - player.height * 0.5; // 여우 머리 높이 정도에 위치
-        }
-
-        const isTooClose = entitiesRef.current.some(e => Math.abs(e.x - x) < width * 4);
-        if (type === 'quiz' || !isTooClose) {
-          entitiesRef.current.push({ type, x, y, width, height, img });
-        }
-      });
     }
 
     function update() {
@@ -1155,19 +1096,16 @@ export default function Game({ user }) {
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // 이미지 스무딩 비활성화 (선명한 이미지)
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       
       const scale = (canvas.height / bgImg.height);
-      // 정수로 반올림하여 픽셀 정렬 문제 방지
       const drawW = Math.ceil(bgImg.width * scale);
       const drawH = Math.ceil(canvas.height);
       
       backgroundX -= gameSpeedRef.current;
       if (backgroundX <= -drawW) backgroundX = 0;
       
-      // 1픽셀 오버랩으로 하얀 선 방지
       for (let x = Math.floor(backgroundX); x < canvas.width + drawW; x += drawW) {
         ctx.drawImage(bgImg, 0, 0, bgImg.width, bgImg.height, x, 0, drawW + 1, drawH);
       }
@@ -1183,6 +1121,46 @@ export default function Game({ user }) {
       }
       ctx.drawImage(playerImageRef.current, player.x, player.y, player.width, player.height);
 
+      // 코인과 장애물 생성 - 정확한 프레임에 생성
+      if (!isPaused && !endingRef.current) {
+        maybeSpawnFlag();
+        
+        // 코인 생성 체크
+        while (coinIndexRef.current < coinSpawnFramesRef.current.length &&
+               frameRef.current >= coinSpawnFramesRef.current[coinIndexRef.current]) {
+          const canvas = canvasRef.current;
+          const x = canvas.width;
+          const yBase = canvas.height - groundHeightRatioRef.current * canvas.height;
+          const player = playerRef.current;
+          
+          const img = coinImageRef.current;
+          const width = canvas.width * 0.04;
+          const height = width;
+          const y = yBase - height - player.height * 1.3;
+          entitiesRef.current.push({ type: 'coin', x, y, width, height, img });
+          coinIndexRef.current++;
+        }
+        
+        // 장애물 생성 체크
+        while (hurdleIndexRef.current < hurdleSpawnFramesRef.current.length &&
+               frameRef.current >= hurdleSpawnFramesRef.current[hurdleIndexRef.current]) {
+          const canvas = canvasRef.current;
+          const x = canvas.width;
+          const yBase = canvas.height - groundHeightRatioRef.current * canvas.height;
+          
+          const idx = Math.floor(seededRandom() * hurdleImagesRef.current.length);
+          const img = hurdleImagesRef.current[idx];
+          const baseWidth = canvas.width * 0.04;
+          const aspectRatio = img.naturalWidth / img.naturalHeight;
+          const width = baseWidth;
+          const height = width / aspectRatio;
+          const y = yBase - height - 30;
+          entitiesRef.current.push({ type: 'hurdle', x, y, width, height, img });
+          hurdleIndexRef.current++;
+        }
+      }
+      
+      // 퀴즈는 60프레임마다 체크
       if (frameRef.current % 60 === 0 && !isPaused && !endingRef.current) {
         spawnEntities();
       }
@@ -1205,14 +1183,14 @@ export default function Game({ user }) {
           finishSound.volume = 0.7;
           finishSound.play().catch(err => console.warn("끝 효과음 재생 실패:", err));
           showEndEffect();
-          break; // 루프 탈출
+          break;
         }
 
         if (ent.type === 'quiz' && !quiz && ent.x + ent.width < player.x) {
-            console.log("퀴즈 박스와 충돌 감지!"); // 디버그 로그 추가
+            console.log("퀴즈 박스와 충돌 감지!");
             cancelAnimationFrame(animationIdRef.current);
-            entities.splice(i, 1); // 퀴즈를 먼저 제거
-            snapshotState(); // 그 다음에 스냅샷 저장
+            entities.splice(i, 1);
+            snapshotState();
             setIsPaused(true);
             showQuiz();
             return;
@@ -1233,36 +1211,16 @@ export default function Game({ user }) {
             entities.splice(i, 1);
             i--;
           }
-        //    else if (ent.type === 'flag') {
-        //     if (ent.x + ent.width < player.x && !endingRef.current) {
-        //     endingRef.current = true;
-        //     playerImageRef.current = playerEndImage;
-        //     entities.splice(i, 1);
-        //     bgmRef.current?.pause();
-        //     bgmRef.current.currentTime = 0; // 🎵 완전 정지
-        //     const finishSound = new Audio(require('../../assets/cute-level-up-3-189853.mp3'));
-        //     finishSound.volume = 0.7;
-        //     finishSound.play().catch(err => console.warn("끝 효과음 재생 실패:", err));
-        //     showEndEffect();
-        //   }
-        // }
         }
       }
 
-      // 점수 표시 (나중에 사용)
-      // ctx.font = `${canvas.width * 0.02}px Arial`;
-      // ctx.fillStyle = 'black';
-      // ctx.fillText('Score: ' + scoreRef.current, canvas.width - 200, 50);
-
       if (!isPaused) {
         frameRef.current++;
-        // 게임 속도는 고정 픽셀 단위로 설정
-        // gameSpeedRef.current += 0.1; // 필요시 속도 증가 활성화
       }
       animationIdRef.current = requestAnimationFrame(updateRef.current);
 
       if (endingRef.current) {
-        player.x += 5; // 고정 픽셀 단위로 이동
+        player.x += 5;
         if (player.x > canvas.width) {
           setGameOver(true);
           cancelAnimationFrame(animationIdRef.current);
@@ -1281,33 +1239,24 @@ export default function Game({ user }) {
         triggerJump();
     };
 
-    //키보드, 클릭, 터치 이벤트 ㄷ등록
     document.addEventListener('keydown',handleInput);
     document.addEventListener('click',handleInput);
     document.addEventListener('touchstart',handleInput);
 
-    //clean-up
     return()=>{
       window.removeEventListener('resize',resizeCanvas);
       document.removeEventListener('keydown',handleInput);
       document.removeEventListener('click',handleInput);
       document.removeEventListener('touchstart',handleInput);
+      itemsInitializedRef.current = false;
+      coinSpawnFramesRef.current = [];
+      hurdleSpawnFramesRef.current = [];
+      coinIndexRef.current = 0;
+      hurdleIndexRef.current = 0;
     };
-
-    // //점프
-    // document.addEventListener('keydown', e => {
-    //   const player = playerRef.current;
-    //   if (e.code === 'Space' && !player.isJumping && !gameOver && !isPaused) {
-    //     player.vy = player.jumpForce;
-    //     player.isJumping = true;
-    //   }
-    // });
-
-    // return () => window.removeEventListener('resize', resizeCanvas);
     
-  }, [gameOver, quizLoaded, quizList, isGameStarted, imagesLoaded]); // imagesLoaded를 의존성에 추가
+  }, [gameOver, quizLoaded, quizList, isGameStarted, imagesLoaded]);
 
-  //모바일 환경 점프
   const triggerJump=()=>{
     console.log("점프 클릭");
     const player=playerRef.current;
@@ -1317,33 +1266,18 @@ export default function Game({ user }) {
     }
   };
 
-  // useEffect(()=>{
-  //   const handleGlobalClick=()=>{
-  //     triggerJump();
-  //   };
-
-  //   document.body.addEventListener('click',handleGlobalClick);
-  //   document.body.addEventListener('touchstart',handleGlobalClick);
-
-  //   return()=>{
-  //     document.body.removeEventListener('click',handleGlobalClick);
-  //     document.body.removeEventListener('touchstart',handleGlobalClick);
-  //   };
-  // },[gameOver,isPaused]);
-
   useEffect(() => {
 
-  if (!bgmRef.current) return; // ✅ ref가 null이면 아무 것도 하지 않음
+  if (!bgmRef.current) return;
   const bgm = bgmRef.current;
 
   const tryPlayBGM = () => {
     if (bgm) {
-      bgm.volume = 0.5; // 적당한 볼륨
+      bgm.volume = 0.5;
       bgm.play().catch(err => console.warn("🎵 BGM 자동재생 실패:", err));
     }
   };
 
-  // 사용자 상호작용 후 재생 보장 (브라우저 정책 회피)
   window.addEventListener('click', tryPlayBGM, { once: true });
 
   return () => {
@@ -1353,7 +1287,6 @@ export default function Game({ user }) {
   };
 }, []);
 
-  // Pause 버튼 핸들러
   const handlePauseClick = (e) => {
     e.stopPropagation();
     setShowPauseModal(true);
@@ -1362,7 +1295,6 @@ export default function Game({ user }) {
     snapshotState();
   };
 
-  // Exit 버튼 핸들러
   const handleExitClick = (e) => {
     e.stopPropagation();
     setShowExitModal(true);
@@ -1371,7 +1303,6 @@ export default function Game({ user }) {
     snapshotState();
   };
 
-  // Pause 모달 - 게임 재개 (EXIT 상태 전송 안 함)
   const handleResume = () => {
     console.log('▶️ 게임 재개 - EXIT 상태 전송하지 않음');
     setShowPauseModal(false);
@@ -1380,19 +1311,16 @@ export default function Game({ user }) {
     animationIdRef.current = requestAnimationFrame(updateRef.current);
   };
 
-  // Pause 모달 - 게임 종료 (EXIT 상태 전송)
   const handleExitFromPause = async () => {
-    await sendExit(); // EXIT 상태 전송
+    await sendExit();
     navigate('/main');
   };
 
-  // Exit 모달 - 확인 (EXIT 상태 전송)
   const handleConfirmExit = async () => {
-    await sendExit(); // EXIT 상태 전송
+    await sendExit();
     navigate('/main');
   };
 
-  // Exit 모달 - 취소 (EXIT 상태 전송 안 함)
   const handleCancelExit = () => {
     console.log('🚫 Exit 취소 - EXIT 상태 전송하지 않음');
     setShowExitModal(false);
@@ -1401,7 +1329,6 @@ export default function Game({ user }) {
     animationIdRef.current = requestAnimationFrame(updateRef.current);
   };
 
-  // 로딩 화면 표시 (게임이 시작되지 않았을 때는 시작 화면을 보여줌)
   if (!quizLoaded || !imagesLoaded) {
     return (
       <LoadingOverlay>
@@ -1412,12 +1339,9 @@ export default function Game({ user }) {
 
   return (
     <>
-      {/*모바일 점프 추가*/}
-      
       <GameCanvas ref={canvasRef} onClick={triggerJump} onTouchStart={triggerJump} /> 
       <audio ref={bgmRef} src={bgmSrc} loop />
       
-      {/* Pause/Exit 버튼 */}
       {isGameStarted && !gameOver && (
         <GameControls>
           <ControlButton src={pause_btn} alt="일시정지" onClick={handlePauseClick} />
@@ -1438,7 +1362,7 @@ export default function Game({ user }) {
                   <QuizButton 
                     key={idx} 
                     onClick={(e) => {
-                      e.stopPropagation(); // 이벤트 전파 방지
+                      e.stopPropagation();
                       handleQuizAnswer(opt);
                     }}
                     isOdd={idx % 2 === 0}
@@ -1460,7 +1384,7 @@ export default function Game({ user }) {
 
       {wrongVisible && (
         <WrongNotification>
-          오답입니다! 점수 0으로
+          오답입니다! -10점
         </WrongNotification>
       )}
 
@@ -1482,7 +1406,6 @@ export default function Game({ user }) {
         </EndNotification>
       )}
       
-      {/* Pause 모달 */}
       {showPauseModal && (
         <ModalOverlay onClick={(e) => e.stopPropagation()}>
           <ModalBox>
@@ -1502,7 +1425,6 @@ export default function Game({ user }) {
         </ModalOverlay>
       )}
       
-      {/* Exit 모달 */}
       {showExitModal && (
         <ModalOverlay onClick={(e) => e.stopPropagation()}>
           <ModalBox>
@@ -1529,7 +1451,6 @@ export default function Game({ user }) {
             <GameOverContent>
               <GameOverTitle>완주완료!!</GameOverTitle>
 
-            {/* 퀴즈 결과 요약 */}
               <GameResultBox>
                 <GameResultItem1>
                   <GameResultTitle>퀴즈 결과</GameResultTitle>
@@ -1547,7 +1468,6 @@ export default function Game({ user }) {
                 </GameResultItem2>
               </GameResultBox>
 
-            {/* 퀴즈 상세 결과 */}
               <QuizResultsContainer>
               {quizResultsRef.current.map((result, index) => (
                   <QuizResultItem key={index} isCorrect={result.isCorrect}>
@@ -1561,8 +1481,8 @@ export default function Game({ user }) {
               </QuizResultsContainer>
 
               <NextButton onClick={async (e) => { 
-                e.stopPropagation(); // 이벤트 전파 방지
-                await completeSession(); // Level 4 (게임) 완료 상태 전송
+                e.stopPropagation();
+                await completeSession();
                 navigate(`/study/level6/summary?chapterId=${chapterId}`); 
               }}>
                 다음단계로
@@ -1578,7 +1498,6 @@ export default function Game({ user }) {
             <TitleBanner />
             
             <ModalContent>
-          {/* 게임 설명 / 튜토리얼 */}
               <TutorialBox>
                 <TutorialItem>
                   <img src={gameStartCoin} alt="코인" />
@@ -1598,9 +1517,8 @@ export default function Game({ user }) {
                 마우스를 클릭하거나 화면을 터치하여 점프하세요!
               </TutorialJump>
 
-          {/* 시작 버튼 */}
               <StartButton onClick={(e) => {
-                e.stopPropagation(); // 이벤트 전파 방지
+                e.stopPropagation();
             bgmRef.current?.play();
             setIsGameStarted(true);
               }} />
