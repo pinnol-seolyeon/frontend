@@ -8,6 +8,7 @@ import quizClosedImg from '../../assets/game3/Quiz_Box_Closed.png';
 import quizOpenedImg from '../../assets/game3/Quiz_Box_Opened.png';
 import quizHalfBanner from '../../assets/game3/Quiz_Popup_Half.png';
 import quizPopupImg from '../../assets/game3/Quiz_Popup.png';
+import quizPopupTopImg from '../../assets/game3/GameBox_Top.png';
 import quizCorrectImg from '../../assets/game3/Quiz_Answer_Correct_Fx.png';
 import quizIncorrectImg from '../../assets/game3/Quiz_Answer_Incorrect_Fx.png';
 import gameResultTopImg from '../../assets/game3/game_result_top.png';
@@ -221,22 +222,34 @@ const ModalCard = styled.div`
   width: auto;
   max-width: 80%;
   background-color: #ffffff;
-  border: 15px solid rgb(202, 178, 233);
-  border-radius: 100px;
-  padding: 3rem 1rem 1rem 1rem;
+  border: 10px solid #F3EAD9;
+  border-radius: 50px;
+  padding: 1rem;
   box-shadow: 0 6px 24px rgba(0,0,0,0.15);
   pointer-events: auto;
   z-index: 1;
 `;
 
+const QuizModalTop = styled.img`
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20%;
+  height: auto;
+  pointer-events: none;
+  z-index: 2;
+`;
+
 const ModalCardContent = styled.div`
-  padding: 2rem;
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
   font-family: 'KNPSOdaesan', sans-serif !important;
+  gap: 1rem;
 `;
 
 const QuestionText = styled.div`
@@ -266,13 +279,15 @@ const ChoiceButton = styled.button`
   font-size: 22px;
   font-weight: 700;
   padding: 0.75rem 1rem;
-  border-radius: 12px;
+  border-radius: 20px;
   border: 2px solid #333;
-  background: #f5f5f5;
+  background: ${props => props.$isOdd ? '#C3BBAB' : '#F27457'};
   cursor: pointer;
   text-align: center;
   line-height: 1.4;
-  &:hover { background: #ececec; }
+  &:hover { 
+    background: ${props => props.$isOdd ? '#B7B0A0' : '#EB7D53'};
+  }
 `;
 
 const FinishOverlay = styled.div`
@@ -373,10 +388,10 @@ const EndCard = styled.div`
   display: inline-block;
   width: auto;
   max-width: 80%;
-  background-color: #E8FAFF;
-  border: 15px solid #C2F0FF;
-  border-radius: 100px;
-  padding: 1rem 1rem 1rem 1rem;
+  background-color: #FFFFFF;
+  border: 15px solid #E9BFA5;
+  border-radius: 80px;
+  padding: 3rem 1rem 1rem 1rem;
   box-shadow: 0 6px 24px rgba(0,0,0,0.15);
   pointer-events: auto;
   z-index: 1;
@@ -441,7 +456,7 @@ const EndQuizResultItem = styled.div`
   font-size: 15px;
   border-radius: 10px;
   color: #454545;
-  background-color: #ffffff;
+  background-color: #F3EAD9;
   font-family: 'KNPSOdaesan', sans-serif !important;
 `;
 
@@ -482,14 +497,14 @@ const EndNextButton = styled.button`
   padding: 0.5rem 1.2rem;
   font-size: 0.95rem;
   cursor: pointer;
-  background-color: #C2F0FF;
-  border: 2px solid #478CEE;
+  background-color: #F3EAD9;
+  border: 2px solid #D97B59;
   border-radius: 30px;
-  color: #478CEE;
+  color: #D97B59;
   font-weight: 700;
   font-family: 'KNPSOdaesan', sans-serif !important;
   &:hover {
-    background-color: #A8E0F0;
+    background-color:rgb(243, 225, 192);
   }
 `;
 
@@ -580,6 +595,19 @@ const SHELF_SLOTS = 4;
 const QUIZ_REWARD = 10;
 const MAX_STACK = 3;
 const QUIZ_BOXES = 5;
+
+const dedupeQuizList = (rawList = []) => {
+  const unique = new Map();
+  rawList.forEach((raw, index) => {
+    const questionText = raw?.quiz ?? raw?.question ?? raw?.questionText ?? '';
+    const baseKey = raw?.quizId ?? raw?.id ?? raw?._id ?? raw?.questionId ?? index;
+    const key = `${baseKey}::${questionText}`;
+    if (!unique.has(key)) {
+      unique.set(key, raw);
+    }
+  });
+  return Array.from(unique.values());
+};
 
 function generateInitialBoard() {
   // Total slots: 6*5*3 = 90
@@ -732,8 +760,8 @@ const Game3 = () => {
       try {
         if (!chapterId) return;
         const data = await fetchQuizByChapterId(chapterId);
-        setQuizList(Array.isArray(data) ? data : []);
-        // Reset used quiz indices when quiz list changes
+        const deduped = dedupeQuizList(Array.isArray(data) ? data : []);
+        setQuizList(deduped);
         usedQuizIndicesRef.current.clear();
       } catch (e) {
         setQuizList([]);
@@ -1259,12 +1287,17 @@ const Game3 = () => {
       {quizOpen && currentQuiz && (
         <ModalBackdrop onClick={() => setQuizOpen(null)}>
           <ModalCardWrapper onClick={(e) => e.stopPropagation()}>
+            <QuizModalTop src={quizPopupTopImg} alt="quiz-popup-top" />
             <ModalCard>
               <ModalCardContent>
                 <QuestionText>{currentQuiz.question}</QuestionText>
                 <ChoiceButtonContainer>
                   {currentQuiz.options.map((ch, idx) => (
-                    <ChoiceButton key={idx} onClick={() => answerQuiz(idx)}>
+                    <ChoiceButton
+                      key={idx}
+                      $isOdd={(idx + 1) % 2 === 1}
+                      onClick={() => answerQuiz(idx)}
+                    >
                       {ch}
                     </ChoiceButton>
                   ))}
