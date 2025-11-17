@@ -28,6 +28,8 @@ import StatusDetail from './pages/Status_Detail';
 import Game2 from './pages/game/Game2';
 import Point from './pages/Point';
 import Game2Ready from './pages/game/Game2Ready';
+import Game3Ready from './pages/game/Game3Ready';
+import Game3 from './pages/game/Game3';
 
 const GlobalStyles = createGlobalStyle`
   ${reset};
@@ -70,6 +72,8 @@ const routes = [
   {path:'/status/detail',element:<StatusDetail/>},
   {path:'/point',element:<Point/>},
   {path:'/game2/ready',element:<Game2Ready/>},
+  {path:'/game3/ready',element:<Game3Ready/>},
+  {path:'/game3',element:<Game3/>},
 ];
 
 export default function AppRoutes({ login, setLogin, user }) {
