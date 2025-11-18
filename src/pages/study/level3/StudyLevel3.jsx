@@ -16,6 +16,7 @@ import TtsPlayer from "../../../components/TtsPlayer";
 import api from "../../../api/login/axiosInstance";
 import { useActivityTracker } from "../../../hooks/useActivityTracker";
 import ladybugImage from "../../../assets/ladybug.png";
+import { winBadge } from "../../../api/analyze/winBadge";
 
 
 /*학습하기-3단계-1*/
@@ -407,6 +408,11 @@ function StudyPage({ user, login, setLogin }){
     const [ladybugs, setLadybugs] = useState([]); // [{id, x, y, createdAt}]
     const [ladybugCount, setLadybugCount] = useState(0); // 총 나타난 무당벌레 수
     const [questionClickTime, setQuestionClickTime] = useState(null); // 질문하기 클릭 시간
+    const [firstLadybugTime, setFirstLadybugTime] = useState(null); // 첫 번째 무당벌레 생성 시간
+    const [lastLadybugSpawnTime, setLastLadybugSpawnTime] = useState(null); // 마지막 무당벌레 생성 시간
+    const [clickedLadybugs, setClickedLadybugs] = useState([]); // 클릭한 무당벌레 [{id, clickedAt}]
+    const [consecutiveClicks, setConsecutiveClicks] = useState(0); // 연속 클릭 카운트
+    const [lastClickTime, setLastClickTime] = useState(null); // 마지막 클릭 시간
 
     // 활동 감지 Hook 사용 (level 3)
     const { completeSession } = useActivityTracker(
@@ -420,12 +426,26 @@ function StudyPage({ user, login, setLogin }){
     const spawnLadybug = () => {
         if (ladybugCount >= 3) return; // 최대 3마리
 
-        const id = Date.now();
+        const now = Date.now();
+        const id = now;
         const x = Math.random() * (window.innerWidth - 100); // 화면 너비 내 랜덤
         const y = Math.random() * (window.innerHeight - 100); // 화면 높이 내 랜덤
 
-        setLadybugs(prev => [...prev, { id, x, y, createdAt: Date.now() }]);
-        setLadybugCount(prev => prev + 1);
+        // 첫 번째 무당벌레 생성 시간 기록
+        if (ladybugCount === 0) {
+            setFirstLadybugTime(now);
+            console.log('🐞 첫 번째 무당벌레 생성 시간 기록:', now);
+        }
+
+        setLadybugs(prev => [...prev, { id, x, y, createdAt: now }]);
+        const newCount = ladybugCount + 1;
+        setLadybugCount(newCount);
+        
+        // 마지막 무당벌레 생성 시간 기록 (3마리 모두 생성되었을 때)
+        if (newCount === 3) {
+            setLastLadybugSpawnTime(now);
+            console.log('🐞 마지막 무당벌레 생성 시간 기록:', now);
+        }
 
         console.log('🐞 무당벌레 생성:', { id, x, y, count: ladybugCount + 1 });
 
@@ -437,16 +457,78 @@ function StudyPage({ user, login, setLogin }){
     };
 
     // 무당벌레 클릭 핸들러
-    const handleLadybugClick = (id) => {
+    const handleLadybugClick = async (id) => {
         // 질문하기 클릭 2초 이내인지 확인
         if (questionClickTime && Date.now() - questionClickTime < 2000) {
             console.log('❌ 무당벌레 클릭 무효 (질문하기 클릭 2초 이내)');
             return;
         }
 
+        const clickTime = Date.now();
+        const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+
+        // 연속 클릭 체크 (이전 클릭과 2초 이내면 연속으로 간주)
+        let newConsecutiveClicks = 1;
+        if (lastClickTime && clickTime - lastClickTime < 2000) {
+            newConsecutiveClicks = consecutiveClicks + 1;
+        }
+        
+        // 클릭한 무당벌레 기록 (상태 업데이트 전에 계산)
+        const newClickedLadybugs = [...clickedLadybugs, { id, clickedAt: clickTime }];
+        const totalClicked = newClickedLadybugs.length;
+
+        // 상태 업데이트
+        setClickedLadybugs(newClickedLadybugs);
+        setConsecutiveClicks(newConsecutiveClicks);
+        setLastClickTime(clickTime);
+
+        // 무당벌레 제거
         setLadybugs(prev => prev.filter(lb => lb.id !== id));
-        console.log('✅ 무당벌레 클릭 제거:', id);
+        console.log('✅ 무당벌레 클릭 제거:', id, `총 ${totalClicked}마리 클릭`);
+
+        // 뱃지 획득 체크
+        if (chapterId) {
+            const badgesToWin = [];
+
+            // SPEED_HUNTER: 모든 무당벌레(3마리)를 마지막 무당벌레 생성 후 2초 이내에 클릭
+            if (lastLadybugSpawnTime && totalClicked === 3) {
+                const timeElapsed = clickTime - lastLadybugSpawnTime;
+                if (timeElapsed <= 2000) {
+                    badgesToWin.push('SPEED_HUNTER');
+                    console.log('🏆 SPEED_HUNTER 뱃지 획득 조건 만족! (마지막 무당벌레 생성 후 2초 이내 3마리 클릭)');
+                }
+            }
+
+            // FINE_HUNTER: 연속 3마리 클릭 성공 (각 클릭 사이가 2초 이내)
+            if (newConsecutiveClicks >= 3) {
+                badgesToWin.push('FINE_HUNTER');
+                console.log('🏆 FINE_HUNTER 뱃지 획득 조건 만족! (연속 3마리 클릭)');
+            }
+
+            // 뱃지 획득 API 호출
+            if (badgesToWin.length > 0) {
+                try {
+                    await winBadge(chapterId, badgesToWin);
+                    console.log('✅ 뱃지 획득 성공:', badgesToWin);
+                } catch (error) {
+                    console.error('❌ 뱃지 획득 실패:', error);
+                }
+            }
+        }
     };
+
+    // 무당벌레가 모두 사라지면 상태 리셋
+    useEffect(() => {
+        if (ladybugs.length === 0 && ladybugCount >= 3) {
+            console.log('🔄 무당벌레 상태 리셋');
+            setLadybugCount(0);
+            setFirstLadybugTime(null);
+            setLastLadybugSpawnTime(null);
+            setClickedLadybugs([]);
+            setConsecutiveClicks(0);
+            setLastClickTime(null);
+        }
+    }, [ladybugs.length, ladybugCount]);
 
     // 무당벌레 랜덤 생성 (10~30초마다)
     useEffect(() => {
