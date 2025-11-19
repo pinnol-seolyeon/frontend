@@ -136,7 +136,8 @@ const BoardWrapper = styled.div`
 /* GridOverlay removed */
 
 const Cell = styled.button`
-    background: #ffffff;
+    // background: #ffffff;
+    background: rgba(255, 255, 255, 0.5);
     border: 1px solid #E5BE8B;
     position: relative;
     display: flex;

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Sidebar from '../../components/Sidebar';
 import ReviewPageCSS from '../review/ReviewPage.css';
+import { fetchReviewList } from '../../api/review/fetchReview';
 
 const Wrapper = styled.div`
   background-color: #ffffff;
@@ -145,6 +146,16 @@ const ReviewButton = styled.button`
   font-weight: 700;
   color: #F0F4FC;
   background-color: #2D7BED;
+  transition: opacity 0.2s;
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
 `;
 
 const ReviewText = styled.div`
@@ -157,99 +168,86 @@ const ReviewText = styled.div`
   gap: 0.5rem;
 `;
 
+// 아이콘 매핑 함수 (chapterId 또는 chapterTitle 기반)
+const getChapterIcon = (chapterId, chapterTitle) => {
+  const id = String(chapterId).toLowerCase();
+  const title = String(chapterTitle).toLowerCase();
+  
+  if (id.includes('1') || title.includes('기초') || title.includes('1단계')) return "📘";
+  if (id.includes('2') || title.includes('저축') || title.includes('투자') || title.includes('2단계')) return "💰";
+  if (id.includes('3') || title.includes('소비') || title.includes('3단계')) return "🛒";
+  if (id.includes('4') || title.includes('용돈') || title.includes('4단계')) return "💵";
+  if (id.includes('5') || title.includes('미래') || title.includes('5단계')) return "🎯";
+  if (id.includes('6') || title.includes('금융') || title.includes('생활') || title.includes('6단계')) return "🏦";
+  
+  return "📚"; // 기본 아이콘
+};
+
 function ReviewPage({ user, login, setLogin }) {
   const navigate = useNavigate();
   
-  // API 관련 상태 및 로직은 임시로 주석 처리
-  // const { userProgress } = useOutletContext();
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [completedStages, setCompletedStages] = useState([]);
+  const [reviewModules, setReviewModules] = useState([]);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [paginationInfo, setPaginationInfo] = useState({
+    totalPages: 0,
+    totalElements: 0,
+    first: true,
+    last: true
+  });
 
-  // API 호출 부분은 임시로 주석 처리
-  // useEffect(() => {
-  //   const initializePage = async () => {
-  //     try {
-  //       setLoading(true);
-  //       if (!auth.currentUser) {
-  //         throw new Error('로그인이 필요합니다.');
-  //       }
-        
-  //       // completedSteps 데이터 처리
-  //       const completed = Array.isArray(userProgress?.completedSteps) 
-  //         ? userProgress.completedSteps 
-  //         : Object.keys(userProgress?.completedSteps || {}).map(Number);
-        
-  //       setCompletedStages(completed);
-  //     } catch (error) {
-  //       console.error('Review page error:', error);
-  //       setError(error.message || '페이지를 불러오는 중 오류가 발생했습니다.');
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   initializePage();
-  // }, [userProgress]);
-
-  // 임시 데이터로 표시 (API 연결 전)
+  // API 호출
   useEffect(() => {
-    // 임시로 모든 단계를 완료 상태로 설정
-    setCompletedStages([1, 2, 3, 4, 5, 6]);
-    setLoading(false);
-  }, []);
+    const loadReviewData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const data = await fetchReviewList(currentPage);
+        
+        // API 응답 데이터를 컴포넌트 형식으로 변환
+        const modules = (data.content || []).map((chapter) => {
+          const isFirstReviewAvailable = chapter.lockStatus?.firstReview !== 'LOCKED';
+          const isSecondReviewAvailable = chapter.lockStatus?.secondReview !== 'LOCKED';
+          
+          return {
+            chapterId: chapter.chapterId,
+            title: chapter.chapterTitle,
+            subTitle: "복습 가능한 단원입니다",
+            icon: getChapterIcon(chapter.chapterId, chapter.chapterTitle),
+            firstReviewAvailable: isFirstReviewAvailable,
+            secondReviewAvailable: isSecondReviewAvailable,
+            // 복습하기 버튼은 firstReview가 가능하면 활성화
+            // 퀴즈풀기 버튼은 secondReview가 가능하면 활성화
+          };
+        });
+        
+        setReviewModules(modules);
+        setPaginationInfo({
+          totalPages: data.totalPages || 0,
+          totalElements: data.totalElements || 0,
+          first: data.first || false,
+          last: data.last || false
+        });
+      } catch (error) {
+        console.error('Review page error:', error);
+        setError(error.message || '페이지를 불러오는 중 오류가 발생했습니다.');
+        setReviewModules([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const reviewModules = [
-    {
-      title: "1단계: 금융의 기초",
-      completed: completedStages.includes(1),
-      subTitle: "마지막 복습 8일전, 퀴즈 풀기 10번",
-      icon: "📘",
-      id: 1
-    },
-    {
-      title: "2단계: 저축과 투자",
-      completed: completedStages.includes(2),
-      subTitle: "마지막 복습 8일전, 퀴즈 풀기 10번",
-      icon: "💰",
-      id: 2
-    },
-    {
-      title: "3단계: 현명한 소비",
-      completed: completedStages.includes(3),
-      subTitle: "마지막 복습 8일전, 퀴즈 풀기 10번",
-      icon: "🛒",
-      id: 3
-    },
-    {
-      title: "4단계: 용돈 관리",
-      completed: completedStages.includes(4),
-      subTitle: "마지막 복습 8일전, 퀴즈 풀기 10번",
-      icon: "💵",
-      id: 4
-    },
-    {
-      title: "5단계: 미래 설계",
-      completed: completedStages.includes(5),
-      subTitle: "마지막 복습 8일전, 퀴즈 풀기 10번",
-      icon: "🎯",
-      id: 5
-    },
-    {
-      title: "6단계: 금융 생활",
-      completed: completedStages.includes(6),
-      subTitle: "마지막 복습 8일전, 퀴즈 풀기 10번",
-      icon: "🏦",
-      id: 6
-    }
-  ];
+    loadReviewData();
+  }, [currentPage]);
 
-  const handleReview = (moduleId) => {
-    navigate(`/main/learning/${moduleId}`, { state: { isReview: true }});
+  const handleReview = (chapterId) => {
+    navigate(`/main/learning/${chapterId}`, { state: { isReview: true }});
   };
 
-  const handleQuiz = (moduleId) => {
-    navigate(`/main/learning/${moduleId}`, { state: { isReview: true, isQuiz: true }});
+  const handleQuiz = (chapterId) => {
+    navigate(`/main/learning/${chapterId}`, { state: { isReview: true, isQuiz: true }});
   };
 
   if (loading) return <div className="loading">로딩 중...</div>;
@@ -266,33 +264,45 @@ function ReviewPage({ user, login, setLogin }) {
               <SubTitleText>이전 학습 내용을 복습하고 실력을 다져보세요!</SubTitleText>
             </TitleWrapper>
             <ReviewContainer>
-              {reviewModules.map((module) => (
-                <ReviewCard key={module.id}>
-                  <ReviewContent>
-                    <ReviewIconContainer>
-                      <ReviewIcon>
-                        {module.icon}
-                      </ReviewIcon>
-                    </ReviewIconContainer>
-                    <ReviewText>
-                      <ReviewTitle>
-                        {module.title}
-                      </ReviewTitle>
-                      <ReviewSubTitle>
-                        {module.subTitle}
-                      </ReviewSubTitle>
-                    </ReviewText>
-                  </ReviewContent>
-                  <ReviewButtons>
-                    <ReviewButton onClick={() => handleReview(module.id)} disabled={!module.completed}>
-                      복습하기
-                    </ReviewButton>
-                    <ReviewButton onClick={() => handleQuiz(module.id)} disabled={!module.completed}>
-                      퀴즈풀기
-                    </ReviewButton>
-                  </ReviewButtons>
-                </ReviewCard>
-              ))}
+              {reviewModules.length === 0 && !loading ? (
+                <div style={{ width: '100%', textAlign: 'center', padding: '2rem', color: '#9E9E9E' }}>
+                  복습할 단원이 없습니다.
+                </div>
+              ) : (
+                reviewModules.map((module) => (
+                  <ReviewCard key={module.chapterId}>
+                    <ReviewContent>
+                      <ReviewIconContainer>
+                        <ReviewIcon>
+                          {module.icon}
+                        </ReviewIcon>
+                      </ReviewIconContainer>
+                      <ReviewText>
+                        <ReviewTitle>
+                          {module.title}
+                        </ReviewTitle>
+                        <ReviewSubTitle>
+                          {module.subTitle}
+                        </ReviewSubTitle>
+                      </ReviewText>
+                    </ReviewContent>
+                    <ReviewButtons>
+                      <ReviewButton 
+                        onClick={() => handleReview(module.chapterId)} 
+                        disabled={!module.firstReviewAvailable}
+                      >
+                        1차 복습
+                      </ReviewButton>
+                      <ReviewButton 
+                        onClick={() => handleQuiz(module.chapterId)} 
+                        disabled={!module.secondReviewAvailable}
+                      >
+                        2차 복습
+                      </ReviewButton>
+                    </ReviewButtons>
+                  </ReviewCard>
+                ))
+              )}
             </ReviewContainer>
           </ContentContainer>
           {/* <div className="review-page">

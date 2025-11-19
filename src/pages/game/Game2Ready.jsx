@@ -148,7 +148,7 @@ export default function Game2Ready() {
 
                     <CoinWrapper>
                         <CoinImage src={Coin} alt="coin" />
-                        <CoinText>+ 3</CoinText>
+                        <CoinText>+ 2</CoinText>
                     </CoinWrapper>
                 </DescribeItem>
                 <DescribeItem>
@@ -158,7 +158,7 @@ export default function Game2Ready() {
                     </DescribeItemWrapper>
                     <CoinWrapper>
                         <CoinImage src={Coin} alt="coin" />
-                        <CoinText>+ 5</CoinText>
+                        <CoinText>+ 4</CoinText>
                     </CoinWrapper>
                 </DescribeItem>
                 <DescribeItem>
@@ -168,7 +168,7 @@ export default function Game2Ready() {
                     </DescribeItemWrapper>
                     <CoinWrapper>
                         <CoinImage src={Coin} alt="coin" />
-                        <CoinText>+ 7</CoinText>
+                        <CoinText>+ 5</CoinText>
                     </CoinWrapper>
                 </DescribeItem>
             </DescribeWrapper>

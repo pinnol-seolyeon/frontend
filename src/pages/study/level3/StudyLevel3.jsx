@@ -354,7 +354,7 @@ const Ladybug = styled.div`
     cursor: pointer;
     z-index: 9999;
     transition: transform 0.3s ease;
-    animation: float 3s ease-in-out infinite;
+    animation: float 4s ease-in-out infinite;
     user-select: none;
     
     &:hover {
@@ -362,11 +362,20 @@ const Ladybug = styled.div`
     }
     
     @keyframes float {
-        0%, 100% {
-            transform: translateY(0px);
+        0% {
+            transform: translate(0, 0) rotate(0deg);
+        }
+        25% {
+            transform: translate(var(--move-x-1, 30px), var(--move-y-1, -20px)) rotate(5deg);
         }
         50% {
-            transform: translateY(-20px);
+            transform: translate(var(--move-x-2, -20px), var(--move-y-2, -30px)) rotate(-5deg);
+        }
+        75% {
+            transform: translate(var(--move-x-3, 25px), var(--move-y-3, -10px)) rotate(3deg);
+        }
+        100% {
+            transform: translate(0, 0) rotate(0deg);
         }
     }
 `;
@@ -431,13 +440,32 @@ function StudyPage({ user, login, setLogin }){
         const x = Math.random() * (window.innerWidth - 100); // 화면 너비 내 랜덤
         const y = Math.random() * (window.innerHeight - 100); // 화면 높이 내 랜덤
 
+        // 각 무당벌레마다 랜덤한 움직임 값 생성 (자유로운 이동을 위해)
+        const moveX1 = (Math.random() - 0.5) * 60; // -30 ~ 30px
+        const moveY1 = (Math.random() - 0.5) * 60; // -30 ~ 30px
+        const moveX2 = (Math.random() - 0.5) * 60; // -30 ~ 30px
+        const moveY2 = (Math.random() - 0.5) * 60; // -30 ~ 30px
+        const moveX3 = (Math.random() - 0.5) * 60; // -30 ~ 30px
+        const moveY3 = (Math.random() - 0.5) * 60; // -30 ~ 30px
+
         // 첫 번째 무당벌레 생성 시간 기록
         if (ladybugCount === 0) {
             setFirstLadybugTime(now);
             console.log('🐞 첫 번째 무당벌레 생성 시간 기록:', now);
         }
 
-        setLadybugs(prev => [...prev, { id, x, y, createdAt: now }]);
+        setLadybugs(prev => [...prev, { 
+            id, 
+            x, 
+            y, 
+            createdAt: now,
+            moveX1,
+            moveY1,
+            moveX2,
+            moveY2,
+            moveX3,
+            moveY3
+        }]);
         const newCount = ladybugCount + 1;
         setLadybugCount(newCount);
         
@@ -880,6 +908,12 @@ const stopVoiceRecognition = () => {
                 style={{
                     left: `${ladybug.x}px`,
                     top: `${ladybug.y}px`,
+                    ['--move-x-1']: `${ladybug.moveX1 || 30}px`,
+                    ['--move-y-1']: `${ladybug.moveY1 || -20}px`,
+                    ['--move-x-2']: `${ladybug.moveX2 || -20}px`,
+                    ['--move-y-2']: `${ladybug.moveY2 || -30}px`,
+                    ['--move-x-3']: `${ladybug.moveX3 || 25}px`,
+                    ['--move-y-3']: `${ladybug.moveY3 || -10}px`,
                 }}
                 onClick={() => handleLadybugClick(ladybug.id)}
             >

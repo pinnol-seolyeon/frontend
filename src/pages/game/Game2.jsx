@@ -732,6 +732,19 @@ export default function Game2() {
   const quizResultsRef = useRef([]);
   const virusSpawnTimerRef = useRef(0);
   const coinSpawnTimerRef = useRef(0);
+  // 고정된 개수 추적
+  const virusCountRef = useRef({ 
+    total: 0, 
+    reward2: 0,  // 2점 바이러스 개수
+    reward4: 0,  // 4점 바이러스 개수
+    reward5: 0   // 5점 바이러스 개수
+  });
+  const coinCountRef = useRef(0);
+  const virusSpawnedRef = useRef(false); // 바이러스 생성 완료 여부
+  const coinSpawnedRef = useRef(false); // 코인 생성 완료 여부
+  const gameStartTimeRef = useRef(null); // 게임 시작 시간
+  const lastVirusSpawnTimeRef = useRef(0); // 마지막 바이러스 생성 시간
+  const lastCoinSpawnTimeRef = useRef(0); // 마지막 코인 생성 시간
   const quizAlertYRef = useRef(-100);
   const gameEndXRef = useRef(-100);
   const initialQuizScheduledRef = useRef(false);
@@ -949,13 +962,13 @@ export default function Game2() {
 
   useEffect(() => {
     if (!isGameRunning || isPaused || gameEnded) return;
-    const MAX_DURATION_MS = 50000;
+    const MAX_DURATION_MS = 30000; // 50초 -> 30초로 단축
     const timerId = setTimeout(() => {
       if (quizTimerRef.current) {
         clearTimeout(quizTimerRef.current);
         quizTimerRef.current = null;
       }
-      // 게임 종료 이미지 표시 시작 (50초 타이머 - 퀴즈 완료와 별개)
+      // 게임 종료 이미지 표시 시작 (30초 타이머 - 퀴즈 완료와 별개)
       setShowGameEnd(true);
       gameEndXRef.current = -window.innerWidth; // 왼쪽 화면 밖에서 시작
       setGameEndX(-window.innerWidth);
@@ -1105,37 +1118,84 @@ export default function Game2() {
   const spawnVirus = () => {
     if (isQuizActive || showQuizAlert || showGameEnd || gameEnded || allQuizzesCompleted) return;
     
+    // 이미 모든 바이러스가 생성되었으면 더 이상 생성하지 않음
+    if (virusSpawnedRef.current) return;
+    
     const canvas = canvasRef.current;
     if (!canvas) return;
     
-    virusSpawnTimerRef.current += 16;
-    if (virusSpawnTimerRef.current >= 1500) {
+    if (!gameStartTimeRef.current) return;
+    
+    // 목표 개수: 2점 10개, 4점 5개, 5점 8개 (총 23개)
+    const targetCounts = { reward2: 10, reward4: 5, reward5: 8 };
+    const totalTarget = 23;
+    
+    // 이미 목표 개수에 도달했으면 생성 중단
+    if (virusCountRef.current.total >= totalTarget) {
+      virusSpawnedRef.current = true;
+      return;
+    }
+    
+    // 고정된 간격으로 고르게 생성 (30초 / 23개 = 약 1.3초마다 1개)
+    const gameDuration = 30000; // 30초
+    const spawnInterval = gameDuration / totalTarget; // 각 바이러스 생성 간격
+    const elapsed = Date.now() - gameStartTimeRef.current;
+    
+    // 현재까지 생성되어야 할 개수 계산
+    const expectedIndex = Math.floor(elapsed / spawnInterval);
+    
+    // 현재 생성된 개수가 예상 인덱스보다 적고, 최소 간격이 지났으면 생성
+    const timeSinceLastSpawn = elapsed - lastVirusSpawnTimeRef.current;
+    const minInterval = spawnInterval * 0.8; // 최소 간격 (80%로 여유 있게)
+    
+    if (virusCountRef.current.total < expectedIndex && timeSinceLastSpawn >= minInterval) {
       const topBarHeight = 80;
       
-      const virusTypes = [
-        { 
-          type: 'enemy3', 
-          image: enemy3ImageRef.current, 
-          attackedImage: enemy3AttackedImageRef.current,
-          speed: 3.0, 
-          reward: 3 
-        },
-        { 
-          type: 'enemy2', 
-          image: enemy2ImageRef.current, 
-          attackedImage: enemy2AttackedImageRef.current,
-          speed: 2.4, 
-          reward: 5 
-        },
-        { 
-          type: 'enemy1', 
-          image: enemy1ImageRef.current, 
+      // 필요한 바이러스 타입 결정
+      let chosen = null;
+      const availableTypes = [];
+      
+      // 2점 바이러스가 더 필요하면 추가
+      if (virusCountRef.current.reward2 < targetCounts.reward2) {
+        availableTypes.push({
+          type: 'enemy1',
+          image: enemy1ImageRef.current,
           attackedImage: enemy1AttackedImageRef.current,
-          speed: 1.8, 
-          reward: 7 
-        },
-      ];
-      const chosen = virusTypes[Math.floor(Math.random() * virusTypes.length)];
+          speed: 1.8,
+          reward: 2
+        });
+      }
+      
+      // 4점 바이러스가 더 필요하면 추가
+      if (virusCountRef.current.reward4 < targetCounts.reward4) {
+        availableTypes.push({
+          type: 'enemy2',
+          image: enemy2ImageRef.current,
+          attackedImage: enemy2AttackedImageRef.current,
+          speed: 2.4,
+          reward: 4
+        });
+      }
+      
+      // 5점 바이러스가 더 필요하면 추가
+      if (virusCountRef.current.reward5 < targetCounts.reward5) {
+        availableTypes.push({
+          type: 'enemy3',
+          image: enemy3ImageRef.current,
+          attackedImage: enemy3AttackedImageRef.current,
+          speed: 3.0,
+          reward: 5
+        });
+      }
+      
+      // 사용 가능한 타입이 없으면 생성 중단
+      if (availableTypes.length === 0) {
+        virusSpawnedRef.current = true;
+        return;
+      }
+      
+      // 사용 가능한 타입 중 랜덤 선택
+      chosen = availableTypes[Math.floor(Math.random() * availableTypes.length)];
       
       virusesRef.current.push({
         x: Math.random() * (canvas.width - 60),
@@ -1150,18 +1210,57 @@ export default function Game2() {
         attacked: false,
         attackedTime: 0,
       });
-      virusSpawnTimerRef.current = 0;
+      
+      // 생성된 바이러스 개수 업데이트
+      virusCountRef.current.total++;
+      if (chosen.reward === 2) virusCountRef.current.reward2++;
+      else if (chosen.reward === 4) virusCountRef.current.reward4++;
+      else if (chosen.reward === 5) virusCountRef.current.reward5++;
+      
+      // 마지막 생성 시간 업데이트
+      lastVirusSpawnTimeRef.current = elapsed;
+      
+      // 모든 바이러스 생성 완료 확인
+      if (virusCountRef.current.total >= totalTarget) {
+        virusSpawnedRef.current = true;
+      }
     }
   };
 
   // 코인 스폰 및 업데이트
   const spawnCoin = () => {
     if (isQuizActive || showQuizAlert || showGameEnd || gameEnded || allQuizzesCompleted) return;
+    
+    // 이미 모든 코인이 생성되었으면 더 이상 생성하지 않음
+    if (coinSpawnedRef.current) return;
+    
     const canvas = canvasRef.current;
     if (!canvas) return;
-    coinSpawnTimerRef.current += 16;
-    if (coinSpawnTimerRef.current >= 1300) {
-      coinSpawnTimerRef.current = 0;
+    
+    if (!gameStartTimeRef.current) return;
+    
+    // 목표 개수: 10개
+    const targetCoinCount = 10;
+    
+    // 이미 목표 개수에 도달했으면 생성 중단
+    if (coinCountRef.current >= targetCoinCount) {
+      coinSpawnedRef.current = true;
+      return;
+    }
+    
+    // 고정된 간격으로 고르게 생성 (30초 / 10개 = 3초마다 1개)
+    const gameDuration = 30000; // 30초
+    const spawnInterval = gameDuration / targetCoinCount; // 각 코인 생성 간격
+    const elapsed = Date.now() - gameStartTimeRef.current;
+    
+    // 현재까지 생성되어야 할 개수 계산
+    const expectedIndex = Math.floor(elapsed / spawnInterval);
+    
+    // 현재 생성된 개수가 예상 인덱스보다 적고, 최소 간격이 지났으면 생성
+    const timeSinceLastSpawn = elapsed - lastCoinSpawnTimeRef.current;
+    const minInterval = spawnInterval * 0.8; // 최소 간격 (80%로 여유 있게)
+    
+    if (coinCountRef.current < expectedIndex && timeSinceLastSpawn >= minInterval) {
       const size = Math.max(32, Math.min(56, Math.floor(window.innerWidth * 0.04)));
       const x = Math.random() * (canvas.width - size);
       coinsRef.current.push({
@@ -1170,7 +1269,19 @@ export default function Game2() {
         width: size,
         height: size,
         speed: 3.5,
+        reward: 5,
       });
+      
+      // 생성된 코인 개수 업데이트
+      coinCountRef.current++;
+      
+      // 마지막 생성 시간 업데이트
+      lastCoinSpawnTimeRef.current = elapsed;
+      
+      // 모든 코인 생성 완료 확인
+      if (coinCountRef.current >= targetCoinCount) {
+        coinSpawnedRef.current = true;
+      }
     }
   };
 
@@ -1418,6 +1529,14 @@ export default function Game2() {
       playerRef.current.y = canvas.height - safeZoneHeight - playerRef.current.height;
     }
     
+    // 게임 시작 시 바이러스/코인 카운터 초기화
+    virusCountRef.current = { total: 0, reward2: 0, reward4: 0, reward5: 0 };
+    coinCountRef.current = 0;
+    virusSpawnedRef.current = false;
+    coinSpawnedRef.current = false;
+    gameStartTimeRef.current = Date.now(); // 게임 시작 시간 기록
+    lastVirusSpawnTimeRef.current = 0;
+    lastCoinSpawnTimeRef.current = 0;
     setIsGameRunning(true);
   }, [quizLoaded, isGameStarted, isGameRunning]);
 
