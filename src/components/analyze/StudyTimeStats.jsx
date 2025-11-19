@@ -197,12 +197,13 @@ export default function StudyTimeStats() {
     
     return dayNames.map(day => {
       const dayData = weeklyStats[day] || {};
+      // dawn을 night로 합침 (새벽 시간대는 night로 표시)
       return {
         day,
         morning: dayData.morning || 0,
         afternoon: dayData.afternoon || 0,
         evening: dayData.evening || 0,
-        night: dayData.night || 0,
+        dawn: dayData.dawn || 0,
       };
     });
   };
@@ -279,7 +280,7 @@ export default function StudyTimeStats() {
                 <Bar dataKey="morning" stackId="a" fill="#BFDBFF" name="오전" />
                 <Bar dataKey="afternoon" stackId="a" fill="#FFDD8F" name="낮" />
                 <Bar dataKey="evening" stackId="a" fill="#EAD4FF" name="저녁" />
-                <Bar dataKey="night" stackId="a" fill="#C5F8B5" name="새벽" />
+                <Bar dataKey="dawn" stackId="a" fill="#C5F8B5" name="새벽" />
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>

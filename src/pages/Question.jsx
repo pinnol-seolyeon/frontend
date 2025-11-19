@@ -222,8 +222,8 @@ const ReceiveMessage = styled.div`
     color: #333333;
 
     
-    max-width: 80%;
-    word-wrap: break-word;
+    max-width: 60%;
+    word-wrap: normal;
     white-space: pre-wrap;
     
     animation: ${fadeIn} 0.3s ease-out;

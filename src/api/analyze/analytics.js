@@ -191,18 +191,18 @@ function transformWeeklyPatternData(apiData) {
     'MORNING': 'morning',
     'AFTERNOON': 'afternoon',
     'EVENING': 'evening',
-    'NIGHT': 'night'
+    'DAWN': 'dawn'
   };
 
   // 초기화: 요일별 시간대별 분 초기화
   const weeklyStats = {
-    '일': { morning: 0, afternoon: 0, evening: 0, night: 0 },
-    '월': { morning: 0, afternoon: 0, evening: 0, night: 0 },
-    '화': { morning: 0, afternoon: 0, evening: 0, night: 0 },
-    '수': { morning: 0, afternoon: 0, evening: 0, night: 0 },
-    '목': { morning: 0, afternoon: 0, evening: 0, night: 0 },
-    '금': { morning: 0, afternoon: 0, evening: 0, night: 0 },
-    '토': { morning: 0, afternoon: 0, evening: 0, night: 0 }
+    '일': { morning: 0, afternoon: 0, evening: 0, dawn: 0 },
+    '월': { morning: 0, afternoon: 0, evening: 0, dawn: 0 },
+    '화': { morning: 0, afternoon: 0, evening: 0, dawn: 0 },
+    '수': { morning: 0, afternoon: 0, evening: 0, dawn: 0 },
+    '목': { morning: 0, afternoon: 0, evening: 0, dawn: 0 },
+    '금': { morning: 0, afternoon: 0, evening: 0, dawn: 0 },
+    '토': { morning: 0, afternoon: 0, evening: 0, dawn: 0 }
   };
 
   // 전체 시간대별 총합 (preferredType 계산용)
@@ -210,7 +210,7 @@ function transformWeeklyPatternData(apiData) {
     morning: 0,
     afternoon: 0,
     evening: 0,
-    night: 0
+    dawn: 0
   };
 
   // API 데이터 변환
@@ -259,7 +259,7 @@ function transformWeeklyPatternData(apiData) {
         preferredType = '낮형';
       } else if (totalByTimeZone.evening === maxTime) {
         preferredType = '밤형';
-      } else if (totalByTimeZone.night === maxTime) {
+      } else if (totalByTimeZone.dawn === maxTime) {
         preferredType = '새벽형';
       }
     }

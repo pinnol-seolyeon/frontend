@@ -71,13 +71,53 @@ const GameControls = styled.div`
   position: fixed;
   top: 2rem;
   right: 2rem;
+  left: 2rem;
   display: flex;
   gap: 1rem;
+  justify-content: space-between;
   z-index: 5;
   pointer-events: auto;
 `;
 
-const ControlButton = styled.img`
+const CoinDisplay = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  
+  img {
+    width: 50px;
+    height: 50px;
+  }
+`;
+
+const CoinText = styled.div`
+  font-size: 2rem;
+  font-weight: bold;
+  font-family: 'DungeonFighterOnlineBeatBeat', "Noto Sans KR", sans-serif !important;
+  color: #ffffff;
+
+  text-shadow: 
+    -2px -2px 0 #104EA7,
+    2px -2px 0 #104EA7,
+    -2px 2px 0 #104EA7,
+    2px 2px 0 #104EA7;
+
+`;
+
+const CoinImage = styled.img`
+  width: 50px;
+  height: 50px;
+`;
+
+const ControlDisplay = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+`;
+
+const ControlButton = styled.img` 
   width: 50px;
   height: 50px;
   cursor: pointer;
@@ -658,11 +698,17 @@ export default function Game({ user }) {
   const [imagesLoaded, setImagesLoaded] = useState(false);
 
   const frameRef = useRef(0);
-  const gameSpeedRef = useRef(8);
+  const gameSpeedRef = useRef(16); // 속도 조절
   const backgroundXRef = useRef(0);
   const entitiesRef = useRef([]);
   const playerRef = useRef({});
   const pausedSnapshotRef = useRef(null);
+  
+  // 시간 기반 애니메이션을 위한 변수들
+  const lastTimeRef = useRef(performance.now());
+  const targetFPS = 60; // 목표 FPS
+  const frameTime = 1000 / targetFPS; // 목표 프레임 시간 (ms)
+  const gameTimeRef = useRef(0); // 게임 시간 (초)
 
   const playerImageRef = useRef(null);
   const coinImageRef = useRef(null);
@@ -710,6 +756,11 @@ export default function Game({ user }) {
 
   const [isGameStarted, setIsGameStarted] = useState(false);
   const bgmRef = useRef(null);
+  
+  // 코인 사운드 미리 생성 (프레임 드롭 방지)
+  // 여러 개 준비해서 재생 중인 사운드가 있어도 즉시 재생 가능
+  const coinSoundPoolRef = useRef([]);
+  const coinSoundIndexRef = useRef(0);
   
   const [showPauseModal, setShowPauseModal] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
@@ -834,6 +885,23 @@ export default function Game({ user }) {
       });
     };
 
+    // 코인 사운드 풀 미리 생성 (초반 렉 방지)
+    const coinSoundPool = [];
+    for (let i = 0; i < 3; i++) {
+      const audio = new Audio(require('../../assets/coin-recieved-230517.mp3'));
+      audio.volume = 0.7;
+      audio.preload = 'auto';
+      // 미리 재생했다가 멈춰서 디코딩 완료 상태로 만들기
+      audio.play().then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+      }).catch(() => {
+        // 자동 재생이 차단되어도 무시 (나중에 사용자 액션으로 재생 가능)
+      });
+      coinSoundPool.push(audio);
+    }
+    coinSoundPoolRef.current = coinSoundPool;
+
     loadImages();
   }, []);
 
@@ -932,9 +1000,13 @@ export default function Game({ user }) {
     flagImageRef.current = flagImage;
 
     const groundHeightRatio = 0.15;
+    // 원래 프레임 기반 값 유지 (deltaTime으로 정규화)
     playerRef.current = {
       x: 100, y: 0, width: 0, height: 0,
-      vy: 0, gravity: 1.8, jumpForce: -35, isJumping: false,
+      vy: 0, 
+      gravity: 2.5, // 중력 증가: 1.8 -> 2.5 (더 빠르게 떨어짐)
+      jumpForce: -40, // 점프 높이 증가: -35 -> -50
+      isJumping: false,
     };
 
     function resizeCanvas() {
@@ -1004,38 +1076,39 @@ export default function Game({ user }) {
       return seed / 233280;
     };
     
-    // 고정된 개수 및 게임 길이 설정
+    // 고정된 개수 및 게임 길이 설정 (시간 기반으로 변경)
     const TOTAL_COINS = 25;
     const TOTAL_HURDLES = 20;
     const TOTAL_QUIZZES = 5;
-    const GAME_TOTAL_FRAMES = 2400;
-    const SPAWN_START_FRAME = 120;
-    const FLAG_BUFFER_FRAMES = 120;
-    const SPAWN_END_FRAME = GAME_TOTAL_FRAMES - FLAG_BUFFER_FRAMES;
+    const GAME_TOTAL_TIME = 28; // 게임 총 시간 단축: 40초 -> 28초 (아이템 개수는 동일, 빈 공간만 줄임)
+    const SPAWN_START_TIME = 1; // 스폰 시작 시간 단축: 2초 -> 1초
+    const FLAG_BUFFER_TIME = 1; // 플래그 버퍼 시간 단축: 2초 -> 1초
+    const SPAWN_END_TIME = GAME_TOTAL_TIME - FLAG_BUFFER_TIME;
     
     const initializeItems = () => {
       if (itemsInitializedRef.current) return;
 
-      const startFrame = SPAWN_START_FRAME;
-      const endFrame = SPAWN_END_FRAME;
-      const segmentCoin = (endFrame - startFrame) / (TOTAL_COINS + 1);
-      const segmentHurdle = (endFrame - startFrame) / (TOTAL_HURDLES + 1);
-      const segmentQuiz = (endFrame - startFrame) / (TOTAL_QUIZZES + 1);
+      const startTime = SPAWN_START_TIME;
+      const endTime = SPAWN_END_TIME;
+      const segmentCoin = (endTime - startTime) / (TOTAL_COINS + 1);
+      const segmentHurdle = (endTime - startTime) / (TOTAL_HURDLES + 1);
+      const segmentQuiz = (endTime - startTime) / (TOTAL_QUIZZES + 1);
 
+      // 시간 기반 스폰 시간 배열로 변경
       coinSpawnFramesRef.current = Array.from({ length: TOTAL_COINS }, (_, i) =>
-        Math.floor(startFrame + segmentCoin * (i + 1)));
+        startTime + segmentCoin * (i + 1));
       hurdleSpawnFramesRef.current = Array.from({ length: TOTAL_HURDLES }, (_, i) =>
-        Math.floor(startFrame + segmentHurdle * (i + 1)));
+        startTime + segmentHurdle * (i + 1));
       quizSpawnFramesRef.current = Array.from({ length: TOTAL_QUIZZES }, (_, i) =>
-        Math.floor(startFrame + segmentQuiz * (i + 1)));
+        startTime + segmentQuiz * (i + 1));
 
       coinIndexRef.current = 0;
       hurdleIndexRef.current = 0;
       quizIndexRef.current = 0;
-      flagSpawnFrameRef.current = GAME_TOTAL_FRAMES;
+      flagSpawnFrameRef.current = GAME_TOTAL_TIME; // 시간으로 변경
       itemsInitializedRef.current = true;
 
-      console.log(`🎮 아이템 초기화: 코인 ${TOTAL_COINS}개, 장애물 ${TOTAL_HURDLES}개, 퀴즈 ${TOTAL_QUIZZES}개, 게임 프레임 ${GAME_TOTAL_FRAMES}`);
+      console.log(`🎮 아이템 초기화: 코인 ${TOTAL_COINS}개, 장애물 ${TOTAL_HURDLES}개, 퀴즈 ${TOTAL_QUIZZES}개, 게임 시간 ${GAME_TOTAL_TIME}초`);
     };
     
     const pushFlagEntity = () => {
@@ -1060,7 +1133,7 @@ export default function Game({ user }) {
 
     const maybeSpawnFlag = () => {
       if (flagPushedRef.current) return;
-      if (frameRef.current < flagSpawnFrameRef.current) return;
+      if (gameTimeRef.current < flagSpawnFrameRef.current) return;
       pushFlagEntity();
     };
     
@@ -1074,30 +1147,72 @@ export default function Game({ user }) {
     function update() {
       if (gameOver) return;
 
+      // deltaTime 계산 (시간 기반 애니메이션)
+      const currentTime = performance.now();
+      let deltaTime = (currentTime - lastTimeRef.current) / 1000;
+      
+      // 일시정지 시에는 deltaTime을 0으로 설정
+      if (isPaused) {
+        deltaTime = 0;
+        lastTimeRef.current = currentTime; // 시간은 업데이트하되 deltaTime은 0
+      } else {
+        // 프리즈 방지: 최대 0.1초로 제한 (너무 긴 프레임 스킵 방지)
+        deltaTime = Math.min(deltaTime, 0.1);
+        lastTimeRef.current = currentTime;
+        gameTimeRef.current += deltaTime;
+        frameRef.current++;
+      }
+
       const player = playerRef.current;
       const entities = entitiesRef.current;
       let backgroundX = backgroundXRef.current;
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
+      // 큰 화면에서 성능 최적화: 이미지 스무딩 품질 조정
       ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
+      // 아이패드 프로 등 큰 화면에서 성능을 위해 medium 사용
+      const isLargeScreen = canvas.width > 1500 || canvas.height > 1500;
+      ctx.imageSmoothingQuality = isLargeScreen ? 'medium' : 'high';
       
       const scale = (canvas.height / bgImg.height);
       const drawW = Math.ceil(bgImg.width * scale);
       const drawH = Math.ceil(canvas.height);
       
-      backgroundX -= gameSpeedRef.current;
+      // deltaTime 기반 배경 이동 (60fps 기준으로 정규화)
+      // 큰 화면에서는 실제 FPS를 고려한 보정 추가
+      let frameMultiplier = deltaTime * targetFPS; // 60fps일 때 1.0
+      
+      // 큰 화면에서 느린 경우를 감지하여 보정
+      if (isLargeScreen && deltaTime > 0.02) {
+        // deltaTime이 0.02초(50fps)보다 크면 보정
+        const actualFPS = 1 / deltaTime;
+        frameMultiplier = deltaTime * targetFPS * (targetFPS / Math.max(actualFPS, 30));
+      }
+      
+      backgroundX -= gameSpeedRef.current * frameMultiplier;
       if (backgroundX <= -drawW) backgroundX = 0;
       
-      for (let x = Math.floor(backgroundX); x < canvas.width + drawW; x += drawW) {
+      // 배경 렌더링 최적화: 필요한 부분만 그리기
+      const startX = Math.floor(backgroundX);
+      const endX = canvas.width + drawW;
+      for (let x = startX; x < endX; x += drawW) {
         ctx.drawImage(bgImg, 0, 0, bgImg.width, bgImg.height, x, 0, drawW + 1, drawH);
       }
       backgroundXRef.current = backgroundX;
 
+      // deltaTime 기반 플레이어 물리 (60fps 기준으로 정규화)
       if (!isPaused || !endingRef.current) {
-        player.y += player.vy;
-        player.vy += player.gravity;
+        let physicsMultiplier = deltaTime * targetFPS;
+        // 큰 화면에서 느린 경우 보정
+        if (isLargeScreen && deltaTime > 0.02) {
+          const actualFPS = 1 / deltaTime;
+          physicsMultiplier = deltaTime * targetFPS * (targetFPS / Math.max(actualFPS, 30));
+        }
+        const normalizedGravity = player.gravity * physicsMultiplier;
+        const normalizedVy = player.vy * physicsMultiplier;
+        player.y += normalizedVy;
+        player.vy += normalizedGravity;
       }
       if (player.y > canvas.height - groundHeightRatio * canvas.height - player.height) {
         player.y = canvas.height - groundHeightRatio * canvas.height - player.height;
@@ -1105,13 +1220,13 @@ export default function Game({ user }) {
       }
       ctx.drawImage(playerImageRef.current, player.x, player.y, player.width, player.height);
 
-      // 코인과 장애물 생성 - 정확한 프레임에 생성
+      // 코인과 장애물 생성 - 시간 기반으로 변경
       if (!isPaused && !endingRef.current) {
         maybeSpawnFlag();
         
-        // 코인 생성 체크
+        // 코인 생성 체크 (시간 기반)
         while (coinIndexRef.current < coinSpawnFramesRef.current.length &&
-               frameRef.current >= coinSpawnFramesRef.current[coinIndexRef.current]) {
+               gameTimeRef.current >= coinSpawnFramesRef.current[coinIndexRef.current]) {
           const canvas = canvasRef.current;
           const x = canvas.width;
           const yBase = canvas.height - groundHeightRatioRef.current * canvas.height;
@@ -1125,9 +1240,9 @@ export default function Game({ user }) {
           coinIndexRef.current++;
         }
         
-        // 장애물 생성 체크
+        // 장애물 생성 체크 (시간 기반)
         while (hurdleIndexRef.current < hurdleSpawnFramesRef.current.length &&
-               frameRef.current >= hurdleSpawnFramesRef.current[hurdleIndexRef.current]) {
+               gameTimeRef.current >= hurdleSpawnFramesRef.current[hurdleIndexRef.current]) {
           const canvas = canvasRef.current;
           const x = canvas.width;
           const yBase = canvas.height - groundHeightRatioRef.current * canvas.height;
@@ -1143,9 +1258,9 @@ export default function Game({ user }) {
           hurdleIndexRef.current++;
         }
         
-        // 퀴즈 생성 체크 (고정된 프레임에 생성)
+        // 퀴즈 생성 체크 (시간 기반)
         while (quizIndexRef.current < quizSpawnFramesRef.current.length &&
-               frameRef.current >= quizSpawnFramesRef.current[quizIndexRef.current] &&
+               gameTimeRef.current >= quizSpawnFramesRef.current[quizIndexRef.current] &&
                quizList.length > 0) {
           const canvas = canvasRef.current;
           const x = canvas.width;
@@ -1170,9 +1285,19 @@ export default function Game({ user }) {
         spawnEntities();
       }
 
+      // deltaTime 기반 엔티티 이동 (frameMultiplier는 위에서 계산됨)
+      // 큰 화면에서 느린 경우를 위한 보정
+      let entityMultiplier = frameMultiplier;
+      if (isLargeScreen && deltaTime > 0.02) {
+        const actualFPS = 1 / deltaTime;
+        entityMultiplier = deltaTime * targetFPS * (targetFPS / Math.max(actualFPS, 30));
+      }
+      
       for (let i = 0; i < entities.length; i++) {
         const ent = entities[i];
-        if (!isPaused || !endingRef.current) ent.x -= gameSpeedRef.current;
+        if (!isPaused || !endingRef.current) {
+          ent.x -= gameSpeedRef.current * entityMultiplier;
+        }
 
         if (ent.img && ent.img.complete && ent.img.naturalWidth !== 0) {
           ctx.drawImage(ent.img, ent.x, ent.y, ent.width, ent.height);
@@ -1209,29 +1334,44 @@ export default function Game({ user }) {
             i--;
           } else if (ent.type === 'coin') {
             scoreRef.current += 5;
-            showGainEffect();
-            const coinSound = new Audio(require('../../assets/coin-recieved-230517.mp3'));
-            coinSound.volume = 0.7;
-            coinSound.play().catch(err => console.warn("코인 효과음 재생 실패:", err));
             entities.splice(i, 1);
             i--;
+            
+            // 효과 표시와 사운드 재생을 비동기로 처리 (프레임 드롭 방지)
+            requestAnimationFrame(() => {
+              showGainEffect();
+              // 사운드 풀에서 사용 가능한 사운드 찾기
+              const pool = coinSoundPoolRef.current;
+              if (pool && pool.length > 0) {
+                // 순환 방식으로 사운드 선택 (재생 중인 사운드가 있어도 다른 사운드 사용)
+                const sound = pool[coinSoundIndexRef.current % pool.length];
+                coinSoundIndexRef.current++;
+                sound.currentTime = 0;
+                sound.play().catch(err => {
+                  // 재생 실패 시 무시 (이미 재생 중이거나 자동 재생 차단 등)
+                });
+              }
+            });
           }
         }
       }
 
-      if (!isPaused) {
-        frameRef.current++;
-      }
       animationIdRef.current = requestAnimationFrame(updateRef.current);
 
       if (endingRef.current) {
-        player.x += 5;
+        const normalizedEndSpeed = 5 * (deltaTime * targetFPS);
+        player.x += normalizedEndSpeed;
         if (player.x > canvas.width) {
           setGameOver(true);
           cancelAnimationFrame(animationIdRef.current);
         }
       }
     }
+
+    // 게임 시작 시 시간 초기화
+    lastTimeRef.current = performance.now();
+    gameTimeRef.current = 0;
+    frameRef.current = 0;
 
     updateRef.current = update;
     requestAnimationFrame(updateRef.current);
@@ -1260,6 +1400,10 @@ export default function Game({ user }) {
       coinIndexRef.current = 0;
       hurdleIndexRef.current = 0;
       quizIndexRef.current = 0;
+      // 시간 초기화
+      lastTimeRef.current = performance.now();
+      gameTimeRef.current = 0;
+      frameRef.current = 0;
     };
     
   }, [gameOver, quizLoaded, quizList, isGameStarted, imagesLoaded]);
@@ -1351,8 +1495,14 @@ export default function Game({ user }) {
       
       {isGameStarted && !gameOver && (
         <GameControls>
-          <ControlButton src={pause_btn} alt="일시정지" onClick={handlePauseClick} />
-          <ControlButton src={exit_btn} alt="나가기" onClick={handleExitClick} />
+          <CoinDisplay>
+            <CoinImage src={coinImg} alt="coin" />
+            <CoinText>{scoreRef.current} F</CoinText>
+          </CoinDisplay>
+          <ControlDisplay>
+            <ControlButton src={pause_btn} alt="일시정지" onClick={handlePauseClick} />
+            <ControlButton src={exit_btn} alt="나가기" onClick={handleExitClick} />
+          </ControlDisplay>
         </GameControls>
       )}
 
