@@ -610,7 +610,7 @@ function Question({ user, login, setLogin }){
                             <MicIcon src={mic} alt="마이크 버튼"/>
                         </MicButton>
                         <SendButton onClick={() => handleMessage(transcript)}>
-                            답변하기
+                            보내기
                         </SendButton>
                     </InputArea>
                     </QuestionArea>

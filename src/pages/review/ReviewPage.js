@@ -242,12 +242,14 @@ function ReviewPage({ user, login, setLogin }) {
     loadReviewData();
   }, [currentPage]);
 
-  const handleReview = (chapterId) => {
-    navigate(`/main/learning/${chapterId}`, { state: { isReview: true }});
+  const handleFirstReview = (chapterId) => {
+    // 1차 복습: reviewCount = 1
+    navigate(`/review/content?chapterId=${chapterId}&reviewCount=1`);
   };
 
-  const handleQuiz = (chapterId) => {
-    navigate(`/main/learning/${chapterId}`, { state: { isReview: true, isQuiz: true }});
+  const handleSecondReview = (chapterId) => {
+    // 2차 복습: reviewCount = 2
+    navigate(`/review/content?chapterId=${chapterId}&reviewCount=2`);
   };
 
   if (loading) return <div className="loading">로딩 중...</div>;
@@ -288,14 +290,14 @@ function ReviewPage({ user, login, setLogin }) {
                     </ReviewContent>
                     <ReviewButtons>
                       <ReviewButton 
-                        onClick={() => handleReview(module.chapterId)} 
-                        disabled={!module.firstReviewAvailable}
+                        onClick={() => handleFirstReview(module.chapterId)} 
+                        // disabled={!module.firstReviewAvailable}
                       >
                         1차 복습
                       </ReviewButton>
                       <ReviewButton 
-                        onClick={() => handleQuiz(module.chapterId)} 
-                        disabled={!module.secondReviewAvailable}
+                        onClick={() => handleSecondReview(module.chapterId)} 
+                        // disabled={!module.secondReviewAvailable}
                       >
                         2차 복습
                       </ReviewButton>
