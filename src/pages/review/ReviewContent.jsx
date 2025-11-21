@@ -1,0 +1,876 @@
+import styled from "styled-components";
+import React, { useState, useEffect, useMemo } from "react";
+
+import Header from "../../components/Header";
+import Box from "../../components/Box";
+import tiger from "../../assets/tiger-upperbody1.png";
+import Button from "../../components/Button";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { fetchFeedback, fetchChapterContents } from "../../api/study/level3API";
+import MiniHeader from "../../components/study/MiniHeader";
+import { useChapter } from "../../context/ChapterContext";
+import background from "../../assets/study_background.png";
+import hoppin from "../../assets/hopin.svg";
+import questionIcon from "../../assets/question_icon.svg";
+import TtsPlayer from "../../components/TtsPlayer";
+import api from "../../api/login/axiosInstance";
+import { useActivityTracker } from "../../hooks/useActivityTracker";
+import ladybugImage from "../../assets/ladybug.png";
+import { winBadge } from "../../api/analyze/winBadge";
+import { fetchReviewContent } from "../../api/review/fetchReviewContent";
+
+const Wrapper=styled.div`
+    width:100%;
+    min-height:100vh;
+    height:auto;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    position: relative;
+`;
+
+const MainWrapper = styled.div`
+  width: 100%;
+  min-height: 100vh;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  margin-left: 0;
+  background-image: url(${background});
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+`;
+
+const ContentContainer = styled.div`
+  display: flex;
+  align-items: flex-end;
+  gap: 2rem;
+  width: 100%;
+  max-width: 1200px;
+  justify-content: center;
+`;
+
+const LeftSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  margin-left: 2rem;
+  gap: 0;
+  flex: 2;
+`;
+
+const HoppinImage = styled.img`
+  width: clamp(200px, 25vw, 350px);
+  height: auto;
+  object-fit: contain;
+`;
+
+const RightSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+`;
+
+const ImageWithSpeechWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin: 1rem 0rem;
+`;
+
+const SpeechWrapper = styled.div`
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: row;
+`;
+
+const SpeechBubble=styled.div`
+    display:flex;
+    width:100%;
+    height: fit-content;
+    padding: 2rem;
+    background-color: rgba(255, 255, 255, 0.8);
+    max-width: 1200px;
+    border-radius: 20px;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 1rem;
+    position:relative;
+    margin-top: 0;
+`;
+
+
+const TextBox = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  white-space: pre-line;
+
+  width: 80%;
+  margin: 0 auto;
+  padding: 0 clamp(4vw, 6vw, 90px); 
+
+  font-size: 20px;
+  font-weight: 500;
+  color: #454545;
+`;
+
+const AnswerInputBox = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  width: 100%;
+  max-width: 600px;
+  align-items: center;
+`;
+
+const Input = styled.input`
+  flex: 1;
+  min-width: 300px;
+  padding: 12px 16px;
+  border: 2px solid #E0E0E0;
+  border-radius: 12px;
+  font-size: 16px;
+  font-family: "Noto Sans KR", sans-serif;
+  color: #333;
+  background-color: #FAFAFA;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+  
+  &:focus {
+    outline: none;
+    border-color: #478CEE;
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(71, 140, 238, 0.1);
+  }
+  
+  &::placeholder {
+    color: #999;
+    font-style: italic;
+  }
+`;
+
+
+const SubmitButton = styled.button`
+  padding: 12px 24px;
+  background-color: #478CEE;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+  &:hover {
+    background-color: #1b5c91;
+  }
+`;
+
+const AiResponseBox = styled.div`
+  margin-top: 16px;
+  width: 80%;
+  max-width: 600px;
+  padding: 20px;
+  background-color: #e9f1fb;
+  border-left: 6px solid #2774B2;
+  border-radius: 12px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+  font-family: "Noto Sans KR", sans-serif;
+`;
+
+const QuestionButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1.5rem;
+  background-color: #F0F4FC;
+  color: #79B0FF;
+  border: 1px solid #79B0FF;
+  border-radius: 10px;
+  cursor: pointer;
+  outline: none;
+  font-size: 18px;
+  font-weight: 500;
+  transition: all 0.3s;
+  align-self: flex-end;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  &:hover {
+    background-color: #F5F5F5;
+    border-color: #B8B8B8;
+  }
+  &:active {
+    outline: none;
+  }
+`;
+
+const QuestionIconImg = styled.img`
+  width: 1rem;
+  height: 1rem;
+`;
+
+const BubbleButton = styled.button`
+  display:flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.6rem 5rem; 
+  background-color: #478CEE;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  outline: none;
+  font-size:clamp(13px,1vw,20px);
+
+  transition: background-color 0.3s;
+  &:hover {
+    background-color: #104EA7;
+  }
+
+  &:active {
+    outline: none;
+  }
+`;
+
+const BackButton = styled.button`
+  display:flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.6rem 5rem; 
+  background-color: white;
+  color: #9E9E9E;
+  border: 1px solid #B8B8B8;
+  border-radius: 10px;
+  cursor: pointer;
+  outline: none;
+  font-size:clamp(13px,1vw,20px);
+
+  transition: all 0.3s;
+  &:hover {
+    background-color: #F5F5F5;
+    border-color: #B8B8B8;
+  }
+
+  &:active {
+    outline: none;
+  }
+`;
+
+const ButtonWrapper=styled.div`
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    width:100%;
+    gap: 2rem;
+`;
+
+const AnswerButton = styled.button`
+  padding: 12px 16px;
+  background-color: #478CEE;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  white-space: nowrap;
+
+  transition: background-color 0.3s;
+  &:hover {
+    background-color: #104EA7;
+  }
+`;
+
+const SendButton = styled.button`
+  padding: 12px 24px;
+  background-color: #478CEE;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: "Noto Sans KR", sans-serif;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  min-width: 80px;
+  
+  &:hover {
+    background-color: #104EA7;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(71, 140, 238, 0.3);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(71, 140, 238, 0.2);
+  }
+  
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+`;
+
+// 무당벌레 스타일
+const Ladybug = styled.div`
+    position: fixed;
+    font-size: 60px;
+    cursor: pointer;
+    z-index: 9999;
+    transition: transform 0.3s ease;
+    animation: float 4s ease-in-out infinite;
+    user-select: none;
+    
+    &:hover {
+        transform: scale(1.2);
+    }
+    
+    @keyframes float {
+        0% {
+            transform: translate(0, 0) rotate(0deg);
+        }
+        25% {
+            transform: translate(var(--move-x-1, 30px), var(--move-y-1, -20px)) rotate(5deg);
+        }
+        50% {
+            transform: translate(var(--move-x-2, -20px), var(--move-y-2, -30px)) rotate(-5deg);
+        }
+        75% {
+            transform: translate(var(--move-x-3, 25px), var(--move-y-3, -10px)) rotate(3deg);
+        }
+        100% {
+            transform: translate(0, 0) rotate(0deg);
+        }
+    }
+`;
+
+const LadybugImage = styled.img`
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+`;
+
+
+function ReviewContent({ user, login, setLogin }){
+
+    const navigate=useNavigate();
+    const location=useLocation();
+    const [searchParams] = useSearchParams();
+    const [sentences,setSentences]=useState([]);
+    const [currentIndex,setCurrentIndex]=useState(0);
+
+    
+    const {chapterData, setChapterData}=useChapter();
+    const [questionIndexes, setQuestionIndexes] = useState([]);
+    const [isFinished,setIsFinished]=useState(false);
+
+    const [isQuestionFinished,setIsQuestionFinished]=useState(false);
+    const [userAnswer, setUserAnswer] = useState("");
+    const [aiResponse, setAiResponse] = useState("");
+    const [isAnswering,setIsAnswering]=useState(false);
+    const [preloadDone, setPreloadDone] = useState(false);
+    const [isRecording, setIsRecording] = useState(false);
+    const [recognizedText, setRecognizedText] = useState("");
+    const [isVoiceRecognitionComplete, setIsVoiceRecognitionComplete] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const ttsSentences = useMemo(() => sentences, [sentences]);
+    const nextContext=sentences[currentIndex+1]||"다음 학습 내용 없음";
+    const returnToIndex=location.state?.returnToIndex??0;
+
+    // 무당벌레 관련 상태
+    const [ladybugs, setLadybugs] = useState([]); // [{id, x, y, createdAt}]
+    const [ladybugCount, setLadybugCount] = useState(0); // 총 나타난 무당벌레 수
+    const [questionClickTime, setQuestionClickTime] = useState(null); // 질문하기 클릭 시간
+    const [firstLadybugTime, setFirstLadybugTime] = useState(null); // 첫 번째 무당벌레 생성 시간
+    const [lastLadybugSpawnTime, setLastLadybugSpawnTime] = useState(null); // 마지막 무당벌레 생성 시간
+    const [clickedLadybugs, setClickedLadybugs] = useState([]); // 클릭한 무당벌레 [{id, clickedAt}]
+    const [consecutiveClicks, setConsecutiveClicks] = useState(0); // 연속 클릭 카운트
+    const [lastClickTime, setLastClickTime] = useState(null); // 마지막 클릭 시간
+    const [missedLadybugs, setMissedLadybugs] = useState(false); // 놓친 무당벌레 [{id, missedAt}]
+    const [totalMissed, setTotalMissed] = useState(0); // 놓친 무당벌레 총 수
+    const [fineHunter, setFineHunter] = useState(false);
+    const [speedHunter, setSpeedHunter] = useState(true); // SPEED_HUNTER 상태 (초기값 true, 놓치거나 2초 초과 시 false)
+
+
+    const navigateToQuestion=()=>{
+        // 질문하기 클릭 시간 기록
+        setQuestionClickTime(Date.now());
+        
+        // URL에서 직접 chapterId 가져오기 (chapterData보다 더 신뢰할 수 있음)
+        const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+        
+        console.log("🔀 질문하기로 이동 - 전달 데이터:", {
+            returnToIndex: currentIndex,
+            from: "/review/content",
+            chapterId: chapterId,
+            fromURL: searchParams.get('chapterId'),
+            fromContext: chapterData?.chapterId
+        });
+        
+        if (!chapterId) {
+            console.error('⚠️⚠️⚠️ chapterId를 찾을 수 없습니다!');
+            alert('오류가 발생했습니다. chapterId를 찾을 수 없습니다.');
+            return;
+        }
+        
+        navigate("/question",{
+            state:{
+                returnToIndex:currentIndex,
+                from: "/review/content",
+                chapterId: chapterId
+            }
+        });
+   }
+
+   // Level 3 데이터 가져오기
+   useEffect(() => {
+        const loadLevel3Data = async () => {
+            const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+            // reviewCount를 URL 파라미터에서 가져오기 (1차 복습: 1, 2차 복습: 2)
+            const reviewCount = parseInt(searchParams.get('reviewCount')) || 1;
+            
+            if (!chapterId) {
+                console.error("❌ chapterId가 없습니다.");
+                setSentences(["❌ 단원 정보가 없습니다. 다시 돌아가주세요."]);
+                return;
+            }
+
+            try {
+                setLoading(true);
+                console.log("🔄 review 데이터 로딩 중... chapterId:", chapterId, "reviewCount:", reviewCount, "bookId:", chapterData?.bookId);
+                const ReviewData = await fetchReviewContent(reviewCount, chapterId);
+                console.log("✅ review 데이터:", ReviewData);
+                
+                // // Context 업데이트 (bookId 보존)
+                // setChapterData({
+                //     ...ReviewData,
+                //     bookId: chapterData?.bookId
+                // });
+                
+                const contents = ReviewData?.textbook;
+                
+                if (contents) {
+                    console.log("✅ Chapter content:", contents);
+                    
+                    //문장 분리
+                    const baseSentences = contents
+                        .split(/(?<=[.?!])\s+/)
+                        .filter((s) => s.trim() !== ""); //공백만 있는 문장 등을 제거
+                    
+                    //질문 감지 함수
+                    const isQuestion = (s) => s.includes("?");
+
+                    //긴 문장 분할 함수(질문 제외)
+                    const breakLongSentence = (sentence, max = 50) => {
+                        if (isQuestion(sentence)) return [sentence]; // ✅ 질문이면 그대로
+                        if (sentence.length <= max) return [sentence];
+
+                        const mid = Math.floor(sentence.length / 2);
+                        let splitIndex = sentence.lastIndexOf(" ", mid);
+                        if (splitIndex === -1) splitIndex = mid;
+                        const first = sentence.slice(0, splitIndex).trim();
+                        const second = sentence.slice(splitIndex).trim();
+                        return [first, second];
+                    };
+
+                    //문장분해
+                    const splitSentences=baseSentences
+                        .map((s)=>breakLongSentence(s))
+                        .flat();
+                    console.log("🐋분할된 최종 문장 배열:",splitSentences);
+
+                    //질문이 포함된 문장의 인덱스만 추출
+                    const questionIndexes=splitSentences
+                        .map((s,i)=>isQuestion(s)?i:null)
+                        .filter((i)=>i!=null);
+                    console.log("🧠 질문 문장 인덱스:", questionIndexes);
+
+                    setSentences(splitSentences);
+                    setQuestionIndexes(questionIndexes);
+                } else {
+                    setSentences(["❌ 내용이 없습니다."]);
+                }
+            } catch (error) {
+                console.error("❌ Level 3 데이터 로딩 실패:", error);
+                setSentences(["❌ 내용을 불러오는데 실패했습니다. 다시 시도해주세요."]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadLevel3Data();
+    }, [searchParams]);
+
+
+    //질문 버튼 누른 후 다시 학습하기 3단계로 돌아온 경우 포함
+    useEffect(()=>{
+        console.log("🐛returnToIndex",returnToIndex);
+        setCurrentIndex(returnToIndex);
+    },[]); //의존성 배열이 비어 있어야 컴포넌트 최초 마운트 시 한 번만 실행
+
+
+
+    //질문 문장인 경우 -> 사용자 입력 UI 노출 + 답변 수집
+    //질문이 끝나면 답변 버튼이 생성되도록 함 
+    const goToNextSentence = async () => {
+    if (!preloadDone) return;
+    
+    // 모든 문장을 다 본 후에 완료
+    if (currentIndex < sentences.length - 1){
+        console.log("✅currentIndex:",currentIndex);
+        setCurrentIndex(currentIndex+1);
+    } else {
+        setIsQuestionFinished(true); //질문 끝났다는 상태
+        setIsFinished(true);
+        
+        // Level 3 완료 시 질문/답변 저장 API 호출
+        // const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+        // if (chapterId) {
+        //     try {
+        //         console.log("💾 질문/답변 저장 API 호출 시작 - chapterId:", chapterId);
+        //         const response = await api.post(`/api/question/save-all`, null, {
+        //             params: {
+        //                 chapterId: chapterId
+        //             }
+        //         });
+        //         console.log("✅ 질문/답변 저장 성공:", response.data);
+                
+        //         // sessionStorage에서 해당 chapterId의 질문 데이터 삭제 (선택적)
+        //         try {
+        //             const storageKey = `questionData_${chapterId}`;
+        //             sessionStorage.removeItem(storageKey);
+        //             console.log("🧹 sessionStorage 질문 데이터 삭제 완료");
+        //         } catch (error) {
+        //             console.error("⚠️ sessionStorage 삭제 실패 (무시):", error);
+        //         }
+        //     } catch (error) {
+        //         console.error("❌ 질문/답변 저장 API 호출 실패:", error);
+        //         // 에러가 발생해도 학습 완료는 진행 (사용자 경험을 위해)
+        //     }
+        // } else {
+        //     console.error("⚠️ chapterId가 없어서 질문/답변 저장 API를 호출할 수 없습니다.");
+        // }
+        
+        alert("✅학습을 모두 완료했어요! 게임 단계로 이동해볼까요?")
+        navigate("/game")
+    }
+   };
+
+
+
+   //AI로부터 답변 받기.. 
+   const handleUserSubmit = async () => {
+        // 실제로는 여기에 AI 호출 로직이 들어감 (예: fetch("/chat", { method: POST ... }))
+        console.log("🙋 유저 입력:", userAnswer);
+        if(!userAnswer||userAnswer.trim()===""){
+            alert("🚨답변을 입력해주세요!")
+            return; //함수 실행 중단 
+        }
+
+        // 다른 API 요청과 동일한 패턴으로 시도
+
+        const feedback=await handleFeedback();
+        console.log("✅AI피드백:",feedback.result)
+        // 임시 응답 시뮬레이션 //AI 모델 추후에 연결.. 
+        setAiResponse(feedback.result);
+        setIsAnswering(false);
+        setIsVoiceRecognitionComplete(false);
+        setRecognizedText("");
+        setUserAnswer("");
+    };
+
+    const handleFeedback=async()=>{
+                try{
+                    console.log("🔍 피드백 요청 시작 - 현재 인덱스:", currentIndex);
+                    console.log("🔍 질문:", sentences[currentIndex]);
+                    console.log("🔍 사용자 답변:", userAnswer);
+                    console.log("🔍 브라우저 쿠키:", document.cookie); // 쿠키 확인
+                    
+                    const requestBody = {
+                        chapter: chapterData.content,
+                        sentenceIndex: currentIndex,  // 다시 추가
+                        question: sentences[currentIndex],
+                        userAnswer: userAnswer,
+                        nextContext: nextContext,
+                    };
+                    
+                    console.log("🔍 요청 본문:", requestBody);
+                    
+                    const res=await api.post('/api/study/feedback', requestBody);
+
+                    console.log("📡 응답 상태:", res.status, res.statusText);
+                    console.log("✅저장된 피드백:",res.data);
+                    return res.data;
+                }catch(e){
+                    console.error("❌피드백 요청 실패:", e);
+                    console.error("🔍 에러 응답:", e.response);
+                    console.error("🔍 에러 상태:", e.response?.status);
+                    console.error("🔍 에러 데이터:", e.response?.data);
+                    
+                    // if (e.response?.status === 401) {
+                    //     console.error("🚨 401 Unauthorized - 로그인 필요");
+                    //     return{result:"😟오류 발생: 로그인이 필요합니다. 다시 로그인해주세요."};
+                    // }
+                    return{result:"😟오류 발생: " + (e.response?.data?.message || e.message)};
+                }
+            };
+        
+    const handleNavigate=async()=>{
+        navigate('/game');
+    }
+
+   //다음 문장으로 넘어가도록 함함
+   const handleNext=async()=>{
+    // 기존 코드: 모든 문장을 다 본 후에 /game으로 이동
+    // if (currentIndex<sentences.length-1){
+    //     setCurrentIndex(currentIndex+1);
+    // }else{
+    //     //여태까지 질문한 내용들을 DB에 저장하는 API
+    //     try{
+    //         const response=await api.post(`/api/question/saveAll?chapterId=${chapterData?.chapterId}`);
+    //         console.log("🐯 질문/답변 저장 성공");
+    //     }catch(e){
+    //         console.log("❌ 저장 중 오류 발생",e);
+    //     }
+    //     //피드백 저장
+    //     await saveFeedbacks(chapterData?.chapterId);
+    //     navigate("/game")
+    // }
+
+    // 수정된 코드: 2-3개 문장만 보고 바로 /game으로 이동
+    if (currentIndex < 2) { // 0, 1 인덱스까지만 (즉, 처음 2-3개 문장)
+        setCurrentIndex(currentIndex + 1);
+    } else {
+        //여태까지 질문한 내용들을 DB에 저장하는 API
+        try{
+            const response=await api.post(`/api/question/saveAll?chapterId=${chapterData?.chapterId}`);
+            console.log("🐯 질문/답변 저장 성공");
+        }catch(e){
+            console.log("❌ 저장 중 오류 발생",e);
+        }
+
+        //피드백 저장
+        await saveFeedbacks(chapterData?.chapterId);
+        navigate("/game")
+    }
+   };
+
+   async function saveFeedbacks(chapterId){
+    try{
+        const response=await api.post(`/api/study/feedback/saveAll?chapterId=${chapterId}`);
+        console.log("✅피드백 저장 성공:", response.data);
+    }catch(e){
+        console.error("❌피드백들을 전부 저장하는 데 실패했어요.", e);
+        throw e;
+    }
+   }
+    // 음성인식 시작/종료 함수
+    const handleVoiceRecognition = () => {
+        if (!isRecording) {
+            startVoiceRecognition();
+        } else {
+            stopVoiceRecognition();
+        }
+    };
+
+    const startVoiceRecognition = () => {
+     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+         const recognition = new SpeechRecognition();
+         
+         recognition.lang = 'ko-KR';
+         recognition.continuous = false;
+         recognition.interimResults = false;
+         
+         recognition.onstart = () => {
+             setIsRecording(true);
+             console.log('음성인식 시작');
+         };
+         
+         recognition.onresult = (event) => {
+             const transcript = event.results[0][0].transcript;
+             setRecognizedText(transcript);
+             setUserAnswer(transcript);
+             console.log('인식된 텍스트:', transcript);
+         };
+         
+         recognition.onend = () => {
+             setIsRecording(false);
+             setIsVoiceRecognitionComplete(true);
+             console.log('음성인식 종료');
+         };
+         
+         recognition.onerror = (event) => {
+             console.error('음성인식 오류:', event.error);
+             setIsRecording(false);
+             alert('음성인식에 실패했습니다. 다시 시도해주세요.');
+         };
+         
+         recognition.start();
+     } else {
+         alert('이 브라우저는 음성인식을 지원하지 않습니다.');
+     }
+};
+
+// 음성인식 종료
+const stopVoiceRecognition = () => {
+    setIsRecording(false);
+    setIsVoiceRecognitionComplete(true);
+};
+
+
+
+    return(
+    <>
+        <Wrapper> 
+                <MainWrapper>
+                {/* <MiniHeader
+                    left={<Button onClick={()=>navigate(-1)}>뒤로</Button>}
+                    right={
+                    isFinished?(
+                        <Button
+                        onClick={handleNext}
+                        >다음 단계로</Button>
+                    ):(
+                        <Button disabled>진행 중..</Button> 
+                    )
+                    }
+                >
+                3/6 선생님과 학습하기
+                </MiniHeader> */}
+            <ImageWithSpeechWrapper>
+              <ContentContainer>
+                <LeftSection>
+                  <HoppinImage src={hoppin} alt="호핀" />
+                </LeftSection>
+
+                <RightSection>
+                  <QuestionButton onClick={navigateToQuestion}>
+                        <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
+                        질문하기
+                    </QuestionButton>
+                </RightSection>
+              </ContentContainer>
+
+              <TtsPlayer
+                sentences={ttsSentences}     // useMemo로 감싼 배열
+                answers={[]}                 // 답변 단계는 없으니 빈 배열
+                isAnsweringPhase={false}     // 항상 질문 단계
+                currentIndex={currentIndex}  // 현재 읽을 인덱스
+                autoPlay={true}
+                style={{ display: "none" }}
+                onPreloadDone={() => setPreloadDone(true)}  // 캐싱 끝나면 true
+            />
+            
+            {!preloadDone ? (
+                <SpeechBubble>
+                    <TextBox>화면을 준비 중입니다...</TextBox>
+                </SpeechBubble>
+                ) : !isAnswering ? (
+                    <>
+                    <SpeechWrapper>
+                    <SpeechBubble>
+                        
+                         <TextBox>
+                            {/* ✅ 응답이 있으면 응답만 표시 */}
+                            {aiResponse ? (
+                            <div>
+                                 {aiResponse}
+                            </div>
+                            ) : (
+                            <div>
+                                {sentences.length > 0 ? sentences[currentIndex] : "❌"}
+                            </div>
+                            )}
+                        </TextBox>
+
+                        
+
+                            {/*일반 문장 or 질문+답변 완료 시에만 next 버튼 표시*/}
+                            {(!questionIndexes.includes(currentIndex)||aiResponse)&&(
+                                <ButtonWrapper>
+                                    {currentIndex > 0 && (
+                                        <BackButton onClick={()=>{
+                                            setCurrentIndex(currentIndex-1);
+                                            setAiResponse(""); //이전 문장으로 갈 때 aiResponse초기화
+                                        }}>
+                                            이전
+                                        </BackButton>
+                                    )}
+                                    <BubbleButton onClick={()=>{
+                                        setAiResponse(""); //다음 문장 넘어갈 때 aiResponse초기화
+                                        goToNextSentence();
+                                    }}>
+                                        다음
+                                    </BubbleButton>
+                                </ButtonWrapper>
+                            )}
+                    
+
+                    {/* ✅ 질문이고 아직 대답 전일 경우만 버튼 표시 */}
+                    {questionIndexes.includes(currentIndex) && !aiResponse && (
+                        !isVoiceRecognitionComplete ? (
+                            <AnswerButton onClick={handleVoiceRecognition}>
+                                {isRecording ? "음성인식 중..." : "대답하기"}
+                            </AnswerButton>
+                        ) : (
+                            <AnswerInputBox>
+                                <Input
+                                type="text"
+                                value={userAnswer}
+                                onChange={(e) => setUserAnswer(e.target.value)}
+                                    placeholder="인식된 답변을 확인하고 수정하세요"
+                                />
+                                <SendButton onClick={handleUserSubmit}>보내기</SendButton>
+                            </AnswerInputBox>
+                        )
+                    )}
+                    </SpeechBubble>
+
+                    </SpeechWrapper>
+                    </>
+                ):(
+                    //isAnswering===true일 때 사용자 입력 UI 표시
+                    <AnswerInputBox>
+                        <Input
+                            type="text"
+                            onChange={(e)=>setUserAnswer(e.target.value)}
+                            placeholder="너의 생각을 입력해봐"
+                        />
+                        <SubmitButton onClick={handleUserSubmit}>답변하기</SubmitButton>
+                        {aiResponse && <AiResponseBox>{aiResponse}</AiResponseBox>}
+                    </AnswerInputBox>
+                )}
+               </ImageWithSpeechWrapper>
+                    
+                </MainWrapper>
+        </Wrapper>
+    </>
+    );
+}
+
+export default ReviewContent;

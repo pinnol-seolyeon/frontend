@@ -237,6 +237,7 @@ const RightSection = styled.div`
   align-items: flex-start;
   gap: 1rem;
   flex: 1;
+  margin-bottom: 1rem;
 `;
 
 

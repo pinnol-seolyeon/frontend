@@ -321,7 +321,7 @@ function BookListPage({ user, login, setLogin }) {
         title: "레벨 1",
         icon: "📚", // 기본 아이콘 설정
         path: `/book/chapter/${book.id}`, // 책 ID를 포함한 경로
-        description: `${book.title}을 통해\n재미있게 학습해보세요!`,
+        description: `재미있게 학습해보세요!`,
         status: "in_progress" // 기본적으로 학습 가능한 상태로 설정
       };
 

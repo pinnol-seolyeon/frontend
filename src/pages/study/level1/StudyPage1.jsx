@@ -305,7 +305,7 @@ function StudyPage({ user, login, setLogin }){
         }
         return step === 0
         ? ["안녕! 나는 호랑이 선생님이야"]
-        : [`이번 단원을 소개할게.\n이번 단원은 ${titleText}`];
+        : [`이번 단원을 소개할게.\n오늘은 ${titleText}?이야`];
     }, [loading, step, titleText]);
 
       
@@ -354,7 +354,7 @@ function StudyPage({ user, login, setLogin }){
                                     ? "단원을 준비 중이에요..."
                                     : step===0
                                         ? "안녕! 나는 호랑이 선생님이야"
-                                        : `이번 단원을 소개할게.\n이번 단원은 ${titleText}이야`}
+                                        : `이번 단원을 소개할게.\n오늘은 ${titleText}이야`}
                             </TextBox>
                               <ButtonWrapper>
                                  {step > 0 && (

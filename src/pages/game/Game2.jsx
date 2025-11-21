@@ -1269,7 +1269,7 @@ export default function Game2() {
         width: size,
         height: size,
         speed: 3.5,
-        reward: 5,
+        reward: 2,
       });
       
       // 생성된 코인 개수 업데이트

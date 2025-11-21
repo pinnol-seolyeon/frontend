@@ -263,7 +263,7 @@ const PointTooltip = styled.div`
   opacity: ${props => props.show ? 1 : 0};
   visibility: ${props => props.show ? 'visible' : 'hidden'};
   transition: all 0.2s ease;
-  z-index: 10000;
+  z-index: 3000;
   pointer-events: none;
   left: ${props => props.position?.left +10|| 0}px;
   top: ${props => props.position?.top + 5|| 0}px;
@@ -613,9 +613,9 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
             </PointSection>
             )}
             
-            <PointTooltip show={showTooltip} position={tooltipPosition}>
+            {/* <PointTooltip show={showTooltip} position={tooltipPosition}>
               피넛(FINUT) {user?.coin ?? 0}F
-            </PointTooltip>
+            </PointTooltip> */}
 
           <NavigationMenu>
             {menuItems.map((item) => (
