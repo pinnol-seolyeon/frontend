@@ -149,7 +149,9 @@ const ReviewButton = styled.button`
   transition: opacity 0.2s;
   
   &:disabled {
-    opacity: 0.5;
+    background-color: #CCCCCC;
+    color: #666666;
+    opacity: 1;
     cursor: not-allowed;
   }
   
@@ -208,8 +210,14 @@ function ReviewPage({ user, login, setLogin }) {
         
         // API 응답 데이터를 컴포넌트 형식으로 변환
         const modules = (data.content || []).map((chapter) => {
-          const isFirstReviewAvailable = chapter.lockStatus?.firstReview !== 'LOCKED';
-          const isSecondReviewAvailable = chapter.lockStatus?.secondReview !== 'LOCKED';
+          const firstReviewStatus = chapter.lockStatus?.firstReview;
+          const secondReviewStatus = chapter.lockStatus?.secondReview;
+          
+          const isFirstReviewCompleted = firstReviewStatus === 'COMPLETED';
+          const isSecondReviewCompleted = secondReviewStatus === 'COMPLETED';
+          
+          const isFirstReviewAvailable = firstReviewStatus !== 'LOCKED' && !isFirstReviewCompleted;
+          const isSecondReviewAvailable = secondReviewStatus !== 'LOCKED' && !isSecondReviewCompleted;
           
           return {
             chapterId: chapter.chapterId,
@@ -218,8 +226,8 @@ function ReviewPage({ user, login, setLogin }) {
             icon: getChapterIcon(chapter.chapterId, chapter.chapterTitle),
             firstReviewAvailable: isFirstReviewAvailable,
             secondReviewAvailable: isSecondReviewAvailable,
-            // 복습하기 버튼은 firstReview가 가능하면 활성화
-            // 퀴즈풀기 버튼은 secondReview가 가능하면 활성화
+            firstReviewCompleted: isFirstReviewCompleted,
+            secondReviewCompleted: isSecondReviewCompleted,
           };
         });
         
@@ -291,15 +299,15 @@ function ReviewPage({ user, login, setLogin }) {
                     <ReviewButtons>
                       <ReviewButton 
                         onClick={() => handleFirstReview(module.chapterId)} 
-                        // disabled={!module.firstReviewAvailable}
+                        disabled={module.firstReviewCompleted || !module.firstReviewAvailable}
                       >
-                        1차 복습
+                        {module.firstReviewCompleted ? '완료!' : '1차 복습'}
                       </ReviewButton>
                       <ReviewButton 
                         onClick={() => handleSecondReview(module.chapterId)} 
-                        // disabled={!module.secondReviewAvailable}
+                        disabled={module.secondReviewCompleted || !module.secondReviewAvailable}
                       >
-                        2차 복습
+                        {module.secondReviewCompleted ? '완료!' : '2차 복습'}
                       </ReviewButton>
                     </ReviewButtons>
                   </ReviewCard>

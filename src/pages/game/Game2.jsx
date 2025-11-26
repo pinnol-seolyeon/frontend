@@ -952,6 +952,7 @@ export default function Game2() {
 
       const raw = quizList[pickedIndex];
       const normalized = {
+        quizId: raw?.quizId ?? raw?.id ?? raw?._id ?? raw?.questionId ?? '',
         question: raw?.quiz ?? raw?.question ?? '',
         options: raw?.options ?? [],
         answer: raw?.answer ?? raw?.correctAnswer,
@@ -1028,12 +1029,13 @@ export default function Game2() {
     
     const isCorrect = answer === currentQuiz.answer;
     quizResultsRef.current.push({
+      quizId: currentQuiz.quizId || '',
       question: currentQuiz.question,
-      options: currentQuiz.options,
+      options: currentQuiz.options || [],
       correctAnswer: currentQuiz.answer,
       userAnswer: answer,
       isCorrect,
-      responseTime: Date.now(),
+      quizDate: new Date().toISOString().split('T')[0]
     });
     
     if (isCorrect) {
@@ -1581,6 +1583,7 @@ export default function Game2() {
               pendingQuizIndexRef.current = pickedIndex;
               const raw = quizList[pickedIndex];
               const normalized = {
+                quizId: raw?.quizId ?? raw?.id ?? raw?._id ?? raw?.questionId ?? '',
                 question: raw?.quiz ?? raw?.question ?? '',
                 options: raw?.options ?? [],
                 answer: raw?.answer ?? raw?.correctAnswer,
