@@ -18,6 +18,7 @@ import { useActivityTracker } from "../../hooks/useActivityTracker";
 import ladybugImage from "../../assets/ladybug.png";
 import { winBadge } from "../../api/analyze/winBadge";
 import { fetchReviewContent } from "../../api/review/fetchReviewContent";
+import { fetchQuizReview } from "../../api/review/fetchQuizReview";
 
 const Wrapper=styled.div`
     width:100%;
@@ -575,8 +576,33 @@ function ReviewContent({ user, login, setLogin }){
         //     console.error("⚠️ chapterId가 없어서 질문/답변 저장 API를 호출할 수 없습니다.");
         // }
         
-        alert("✅학습을 모두 완료했어요! 게임 단계로 이동해볼까요?")
-        navigate("/game")
+        // 복습 완료 후 퀴즈로 이동
+        const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+        const reviewCount = parseInt(searchParams.get('reviewCount')) || 1;
+        
+        if (chapterId) {
+            try {
+                console.log("🔍 복습 완료 - 퀴즈 리뷰 API 호출, chapterId:", chapterId, "reviewCount:", reviewCount);
+                const quizData = await fetchQuizReview(reviewCount, chapterId);
+                console.log("✅ 퀴즈 데이터 받음:", quizData);
+                
+                // 퀴즈 데이터를 state로 전달하며 ReviewGame으로 이동
+                navigate(`/review/game`, {
+                    state: {
+                        quizData: quizData.data || [],
+                        chapterId: chapterId,
+                        reviewCount: reviewCount
+                    }
+                });
+            } catch (error) {
+                console.error("❌ 퀴즈 리뷰 로드 실패:", error);
+                alert("퀴즈를 불러오는 중 오류가 발생했습니다. 게임으로 이동합니다.");
+                navigate("/game");
+            }
+        } else {
+            alert("✅학습을 모두 완료했어요! 게임 단계로 이동해볼까요?")
+            navigate("/game");
+        }
     }
    };
 

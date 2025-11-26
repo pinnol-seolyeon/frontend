@@ -9,12 +9,10 @@ import backgroundImg from '../../assets/game_background2.png';
 import flagImg from '../../assets/game_end.svg';
 import playerEndImg from '../../assets/game_character_2.png';
 import { saveCoinToDB } from '../../api/analyze/saveCoinToDB';
-import { useChapter } from "../../context/ChapterContext";
-import { fetchChapterContents } from '../../api/study/level3API';
-import { useNavigate } from "react-router-dom";
-import { useActivityTracker } from "../../hooks/useActivityTracker";
+import { useNavigate, useLocation } from "react-router-dom";
 import bgmSrc from '../../assets/Tiki_Bar_Mixer.mp3';
 import { sendQuizResults } from '../../api/analyze/sendQuizResults';
+import { reviewCompleted } from '../../api/review/reviewCompleted';
 import gameStartTitle from '../../assets/game_startoverlay_title.svg';
 import gameStartCoin from '../../assets/game_coin_start.svg';
 import gameStartTrap from '../../assets/game_trap_start.svg';
@@ -679,17 +677,23 @@ const GameResultItem2 = styled.div`
   flex: 1;
 `;
 
-export default function Game({ user }) {
-  const { chapterData } = useChapter();
-  const chapterId = chapterData?.chapterId;
+export default function ReviewGame({ user }) {
+  const location = useLocation();
   const navigate = useNavigate();
   
-  const { completeSession, sendExit } = useActivityTracker(
-      chapterId, 
-      4,
-      user?.userId,
-      chapterData?.bookId
-  );
+  // location.state에서 퀴즈 데이터와 chapterId 받기
+  const quizDataFromState = location.state?.quizData || [];
+  const chapterId = location.state?.chapterId;
+  const reviewCount = location.state?.reviewCount || 1;
+  
+  // chapterId가 없으면 리다이렉트
+  useEffect(() => {
+    if (!chapterId || !quizDataFromState || quizDataFromState.length === 0) {
+      console.error("❌ chapterId 또는 퀴즈 데이터가 없습니다.");
+      alert("퀴즈 데이터를 불러올 수 없습니다. 복습 페이지로 돌아갑니다.");
+      navigate("/review");
+    }
+  }, [chapterId, quizDataFromState, navigate]);
   
   const canvasRef = useRef(null);
   const animationIdRef = useRef(null);
@@ -766,6 +770,7 @@ export default function Game({ user }) {
   const [showExitModal, setShowExitModal] = useState(false);
 
   const quizStartTimeRef = useRef(null);
+  const gameCompletedRef = useRef(false); // 게임 완료 처리 중복 방지
 
   function snapshotState() {
     pausedSnapshotRef.current = {
@@ -906,27 +911,47 @@ export default function Game({ user }) {
   }, []);
 
   useEffect(() => {
-    if (!chapterId) return;
-    
-    async function loadQuiz() {
-      try {
-        console.log("🎮 Level 4 (퀴즈) 데이터 로딩 중... chapterId:", chapterId, "bookId:", chapterData?.bookId);
-        const level4Data = await fetchChapterContents(4, chapterId, chapterData?.bookId);
-        console.log("✅ Level 4 (퀴즈) 응답:", level4Data);
-        
-        const quizData = level4Data?.quiz || [];
-        console.log("✅ 퀴즈 데이터:", quizData);
-        setQuizList(quizData);
-        setQuizLoaded(true);
-      } catch (err) {
-        console.error("❌ 퀴즈 불러오기 실패:", err);
-        setQuizList([]);
-        setQuizLoaded(true);
-      }
+    if (!quizDataFromState || quizDataFromState.length === 0) {
+      console.warn("⚠️ 퀴즈 데이터가 없습니다.");
+      setQuizList([]);
+      setQuizLoaded(true);
+      return;
     }
-
-    loadQuiz();
-  }, [chapterId]);
+    
+    // 새로운 API 응답 구조를 Game.jsx가 기대하는 형식으로 변환
+    // API 응답: { sourceQuizId, twinQuestion, correctAnswer, explanation }
+    // Game.jsx 형식: { quiz, options, answer, quizId }
+    // 복습하기는 O/X 형식으로 변환
+    const convertedQuizList = quizDataFromState.map((quizItem, index) => {
+      // correctAnswer를 O/X 형식으로 변환 (true/false, "O"/"X", "정답"/"오답" 등)
+      let correctAnswerOX = 'O';
+      const correctAnswer = String(quizItem.correctAnswer || '').trim().toUpperCase();
+      
+      // 다양한 형태의 정답을 O/X로 변환
+      if (correctAnswer === 'X' || correctAnswer === 'FALSE' || correctAnswer === 'F' || 
+          correctAnswer === '오답' || correctAnswer === '틀림' || correctAnswer === 'NO') {
+        correctAnswerOX = 'X';
+      } else if (correctAnswer === 'O' || correctAnswer === 'TRUE' || correctAnswer === 'T' || 
+                 correctAnswer === '정답' || correctAnswer === '맞음' || correctAnswer === 'YES') {
+        correctAnswerOX = 'O';
+      }
+      
+      // O/X 옵션 (항상 O가 먼저)
+      const options = ['O', 'X'];
+      
+      return {
+        quizId: quizItem.sourceQuizId || `quiz-${index}`,
+        quiz: quizItem.twinQuestion || quizItem.question || '',
+        options: options,
+        answer: correctAnswerOX,
+        explanation: quizItem.explanation || ''
+      };
+    });
+    
+    console.log("✅ 변환된 퀴즈 데이터:", convertedQuizList);
+    setQuizList(convertedQuizList);
+    setQuizLoaded(true);
+  }, [quizDataFromState]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -957,20 +982,41 @@ export default function Game({ user }) {
   useEffect(() => {
     if (!quizLoaded || !isGameStarted || !imagesLoaded) return;
     
-    if (gameOver) {
-        saveCoinToDB(scoreRef.current, chapterId);
+    if (gameOver && !gameCompletedRef.current) {
+        gameCompletedRef.current = true; // 중복 실행 방지
+        const handleGameComplete = async () => {
+          try {
+            // 코인 저장
+            if (chapterId) {
+              await saveCoinToDB(scoreRef.current, chapterId);
+            }
+            
+            // 퀴즈 결과 포맷팅
+            const formattedResults = quizResultsRef.current.map(result => ({
+              quizId: result.quizId || '',
+              question: result.question,
+              options: result.options || [],
+              correctAnswer: result.correctAnswer,
+              userAnswer: result.userAnswer,
+              isCorrect: result.isCorrect,
+              quizDate: new Date().toISOString().split('T')[0]
+            }));
+            
+            // 일반 퀴즈 결과 전송
+            await sendQuizResults(formattedResults);
+            
+            // 복습 완료 API 호출
+            if (chapterId && formattedResults.length > 0) {
+              console.log("🔍 복습 완료 API 호출, reviewCount:", reviewCount, "chapterId:", chapterId);
+              await reviewCompleted(reviewCount, chapterId, formattedResults);
+              console.log("✅ 복습 완료 API 호출 성공");
+            }
+          } catch (error) {
+            console.error("❌ 게임 완료 처리 중 오류:", error);
+          }
+        };
         
-        const formattedResults = quizResultsRef.current.map(result => ({
-          quizId: result.quizId || '',
-          question: result.question,
-          options: result.options || [],
-          correctAnswer: result.correctAnswer,
-          userAnswer: result.userAnswer,
-          isCorrect: result.isCorrect,
-          quizDate: new Date().toISOString().split('T')[0]
-        }));
-        
-        sendQuizResults(formattedResults);
+        handleGameComplete();
       }
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -1047,6 +1093,14 @@ export default function Game({ user }) {
       }
 
       const nextQuiz = quizList[currentQuizIndexRef.current];
+      if (!nextQuiz) {
+        console.warn("⚠️ 다음 퀴즈가 없습니다.");
+        restoreSnapshot();
+        setIsPaused(false);
+        requestAnimationFrame(updateRef.current);
+        return;
+      }
+      
       currentQuizIndexRef.current += 1;
 
       console.log("표시할 퀴즈:", nextQuiz);
@@ -1057,9 +1111,9 @@ export default function Game({ user }) {
 
       setQuiz({
         quizId: derivedQuizId,
-        question: nextQuiz.quiz,
-        options: nextQuiz.options,
-        answer: nextQuiz.answer,
+        question: nextQuiz.quiz || nextQuiz.question || '',
+        options: nextQuiz.options || ['O', 'X'],
+        answer: nextQuiz.answer || 'O',
       });
       bgmRef.current?.pause();
     }
@@ -1074,11 +1128,11 @@ export default function Game({ user }) {
       return seed / 233280;
     };
     
-    // 고정된 개수 및 게임 길이 설정 (시간 기반으로 변경)
-    const TOTAL_COINS = 25;
-    const TOTAL_HURDLES = 20;
-    const TOTAL_QUIZZES = 5;
-    const GAME_TOTAL_TIME = 28; // 게임 총 시간 단축: 40초 -> 28초 (아이템 개수는 동일, 빈 공간만 줄임)
+    // 복습하기: 코인과 장애물은 고정, 퀴즈만 동적 (1~5개)
+    const TOTAL_QUIZZES = Math.min(quizList.length, 5);
+    const TOTAL_COINS = 25; // 코인 개수 고정
+    const TOTAL_HURDLES = 20; // 장애물 개수 고정
+    const GAME_TOTAL_TIME = 28; // 게임 시간 고정
     const SPAWN_START_TIME = 1; // 스폰 시작 시간 단축: 2초 -> 1초
     const FLAG_BUFFER_TIME = 1; // 플래그 버퍼 시간 단축: 2초 -> 1초
     const SPAWN_END_TIME = GAME_TOTAL_TIME - FLAG_BUFFER_TIME;
@@ -1460,13 +1514,11 @@ export default function Game({ user }) {
     animationIdRef.current = requestAnimationFrame(updateRef.current);
   };
 
-  const handleExitFromPause = async () => {
-    await sendExit();
+  const handleExitFromPause = () => {
     navigate('/main');
   };
 
-  const handleConfirmExit = async () => {
-    await sendExit();
+  const handleConfirmExit = () => {
     navigate('/main');
   };
 
@@ -1635,10 +1687,9 @@ export default function Game({ user }) {
                 ))}
               </QuizResultsContainer>
 
-              <NextButton onClick={async (e) => { 
+              <NextButton onClick={(e) => { 
                 e.stopPropagation();
-                await completeSession();
-                navigate(`/study/level6/summary?chapterId=${chapterId}`); 
+                navigate(`/review`); 
               }}>
                 다음단계로
               </NextButton>
