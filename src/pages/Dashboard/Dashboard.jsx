@@ -285,7 +285,7 @@ export default function Dashboard({ user, login, setLogin }) {
                 <ContainerWrapper>
                   <ContainerTitle>전체 진행률</ContainerTitle>
                   <PlusContainer>+{studyStats?.totalCompleted || 0}</PlusContainer>
-                  <ContainerText>{noStudy ? '아직 학습을 진행 안했어 학습을 시작해볼까?' : `이번 주에 ${studyStats?.totalCompleted || 0}개의 단원을 완료했어요!
+                  <ContainerText>{noStudy ? `아직 학습을 진행 안했어요\n학습을 시작해볼까요?` : `이번 주에 ${studyStats?.totalCompleted || 0}개의 단원을 완료했어요!
   앞으로도 지금처럼 열심해 해봐요!`}</ContainerText>
                 </ContainerWrapper>
                 <CircularProgress>

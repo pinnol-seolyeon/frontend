@@ -721,6 +721,7 @@ export default function Game({ user }) {
   const [quizLoaded, setQuizLoaded] = useState(false);
   const quizCountRef = useRef(0);
   const quizResultsRef = useRef([]);
+  const sessionDescriptionRef = useRef(null); // session=4에서 받아온 description 저장
 
   const [gameOver, setGameOver] = useState(false);
   const [quiz, setQuiz] = useState(null);
@@ -802,17 +803,15 @@ export default function Game({ user }) {
 
   function handleQuizAnswer(answer) {
     if (!quiz) return;
-
-    const responseTime = Date.now() - quizStartTimeRef.current;
-
     quizResultsRef.current.push({
       quizId: quiz.quizId,
+      quiz: quiz.quiz || quiz.question, // quiz 필드도 함께 저장
       question: quiz.question,
       options: quiz.options,
       correctAnswer: quiz.answer,
       userAnswer: answer,
       isCorrect: answer === quiz.answer,
-      responseTime,
+      description: quiz.description,
     });
   
     if (answer === quiz.answer) {
@@ -914,6 +913,12 @@ export default function Game({ user }) {
         const level4Data = await fetchChapterContents(4, chapterId, chapterData?.bookId);
         console.log("✅ Level 4 (퀴즈) 응답:", level4Data);
         
+        // session=4에서 받아온 description 저장
+        if (level4Data?.description) {
+          sessionDescriptionRef.current = level4Data.description;
+          console.log("✅ Description 저장:", level4Data.description);
+        }
+        
         const quizData = level4Data?.quiz || [];
         console.log("✅ 퀴즈 데이터:", quizData);
         setQuizList(quizData);
@@ -962,11 +967,12 @@ export default function Game({ user }) {
         
         const formattedResults = quizResultsRef.current.map(result => ({
           quizId: result.quizId || '',
-          question: result.question,
+          quiz: result.quiz || result.question, // quiz 필드도 함께 전달
           options: result.options || [],
           correctAnswer: result.correctAnswer,
           userAnswer: result.userAnswer,
           isCorrect: result.isCorrect,
+          description: result.description,
           quizDate: new Date().toISOString().split('T')[0]
         }));
         
@@ -1055,11 +1061,16 @@ export default function Game({ user }) {
 
       const derivedQuizId = nextQuiz?.quizId ?? nextQuiz?.id ?? nextQuiz?._id ?? nextQuiz?.questionId;
 
+      // 퀴즈에 description이 있으면 사용하고, 없으면 session description 사용
+      const quizDescription = nextQuiz?.description || sessionDescriptionRef.current;
+
       setQuiz({
         quizId: derivedQuizId,
         question: nextQuiz.quiz,
+        quiz: nextQuiz.quiz, // quiz 필드도 함께 저장
         options: nextQuiz.options,
         answer: nextQuiz.answer,
+        description: quizDescription,
       });
       bgmRef.current?.pause();
     }

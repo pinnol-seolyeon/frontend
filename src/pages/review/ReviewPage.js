@@ -299,13 +299,15 @@ function ReviewPage({ user, login, setLogin }) {
                     <ReviewButtons>
                       <ReviewButton 
                         onClick={() => handleFirstReview(module.chapterId)} 
-                        disabled={module.firstReviewCompleted || !module.firstReviewAvailable}
+                        // disabled={module.firstReviewCompleted || !module.firstReviewAvailable}
+                        disabled = {module.firstReviewCompleted}
                       >
                         {module.firstReviewCompleted ? '완료!' : '1차 복습'}
                       </ReviewButton>
                       <ReviewButton 
                         onClick={() => handleSecondReview(module.chapterId)} 
-                        disabled={module.secondReviewCompleted || !module.secondReviewAvailable}
+                        // disabled={module.secondReviewCompleted || !module.secondReviewAvailable}
+                        disabled = {module.secondReviewCompleted}
                       >
                         {module.secondReviewCompleted ? '완료!' : '2차 복습'}
                       </ReviewButton>

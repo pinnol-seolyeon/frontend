@@ -297,8 +297,12 @@ function StudyPage({ user, login, setLogin }){
                 setSummary(summaryText);
 
                 if (summaryText) {
+                    //문장 분리 (\n 기준으로 먼저 분리, 그 다음 .?! 기준으로 분리)
                     const baseSentences = summaryText
-                        .split(/(?<=[.?!])\s+/)
+                        .split(/\n/)  // \n 기준으로 먼저 분리
+                        .flatMap(paragraph => 
+                            paragraph.split(/(?<=[.?!])\s+/)  // 각 문단을 .?! 기준으로 분리
+                        )
                         .filter((s) => s.trim() !== "");
 
                     //긴 문장 분할 함수(질문 제외)
