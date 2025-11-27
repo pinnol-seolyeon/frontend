@@ -222,8 +222,8 @@ const ReceiveMessage = styled.div`
     color: #333333;
 
     
-    max-width: 80%;
-    word-wrap: break-word;
+    max-width: 60%;
+    word-wrap: normal;
     white-space: pre-wrap;
     
     animation: ${fadeIn} 0.3s ease-out;
@@ -610,7 +610,7 @@ function Question({ user, login, setLogin }){
                             <MicIcon src={mic} alt="마이크 버튼"/>
                         </MicButton>
                         <SendButton onClick={() => handleMessage(transcript)}>
-                            답변하기
+                            보내기
                         </SendButton>
                     </InputArea>
                     </QuestionArea>

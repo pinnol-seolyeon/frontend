@@ -330,6 +330,12 @@ const QuizAnswerContainer = styled.div`
     gap: 0.5rem;
 `;
 
+const QuizFeedback = styled.div`
+    font-size: 14px;
+    font-weight: 400;
+    color: #454545;
+`;
+
 const StatusDetail = ({user, login, setLogin}) => {
 console.log('REDIRECT_URI:', process.env.REACT_APP_KAKAO_REDIRECT_URI);
 console.log('현재 NODE_ENV:', process.env.NODE_ENV);
@@ -441,6 +447,7 @@ return (
                                         {quiz.isCorrect ? '정답' : '오답'}
                                     </QuizBadge>
                                 </QuizAnswerContainer>
+                                <QuizFeedback>해설: {quiz.description}</QuizFeedback>
                             </QuizCard>
                         ))
                     )}

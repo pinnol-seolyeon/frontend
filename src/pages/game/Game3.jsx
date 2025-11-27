@@ -136,7 +136,8 @@ const BoardWrapper = styled.div`
 /* GridOverlay removed */
 
 const Cell = styled.button`
-    background: #ffffff;
+    // background: #ffffff;
+    background: rgba(255, 255, 255, 0.5);
     border: 1px solid #E5BE8B;
     position: relative;
     display: flex;
@@ -858,6 +859,7 @@ const Game3 = () => {
           
           const raw = quizList[idx];
           normalized = {
+            quizId: raw?.quizId ?? raw?.id ?? raw?._id ?? raw?.questionId ?? '',
             question: raw?.quiz ?? raw?.question ?? '',
             options: raw?.options ?? [],
             answer: raw?.answer ?? raw?.correctAnswer,
@@ -866,6 +868,7 @@ const Game3 = () => {
         if (!normalized) {
           // fallback
           normalized = {
+            quizId: '',
             question: '용돈 500원에서 200원을 썼습니다. 남은 돈은?',
             options: ['100원', '300원', '700원', '900원'],
             answer: '300원',
@@ -1125,9 +1128,13 @@ const Game3 = () => {
     }
     // Save quiz result
     setQuizResults(prev => [...prev, {
+      quizId: currentQuiz.quizId || '',
       question: currentQuiz.question,
+      options: currentQuiz.options || [],
       correctAnswer: currentQuiz.answer,
-      isCorrect: correct
+      userAnswer: chosen || '',
+      isCorrect: correct,
+      quizDate: new Date().toISOString().split('T')[0]
     }]);
     // Show result feedback (toast)
     setQuizResult(correct ? 'correct' : 'incorrect');
