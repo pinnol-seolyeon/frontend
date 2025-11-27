@@ -54,7 +54,7 @@ const MainWrapper = styled.div`
 
 const ContentContainer = styled.div`
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 2rem;
   width: 100%;
   max-width: 1200px;
@@ -64,7 +64,7 @@ const ContentContainer = styled.div`
 const LeftSection = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   margin-left: 2rem;
   gap: 0;
@@ -586,8 +586,12 @@ function ReviewContent({ user, login, setLogin }){
                 const quizData = await fetchQuizReview(reviewCount, chapterId);
                 console.log("✅ 퀴즈 데이터 받음:", quizData);
                 
-                // 퀴즈 데이터를 state로 전달하며 ReviewGame으로 이동
-                navigate(`/review/game`, {
+                // 게임을 랜덤으로 선택 (Game, Game2, Game3 중 하나)
+                const gameTypes = ['game', 'game2', 'game3'];
+                const randomGameType = gameTypes[Math.floor(Math.random() * gameTypes.length)];
+                
+                // 퀴즈 데이터를 state로 전달하며 선택된 ReviewGame으로 이동
+                navigate(`/review/${randomGameType}`, {
                     state: {
                         quizData: quizData.data || [],
                         chapterId: chapterId,
@@ -691,13 +695,6 @@ function ReviewContent({ user, login, setLogin }){
     if (currentIndex < 2) { // 0, 1 인덱스까지만 (즉, 처음 2-3개 문장)
         setCurrentIndex(currentIndex + 1);
     } else {
-        //여태까지 질문한 내용들을 DB에 저장하는 API
-        try{
-            const response=await api.post(`/api/question/saveAll?chapterId=${chapterData?.chapterId}`);
-            console.log("🐯 질문/답변 저장 성공");
-        }catch(e){
-            console.log("❌ 저장 중 오류 발생",e);
-        }
 
         //피드백 저장
         await saveFeedbacks(chapterData?.chapterId);
@@ -793,13 +790,6 @@ const stopVoiceRecognition = () => {
                 <LeftSection>
                   <HoppinImage src={hoppin} alt="호핀" />
                 </LeftSection>
-
-                <RightSection>
-                  <QuestionButton onClick={navigateToQuestion}>
-                        <QuestionIconImg src={questionIcon} alt="질문 아이콘" />
-                        질문하기
-                    </QuestionButton>
-                </RightSection>
               </ContentContainer>
 
               <TtsPlayer

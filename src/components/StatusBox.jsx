@@ -146,17 +146,17 @@ const Sticker = styled.div`
   
   ${props => {
     switch(props.type) {
-      case 'review':
+      case 'MODEL_STUDENT':
         return `
           background-color: #FFF1C1;
           color: #FFAA00;
         `;
-      case 'learning':
+      case 'SMART_GAMER':
         return `
           background-color: #E3F4FF;
           color: #4EB8FF;
         `;
-      case 'focus':
+      case 'FINE_HUNTER':
         return `
           background-color: #F0F4FC;
           color: #478CEE;
@@ -185,16 +185,16 @@ const CrownIcon = styled.div`
         height: 0.8rem;
         ${props => {
             switch(props.type) {
-            case 'review':
+            case 'MODEL_STUDENT':
                 // 노란색 계열
                 return `
                 `;
-            case 'learning':
+            case 'SMART_GAMER':
                 // #4EB8FF 색상 (밝은 파란색)
                 return `
                     filter: brightness(0) saturate(100%) invert(79%) sepia(27%) saturate(1253%) hue-rotate(176deg) brightness(105%) contrast(101%);
                 `;
-            case 'focus':
+            case 'FINE_HUNTER':
                 // #478CEE 색상 (진한 파란색)
                 return `
                     filter: brightness(0) saturate(100%) invert(62%) sepia(45%) saturate(1200%) hue-rotate(197deg) brightness(102%) contrast(95%);
@@ -286,6 +286,16 @@ const StatusBox = ({
       );
     }
 
+    const getStickerText = (sticker) => {
+      switch(sticker.type) {
+        case 'MODEL_STUDENT': return '모범생';
+        case 'SMART_GAMER': return '스마트 게이머';
+        case 'FINE_HUNTER': return '스피드 사냥꾼';
+        default: return sticker.name;
+      }
+    };
+  
+
     return (
       <>
         <StickerSection>
@@ -296,7 +306,7 @@ const StatusBox = ({
                     <CrownIcon type={sticker.type}>
                       <img src={Crown} alt="Crown icon" />
                     </CrownIcon>
-                    {sticker.name}
+                    {getStickerText(sticker.type)}
                   </Sticker>
                 ))}
             </StickerContainer>

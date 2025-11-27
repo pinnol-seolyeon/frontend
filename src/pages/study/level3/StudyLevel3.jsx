@@ -698,9 +698,12 @@ function StudyPage({ user, login, setLogin }){
                 if (contents) {
                     console.log("✅ Chapter content:", contents);
                     
-                    //문장 분리
+                    //문장 분리 (\n 기준으로 먼저 분리, 그 다음 .?! 기준으로 분리)
                     const baseSentences = contents
-                        .split(/(?<=[.?!])\s+/)
+                        .split(/\n/)  // \n 기준으로 먼저 분리
+                        .flatMap(paragraph => 
+                            paragraph.split(/(?<=[.?!])\s+/)  // 각 문단을 .?! 기준으로 분리
+                        )
                         .filter((s) => s.trim() !== ""); //공백만 있는 문장 등을 제거
                     
                     //질문 감지 함수
