@@ -156,6 +156,11 @@ const Sticker = styled.div`
           background-color: #E3F4FF;
           color: #4EB8FF;
         `;
+      case 'SPEED_HUNTER':
+        return `
+          background-color: #F0F4FC;
+          color: #478CEE;
+        `;
       case 'FINE_HUNTER':
         return `
           background-color: #F0F4FC;
@@ -193,6 +198,11 @@ const CrownIcon = styled.div`
                 // #4EB8FF 색상 (밝은 파란색)
                 return `
                     filter: brightness(0) saturate(100%) invert(79%) sepia(27%) saturate(1253%) hue-rotate(176deg) brightness(105%) contrast(101%);
+                `;
+            case 'SPEED_HUNTER':
+                // #478CEE 색상 (진한 파란색)
+                return `
+                    filter: brightness(0) saturate(100%) invert(62%) sepia(45%) saturate(1200%) hue-rotate(197deg) brightness(102%) contrast(95%);
                 `;
             case 'FINE_HUNTER':
                 // #478CEE 색상 (진한 파란색)
@@ -286,12 +296,13 @@ const StatusBox = ({
       );
     }
 
-    const getStickerText = (sticker) => {
-      switch(sticker.type) {
+    const getStickerText = (stickerType, stickerName) => {
+      switch(stickerType) {
         case 'MODEL_STUDENT': return '모범생';
         case 'SMART_GAMER': return '스마트 게이머';
-        case 'FINE_HUNTER': return '스피드 사냥꾼';
-        default: return sticker.name;
+        case 'SPEED_HUNTER': return '스피드 사냥꾼';
+        case 'FINE_HUNTER': return '정교한 사냥꾼';
+        default: return stickerName;
       }
     };
   
@@ -306,7 +317,7 @@ const StatusBox = ({
                     <CrownIcon type={sticker.type}>
                       <img src={Crown} alt="Crown icon" />
                     </CrownIcon>
-                    {getStickerText(sticker.type)}
+                    {getStickerText(sticker.type, sticker.name)}
                   </Sticker>
                 ))}
             </StickerContainer>
