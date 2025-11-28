@@ -209,25 +209,92 @@ function ReviewPage({ user, login, setLogin }) {
         const data = await fetchReviewList(currentPage);
         
         // API 응답 데이터를 컴포넌트 형식으로 변환
-        const modules = (data.content || []).map((chapter) => {
+        // 먼저 모든 chapter의 상태를 파악
+        const chaptersData = (data.content || []).map((chapter) => {
           const firstReviewStatus = chapter.lockStatus?.firstReview;
           const secondReviewStatus = chapter.lockStatus?.secondReview;
-          
-          const isFirstReviewCompleted = firstReviewStatus === 'COMPLETED';
-          const isSecondReviewCompleted = secondReviewStatus === 'COMPLETED';
-          
-          const isFirstReviewAvailable = firstReviewStatus !== 'LOCKED' && !isFirstReviewCompleted;
-          const isSecondReviewAvailable = secondReviewStatus !== 'LOCKED' && !isSecondReviewCompleted;
           
           return {
             chapterId: chapter.chapterId,
             title: chapter.chapterTitle,
+            firstReviewStatus: firstReviewStatus,
+            secondReviewStatus: secondReviewStatus,
+            isFirstReviewCompleted: firstReviewStatus === 'COMPLETED',
+            isSecondReviewCompleted: secondReviewStatus === 'COMPLETED',
+            isFirstReviewLocked: firstReviewStatus === 'LOCKED',
+            isSecondReviewLocked: secondReviewStatus === 'LOCKED',
+          };
+        });
+        
+        // 기존 로직 (주석처리)
+        // const modules = (data.content || []).map((chapter) => {
+        //   const firstReviewStatus = chapter.lockStatus?.firstReview;
+        //   const secondReviewStatus = chapter.lockStatus?.secondReview;
+        //   const isFirstReviewCompleted = firstReviewStatus === 'COMPLETED';
+        //   const isSecondReviewCompleted = secondReviewStatus === 'COMPLETED';
+        //   const isFirstReviewAvailable = firstReviewStatus !== 'LOCKED' && !isFirstReviewCompleted;
+        //   const isSecondReviewAvailable = secondReviewStatus !== 'LOCKED' && !isSecondReviewCompleted;
+        //   return {
+        //     chapterId: chapter.chapterId,
+        //     title: chapter.chapterTitle,
+        //     subTitle: "복습 가능한 단원입니다",
+        //     icon: getChapterIcon(chapter.chapterId, chapter.chapterTitle),
+        //     firstReviewAvailable: isFirstReviewAvailable,
+        //     secondReviewAvailable: isSecondReviewAvailable,
+        //     firstReviewCompleted: isFirstReviewCompleted,
+        //     secondReviewCompleted: isSecondReviewCompleted,
+        //   };
+        // });
+        
+        // 새로운 로직: 모든 것이 locked이면 맨 처음 것 하나만 열어주고, 앞에 completed 상태가 있으면 그 다음 locked를 열어주기
+        const modules = chaptersData.map((chapter, index) => {
+          let isFirstReviewAvailable = false;
+          let isSecondReviewAvailable = false;
+          
+          // 모든 chapter가 모두 locked인지 확인
+          const allChaptersLocked = chaptersData.every(ch => 
+            ch.isFirstReviewLocked && ch.isSecondReviewLocked
+          );
+          
+          if (allChaptersLocked) {
+            // 모든 것이 locked이면 맨 처음 것 하나만 열어주기
+            if (index === 0) {
+              isFirstReviewAvailable = true;
+            }
+          } else {
+            // 앞에 completed 상태가 있으면 그 다음 locked를 열어주기
+            // 1. firstReview가 COMPLETED이고 secondReview가 LOCKED이면 secondReview 열기
+            if (chapter.isFirstReviewCompleted && chapter.isSecondReviewLocked) {
+              isSecondReviewAvailable = true;
+            }
+            
+            // 2. firstReview가 LOCKED이면, 이전 항목들이 모두 completed인지 확인
+            if (chapter.isFirstReviewLocked) {
+              // 첫 번째 항목이거나, 이전 항목들이 모두 completed인 경우
+              if (index === 0) {
+                isFirstReviewAvailable = true;
+              } else {
+                // 이전 항목들이 모두 completed인지 확인
+                const previousAllCompleted = chaptersData.slice(0, index).every(prevChapter => 
+                  prevChapter.isFirstReviewCompleted && prevChapter.isSecondReviewCompleted
+                );
+                
+                if (previousAllCompleted) {
+                  isFirstReviewAvailable = true;
+                }
+              }
+            }
+          }
+          
+          return {
+            chapterId: chapter.chapterId,
+            title: chapter.title,
             subTitle: "복습 가능한 단원입니다",
-            icon: getChapterIcon(chapter.chapterId, chapter.chapterTitle),
+            icon: getChapterIcon(chapter.chapterId, chapter.title),
             firstReviewAvailable: isFirstReviewAvailable,
             secondReviewAvailable: isSecondReviewAvailable,
-            firstReviewCompleted: isFirstReviewCompleted,
-            secondReviewCompleted: isSecondReviewCompleted,
+            firstReviewCompleted: chapter.isFirstReviewCompleted,
+            secondReviewCompleted: chapter.isSecondReviewCompleted,
           };
         });
         
@@ -299,15 +366,19 @@ function ReviewPage({ user, login, setLogin }) {
                     <ReviewButtons>
                       <ReviewButton 
                         onClick={() => handleFirstReview(module.chapterId)} 
+                        // 기존 로직 (주석처리)
                         // disabled={module.firstReviewCompleted || !module.firstReviewAvailable}
-                        disabled = {module.firstReviewCompleted}
+                        // 새 로직: completed이거나 available하지 않으면 disabled
+                        disabled={module.firstReviewCompleted || !module.firstReviewAvailable}
                       >
                         {module.firstReviewCompleted ? '완료!' : '1차 복습'}
                       </ReviewButton>
                       <ReviewButton 
                         onClick={() => handleSecondReview(module.chapterId)} 
+                        // 기존 로직 (주석처리)
                         // disabled={module.secondReviewCompleted || !module.secondReviewAvailable}
-                        disabled = {module.secondReviewCompleted}
+                        // 새 로직: completed이거나 available하지 않으면 disabled
+                        disabled={module.secondReviewCompleted || !module.secondReviewAvailable}
                       >
                         {module.secondReviewCompleted ? '완료!' : '2차 복습'}
                       </ReviewButton>

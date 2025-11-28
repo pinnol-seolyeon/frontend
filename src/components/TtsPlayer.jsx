@@ -230,7 +230,7 @@ export default function TtsPlayer({
         console.error("오디오 src 설정 오류:", error);
         if (handleCanPlay) audio.removeEventListener("canplay", handleCanPlay);
         if (handleError) audio.removeEventListener("error", handleError);
-      }
+    }
     }, 50);
 
     return () => {
