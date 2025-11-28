@@ -570,8 +570,8 @@ function ReviewContent({ user, login, setLogin }){
     //질문 버튼 누른 후 다시 학습하기 3단계로 돌아온 경우 포함
     useEffect(()=>{
         if (returnToIndex > 0) {
-            console.log("🐛returnToIndex",returnToIndex);
-            setCurrentIndex(returnToIndex);
+        console.log("🐛returnToIndex",returnToIndex);
+        setCurrentIndex(returnToIndex);
             setIsTtsCompleted(false); // TTS 완료 상태 초기화
         }
     },[]); //의존성 배열이 비어 있어야 컴포넌트 최초 마운트 시 한 번만 실행

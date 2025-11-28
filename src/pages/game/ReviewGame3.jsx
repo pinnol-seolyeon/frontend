@@ -778,20 +778,18 @@ const ReviewGame3 = ({ user }) => {
     }
     
     // 새로운 API 응답 구조를 Game3.jsx가 기대하는 형식으로 변환
-    // API 응답: { sourceQuizId, twinQuestion, correctAnswer, explanation }
+    // API 응답: { sourceQuizId, twinQuestion, twinCorrectAnswer, explanation }
     // Game3.jsx 형식: { quiz, options, answer, quizId }
     // 복습하기는 O/X 형식으로 변환
     const convertedQuizList = quizDataFromState.map((quizItem, index) => {
-      // correctAnswer를 O/X 형식으로 변환
-      let correctAnswerOX = 'O';
-      const correctAnswer = String(quizItem.correctAnswer || '').trim().toUpperCase();
+      // twinCorrectAnswer를 그대로 사용 (이미 O/X 형식으로 오는 값)
+      const twinCorrectAnswer = String(quizItem.twinCorrectAnswer || '').trim().toUpperCase();
       
-      // 다양한 형태의 정답을 O/X로 변환
-      if (correctAnswer === 'X' || correctAnswer === 'FALSE' || correctAnswer === 'F' || 
-          correctAnswer === '오답' || correctAnswer === '틀림' || correctAnswer === 'NO') {
+      // twinCorrectAnswer가 "O" 또는 "X"로 오므로 그대로 사용
+      let correctAnswerOX = 'O'; // 기본값
+      if (twinCorrectAnswer === 'X' || twinCorrectAnswer === 'FALSE' || twinCorrectAnswer === 'F') {
         correctAnswerOX = 'X';
-      } else if (correctAnswer === 'O' || correctAnswer === 'TRUE' || correctAnswer === 'T' || 
-                 correctAnswer === '정답' || correctAnswer === '맞음' || correctAnswer === 'YES') {
+      } else if (twinCorrectAnswer === 'O' || twinCorrectAnswer === 'TRUE' || twinCorrectAnswer === 'T') {
         correctAnswerOX = 'O';
       }
       
@@ -1228,8 +1226,8 @@ const ReviewGame3 = ({ user }) => {
 
   return (
     <Wrapper>
-      <GlobalFonts />
-      <Topbar>
+        <GlobalFonts />
+        <Topbar>
         <CoinDisplay>
           <CoinImage src={coinImg} alt="coin" />
           <CoinText>{coins}</CoinText>

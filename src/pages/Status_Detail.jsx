@@ -193,21 +193,7 @@ const CrownIcon = styled.div`
             case 'FINE_HUNTER':
                 // #478CEE 색상 (진한 파란색)
                 return `
-                    filter: brightness(0) saturate(100%) invert(62%) sepia(45%) saturate(1200%) hue-rotate(197deg) brightness(102%) contrast(95%);
-                `;
-            case 'review':
-                // 노란색 계열
-                return `
-                `;
-            case 'learning':
-                // #4EB8FF 색상 (밝은 파란색)
-                return `
-                    filter: brightness(0) saturate(100%) invert(79%) sepia(27%) saturate(1253%) hue-rotate(176deg) brightness(105%) contrast(101%);
-                `;
-            case 'focus':
-                // #478CEE 색상 (진한 파란색)
-                return `
-                    filter: brightness(0) saturate(100%) invert(62%) sepia(45%) saturate(1200%) hue-rotate(197deg) brightness(102%) contrast(95%);
+                    // filter: brightness(0) saturate(100%) invert(62%) sepia(45%) saturate(1200%) hue-rotate(197deg) brightness(102%) contrast(95%);
                 `;
             default:
                 return `
@@ -245,23 +231,8 @@ const Sticker = styled.div`
         `;
       case 'FINE_HUNTER':
         return `
-          background-color: #F0F4FC;
-          color: #478CEE;
-        `;
-      case 'review':
-        return `
           background-color: #FFF1C1;
           color: #FFAA00;
-        `;
-      case 'learning':
-        return `
-          background-color: #E3F4FF;
-          color: #4EB8FF;
-        `;
-      case 'focus':
-        return `
-          background-color: #F0F4FC;
-          color: #478CEE;
         `;
       default:
         return `
