@@ -497,7 +497,7 @@ function StudyLv2_withImg({ user, login, setLogin }){
             console.log("✅AI피드백:",feedback.result)
             
             const fullResponse = feedback.result;
-            setAiResponse(fullResponse);
+        setAiResponse(fullResponse);
 
             // 전체 답변을 한 번에 재생하기 위해 하나의 요소로 설정
             setAnswers([fullResponse]);
@@ -512,17 +512,17 @@ function StudyLv2_withImg({ user, login, setLogin }){
 
             // 전체 답변을 한 번에 재생하기 위해 하나의 요소로 설정
             setAnswers([fullResponse]);
-            setIsAnsweringPhase(true);
-            setCurrentIndex(0);
+        setIsAnsweringPhase(true);
+        setCurrentIndex(0);
         } finally {
             // 로딩 종료
             setIsAiLoading(false);
-            setIsAnswering(false);
-            setPreloadDone(false);
+        setIsAnswering(false);
+        setPreloadDone(false);
             setIsTtsCompleted(false); // TTS 완료 상태 초기화
-            setIsVoiceRecognitionComplete(false);
-            setRecognizedText("");
-            setUserAnswer("");
+        setIsVoiceRecognitionComplete(false);
+        setRecognizedText("");
+        setUserAnswer("");
         }
     };
 
@@ -555,7 +555,7 @@ function StudyLv2_withImg({ user, login, setLogin }){
                     
                     return{result:"😟오류 발생: " + (e.response?.data?.message || e.message)};
                 }
-            };
+    };
 
     // 음성인식 시작/종료 함수
     const handleVoiceRecognition = () => {

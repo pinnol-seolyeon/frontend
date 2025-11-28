@@ -163,13 +163,13 @@ const Sticker = styled.div`
         `;
       case 'FINE_HUNTER':
         return `
-          background-color: #F0F4FC;
-          color: #478CEE;
+          background-color: #FFF1C1;
+          color: #FFAA00;
         `;
       default:
         return `
-          background-color: #F5F5F5;
-          color: #666666;
+          background-color: #FFF1C1;
+          color: #FFAA00;
         `;
     }
   }}
@@ -207,7 +207,7 @@ const CrownIcon = styled.div`
             case 'FINE_HUNTER':
                 // #478CEE 색상 (진한 파란색)
                 return `
-                    filter: brightness(0) saturate(100%) invert(62%) sepia(45%) saturate(1200%) hue-rotate(197deg) brightness(102%) contrast(95%);
+                    // filter: brightness(0) saturate(100%) invert(62%) sepia(45%) saturate(1200%) hue-rotate(197deg) brightness(102%) contrast(95%);
                 `;
             default:
                 return `
