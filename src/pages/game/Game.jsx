@@ -716,6 +716,7 @@ export default function Game({ user }) {
   const hurdleImagesRef = useRef([]);
 
   const [quizList, setQuizList] = useState([]);
+  const quizListRef = useRef([]); // ref로도 관리하여 최신 값 참조
   const currentQuizIndexRef = useRef(0);
 
   const [quizLoaded, setQuizLoaded] = useState(false);
@@ -805,7 +806,7 @@ export default function Game({ user }) {
     if (!quiz) return;
     quizResultsRef.current.push({
       quizId: quiz.quizId,
-      quiz: quiz.quiz || quiz.question, // quiz 필드도 함께 저장
+      question: quiz.quiz || quiz.question, // quiz 필드도 함께 저장
       question: quiz.question,
       options: quiz.options,
       correctAnswer: quiz.answer,
@@ -919,9 +920,11 @@ export default function Game({ user }) {
           console.log("✅ Description 저장:", level4Data.description);
         }
         
+        // session=4에서 quiz 필드로 받아옴 (data.quiz 배열)
         const quizData = level4Data?.quiz || [];
         console.log("✅ 퀴즈 데이터:", quizData);
         setQuizList(quizData);
+        quizListRef.current = quizData; // ref도 업데이트
         setQuizLoaded(true);
       } catch (err) {
         console.error("❌ 퀴즈 불러오기 실패:", err);
@@ -967,7 +970,7 @@ export default function Game({ user }) {
         
         const formattedResults = quizResultsRef.current.map(result => ({
           quizId: result.quizId || '',
-          quiz: result.quiz || result.question, // quiz 필드도 함께 전달
+          question: result.quiz || result.question, // quiz 필드도 함께 전달
           options: result.options || [],
           correctAnswer: result.correctAnswer,
           userAnswer: result.userAnswer,
@@ -1063,11 +1066,14 @@ export default function Game({ user }) {
 
       // 퀴즈에 description이 있으면 사용하고, 없으면 session description 사용
       const quizDescription = nextQuiz?.description || sessionDescriptionRef.current;
+      
+      // question 필드로 받아오므로 nextQuiz.question 사용
+      const quizQuestion = nextQuiz?.question || nextQuiz?.quiz;
 
       setQuiz({
         quizId: derivedQuizId,
-        question: nextQuiz.quiz,
-        quiz: nextQuiz.quiz, // quiz 필드도 함께 저장
+        question: quizQuestion,
+        quiz: quizQuestion, // quiz 필드도 함께 저장
         options: nextQuiz.options,
         answer: nextQuiz.answer,
         description: quizDescription,
