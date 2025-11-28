@@ -254,6 +254,7 @@ function StudyPage({ user, login, setLogin }){
     const [sentences,setSentences]=useState([]);
     const [preloadDone, setPreloadDone] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [isTtsCompleted, setIsTtsCompleted] = useState(false); // TTS 재생 완료 상태
 
     // 활동 감지 Hook 사용 (level 5)
     const { completeSession } = useActivityTracker(
@@ -330,6 +331,7 @@ function StudyPage({ user, login, setLogin }){
                 
                 setCurrentIndex(0);
                 setPreloadDone(false);
+                setIsTtsCompleted(false); // TTS 완료 상태 초기화
             } catch (error) {
                 console.error("❌ Level 5 데이터 로딩 실패:", error);
                 setSentences(["❌ 내용을 불러오는데 실패했습니다. 다시 시도해주세요."]);
@@ -341,10 +343,15 @@ function StudyPage({ user, login, setLogin }){
         loadLevel5Data();
     }, [searchParams]);
 
+    // currentIndex가 변경될 때마다 TTS 완료 상태 초기화
+    useEffect(() => {
+        setIsTtsCompleted(false);
+    }, [currentIndex]);
 
     //다음 버튼
     const handleAnswer=()=>{
       if(currentIndex<sentences.length-1){
+        setIsTtsCompleted(false); // TTS 완료 상태 초기화
         setCurrentIndex(currentIndex+1);
       }else{
         // 마지막 문장에서 "잘 이해했어!" 버튼을 누르면 바로 다음 단계로
@@ -382,6 +389,7 @@ function StudyPage({ user, login, setLogin }){
                             autoPlay={true}
                             style={{ display: "none" }}
                             onPreloadDone={() => setPreloadDone(true)}
+                            onTtsEnd={() => setIsTtsCompleted(true)}  // TTS 재생 완료 시 호출
                         />
                         {!preloadDone ? (
                             <SpeechBubble>
@@ -392,9 +400,14 @@ function StudyPage({ user, login, setLogin }){
                                 <TextBox>
                                     {sentences.length > 0 ? sentences[currentIndex] : "설명이 없습니다."}
                                 </TextBox>
+                                {/* TTS 재생 완료 시에만 버튼 표시 */}
+                                {isTtsCompleted && (
                                 <ButtonWrapper>
                                     {currentIndex > 0 && (
-                                        <BackButton onClick={() => setCurrentIndex(currentIndex - 1)}>
+                                        <BackButton onClick={() => {
+                                            setIsTtsCompleted(false); // TTS 완료 상태 초기화
+                                            setCurrentIndex(currentIndex - 1);
+                                        }}>
                                             이전
                                         </BackButton>
                                     )}
@@ -402,6 +415,7 @@ function StudyPage({ user, login, setLogin }){
                                         {currentIndex < sentences.length - 1 ? "다음" : "잘 이해했어!"}
                                     </BubbleButton>
                                 </ButtonWrapper>
+                                )}
                             </SpeechBubble>
                         )}
                     </ImageWithSpeechWrapper>

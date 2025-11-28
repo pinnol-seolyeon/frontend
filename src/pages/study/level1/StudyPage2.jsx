@@ -200,6 +200,7 @@ function StudyPage({ user, login, setLogin }){
     const [loading,setLoading]=useState(true);
     const [preloadDone, setPreloadDone] = useState(false);
     const [step, setStep] = useState(0);
+    const [isTtsCompleted, setIsTtsCompleted] = useState(false); // TTS 재생 완료 상태
 
     // 활동 감지 Hook 사용 (level 2)
     // FIXME: 백엔드 start-level API 401 에러로 임시 스킵
@@ -288,6 +289,7 @@ function StudyPage({ user, login, setLogin }){
                             autoPlay={true}
                             style={{ display: "none" }}
                             onPreloadDone={() => setPreloadDone(true)}
+                            onTtsEnd={() => setIsTtsCompleted(true)}  // TTS 재생 완료 시 호출
                         />
                         { !preloadDone ? (
                             <TextBox>화면을 준비 중입니다...</TextBox>
@@ -306,6 +308,8 @@ function StudyPage({ user, login, setLogin }){
                                     }
 
                             </TextBox>
+                             {/* TTS 재생 완료 시에만 버튼 표시 */}
+                             {isTtsCompleted && (
                              <ButtonWrapper>
                                   <BubbleButton onClick={() => {
                                       navigate(`/study/level2-img?chapterId=${chapterData?.chapterId}`);
@@ -313,6 +317,7 @@ function StudyPage({ user, login, setLogin }){
                                          다음
                                   </BubbleButton>
                              </ButtonWrapper>
+                             )}
                             
                             {/* <SecondWrapper>
                                 <BubbleButton onClick={()=>navigate(`/study/level2-img`)}>좋아✅</BubbleButton>  

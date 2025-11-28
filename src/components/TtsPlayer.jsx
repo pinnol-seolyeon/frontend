@@ -10,6 +10,7 @@ import React, { useEffect, useRef, useState } from "react";
  *   autoPlay (기본 true): true면 currentIndex나 단계 바뀔 때 자동 재생
  *   style: <audio> 태그 스타일
  *   onPreloadDone: 모든 문장 캐싱 완료 시 호출되는 콜백
+ *   onTtsEnd: TTS 재생이 끝날 때 호출되는 콜백
  */
 export default function TtsPlayer({
   sentences = [],
@@ -19,11 +20,13 @@ export default function TtsPlayer({
   autoPlay = true,
   style = { display: "none" },
   onPreloadDone,
+  onTtsEnd,
 }) {
   const audioRef = useRef(null);
   const [preloadAudio, setPreloadAudio] = useState([[], []]);
   const [isPreloading, setIsPreloading] = useState(false);
   const [preloadError, setPreloadError] = useState(null);
+  const preloadAudioRef = useRef([[], []]); // ref로 최신 preloadAudio 유지
 
   // (1) 질문 문장 캐싱
   useEffect(() => {
@@ -47,7 +50,19 @@ export default function TtsPlayer({
       })
     )
       .then((questionUrls) => {
-        setPreloadAudio((prev) => [questionUrls, prev[1]]);
+        // 이전 질문 URL들 정리
+        preloadAudioRef.current[0].forEach((url) => {
+          if (url && url.startsWith('blob:')) {
+            try {
+              URL.revokeObjectURL(url);
+            } catch (e) {
+              console.warn('Blob URL 해제 실패 (무시):', e);
+            }
+          }
+        });
+        const newPreloadAudio = [questionUrls, preloadAudioRef.current[1]];
+        preloadAudioRef.current = newPreloadAudio;
+        setPreloadAudio(newPreloadAudio);
         if (!answers.length) {
           setIsPreloading(false);
           onPreloadDone && onPreloadDone();
@@ -62,10 +77,41 @@ export default function TtsPlayer({
 
   // (2) 답변 문장 캐싱
   useEffect(() => {
-    if (!answers.length) return;
+    if (!answers.length) {
+      // answers가 비어있으면 이전 답변 URL들만 정리 (질문 URL은 유지)
+      setPreloadAudio((prev) => {
+        prev[1].forEach((url) => {
+          if (url && url.startsWith('blob:')) {
+            try {
+              URL.revokeObjectURL(url);
+            } catch (e) {
+              console.warn('Blob URL 해제 실패 (무시):', e);
+            }
+          }
+        });
+        return [prev[0], []];
+      });
+      preloadAudioRef.current = [preloadAudioRef.current[0], []];
+      return;
+    }
 
     setIsPreloading(true);
     setPreloadError(null);
+
+    // 이전 답변 URL들 정리 (질문 URL은 유지)
+    setPreloadAudio((prev) => {
+      prev[1].forEach((url) => {
+        if (url && url.startsWith('blob:')) {
+          try {
+            URL.revokeObjectURL(url);
+          } catch (e) {
+            console.warn('Blob URL 해제 실패 (무시):', e);
+          }
+        }
+      });
+      return [prev[0], []];
+    });
+    preloadAudioRef.current = [preloadAudioRef.current[0], []];
 
     Promise.all(
       answers.map(async (text) => {
@@ -82,7 +128,19 @@ export default function TtsPlayer({
       })
     )
       .then((answerUrls) => {
-        setPreloadAudio((prev) => [prev[0], answerUrls]);
+        // 이전 답변 URL들 정리
+        preloadAudioRef.current[1].forEach((url) => {
+          if (url && url.startsWith('blob:')) {
+            try {
+              URL.revokeObjectURL(url);
+            } catch (e) {
+              console.warn('Blob URL 해제 실패 (무시):', e);
+            }
+          }
+        });
+        const newPreloadAudio = [preloadAudioRef.current[0], answerUrls];
+        preloadAudioRef.current = newPreloadAudio;
+        setPreloadAudio(newPreloadAudio);
         setIsPreloading(false);
         onPreloadDone && onPreloadDone();
       })
@@ -99,21 +157,112 @@ export default function TtsPlayer({
     if (isPreloading) return;
 
     const phaseIndex = isAnsweringPhase ? 1 : 0;
-    const urlList = preloadAudio[phaseIndex];
-    if (!urlList || urlList.length === 0) return;
-    if (currentIndex < 0 || currentIndex >= urlList.length) return;
+    // ref에서 최신 preloadAudio 가져오기
+    const urlList = preloadAudioRef.current[phaseIndex];
+    if (!urlList || urlList.length === 0) {
+      console.warn("URL 리스트가 비어있습니다:", { phaseIndex, urlList });
+      return;
+    }
+    if (currentIndex < 0 || currentIndex >= urlList.length) {
+      console.warn("currentIndex가 범위를 벗어났습니다:", { currentIndex, urlListLength: urlList.length });
+      return;
+    }
 
     const urlToPlay = urlList[currentIndex];
-    if (audioRef.current && urlToPlay) {
-      audioRef.current.src = urlToPlay;
-      audioRef.current.play().catch((e) => console.error("재생 오류:", e));
+    if (!urlToPlay) {
+      console.warn("URL이 없습니다:", { phaseIndex, currentIndex, urlListLength: urlList.length });
+      return;
     }
-  }, [currentIndex, isAnsweringPhase, preloadAudio, isPreloading, autoPlay]);
+
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Blob URL이 유효한지 확인 (URL이 blob:으로 시작하는지 확인)
+    if (!urlToPlay.startsWith('blob:')) {
+      console.error("유효하지 않은 Blob URL:", urlToPlay);
+      return;
+    }
+
+    // 이전 재생 중지 및 초기화
+    audio.pause();
+    // src를 빈 문자열로 설정하여 이전 오디오 해제
+    audio.src = "";
+
+    // 오디오 로드 후 재생 핸들러
+    let handleCanPlay = null;
+    let handleError = null;
+    let loadTimeout = null;
+
+    // 약간의 지연을 두어 이전 오디오가 완전히 해제되도록 함
+    loadTimeout = setTimeout(() => {
+      // URL이 여전히 유효한지 다시 확인
+      if (!urlToPlay || !urlToPlay.startsWith('blob:')) {
+        console.error("URL이 유효하지 않음:", urlToPlay);
+        return;
+      }
+
+      handleCanPlay = () => {
+        audio.play().catch((e) => {
+          console.error("재생 오류:", e);
+          console.error("실패한 URL:", urlToPlay);
+        });
+        if (handleCanPlay) audio.removeEventListener("canplay", handleCanPlay);
+        if (handleError) audio.removeEventListener("error", handleError);
+      };
+
+      handleError = (e) => {
+        console.error("오디오 로드 오류:", e);
+        console.error("실패한 URL:", urlToPlay);
+        console.error("오디오 네트워크 상태:", audio.networkState);
+        console.error("오디오 준비 상태:", audio.readyState);
+        if (handleCanPlay) audio.removeEventListener("canplay", handleCanPlay);
+        if (handleError) audio.removeEventListener("error", handleError);
+      };
+
+      audio.addEventListener("canplay", handleCanPlay, { once: true });
+      audio.addEventListener("error", handleError, { once: true });
+
+      // Blob URL 설정 및 로드
+      try {
+        audio.src = urlToPlay;
+        audio.load();
+      } catch (error) {
+        console.error("오디오 src 설정 오류:", error);
+        if (handleCanPlay) audio.removeEventListener("canplay", handleCanPlay);
+        if (handleError) audio.removeEventListener("error", handleError);
+      }
+    }, 50);
+
+    return () => {
+      if (loadTimeout) clearTimeout(loadTimeout);
+      if (handleCanPlay) audio.removeEventListener("canplay", handleCanPlay);
+      if (handleError) audio.removeEventListener("error", handleError);
+    };
+  }, [currentIndex, isAnsweringPhase, isPreloading, autoPlay]); // preloadAudio 제거
+
+  // (3-1) TTS 재생 종료 감지
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => {
+      console.log("TTS 재생 완료");
+      if (onTtsEnd) {
+        onTtsEnd();
+      }
+    };
+
+    audio.addEventListener("ended", handleEnded);
+    return () => {
+      audio.removeEventListener("ended", handleEnded);
+    };
+  }, [onTtsEnd]);
 
   // (4) 수동 재생용
   const playNow = () => {
     const phaseIndex = isAnsweringPhase ? 1 : 0;
-    const urlList = preloadAudio[phaseIndex];
+    // ref에서 최신 preloadAudio 가져오기
+    const urlList = preloadAudioRef.current[phaseIndex];
     if (!urlList || urlList.length === 0) return;
     if (currentIndex < 0 || currentIndex >= urlList.length) return;
 
@@ -127,11 +276,17 @@ export default function TtsPlayer({
   // (5) 언마운트 시 Blob URL 해제
   useEffect(() => {
     return () => {
-      preloadAudio.flat().forEach((url) => {
-        if (url) URL.revokeObjectURL(url);
+      preloadAudioRef.current.flat().forEach((url) => {
+        if (url && url.startsWith('blob:')) {
+          try {
+            URL.revokeObjectURL(url);
+          } catch (e) {
+            console.warn('Blob URL 해제 실패 (무시):', e);
+          }
+        }
       });
     };
-  }, [preloadAudio]);
+  }, []); // 빈 배열로 변경하여 언마운트 시에만 실행
 
   return (
     <div>
@@ -145,11 +300,11 @@ export default function TtsPlayer({
           캐싱 오류: {preloadError}
         </p>
       )}
-      {!autoPlay && (
+      {/* {!autoPlay && (
         <button onClick={playNow} style={{ marginTop: 8 }}>
           🔊 듣기
         </button>
-      )}
+      )} */}
     </div>
   );
 }

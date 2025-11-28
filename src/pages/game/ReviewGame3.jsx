@@ -1169,14 +1169,19 @@ const ReviewGame3 = ({ user }) => {
     } else {
       setCoins(v => Math.max(0, v - QUIZ_REWARD));
     }
+    // quizList에서 explanation 찾기
+    const quizFromList = quizList.find(q => q.quizId === currentQuiz.quizId);
+    const explanation = quizFromList?.explanation || '';
+    
     // Save quiz result
     setQuizResults(prev => [...prev, {
-      quizId: currentQuiz.quizId || '',
+      quizId: currentQuiz.quizId || '', // sourceQuizId에서 온 값
       question: currentQuiz.question,
       options: currentQuiz.options || [],
       correctAnswer: currentQuiz.answer,
       userAnswer: chosen || '',
       isCorrect: correct,
+      explanation: explanation, // explanation 저장
       quizDate: new Date().toISOString().split('T')[0]
     }]);
     // Show result feedback (toast)
@@ -1194,26 +1199,23 @@ const ReviewGame3 = ({ user }) => {
   
   const handleGameComplete = async () => {
     try {
-      // 퀴즈 결과 포맷팅
-      const formattedResults = quizResults.map(result => ({
-        quizId: result.quizId || '',
-        question: result.question,
+      // 퀴즈 결과 포맷팅 (quizId는 임시로 1, 2, 3... 인덱스 기반 INT 값 사용)
+      const formattedResults = quizResults.map((result, index) => ({
+        quizId: result.quizId || index + 1, // 임시로 1부터 시작하는 INT 값 (백엔드 수정 필요)
+        question: result.quiz || result.question, // quiz 필드도 함께 전달
         options: result.options || [],
         correctAnswer: result.correctAnswer || result.answer,
         userAnswer: result.userAnswer,
         isCorrect: result.isCorrect,
+        description: result.explanation || '', // explanation을 description으로 전달
         quizDate: result.quizDate || new Date().toISOString().split('T')[0]
       }));
       
-      if (formattedResults.length > 0) {
-        await sendQuizResults(formattedResults);
-        
-        // 복습 완료 API 호출
-        if (chapterId) {
-          console.log("🔍 복습 완료 API 호출, reviewCount:", reviewCount, "chapterId:", chapterId);
-          await reviewCompleted(reviewCount, chapterId, formattedResults);
-          console.log("✅ 복습 완료 API 호출 성공");
-        }
+      // 복습 완료 API 호출 (quiz-result는 제외)
+      if (chapterId && formattedResults.length > 0) {
+        console.log("🔍 복습 완료 API 호출, reviewCount:", reviewCount, "chapterId:", chapterId);
+        await reviewCompleted(reviewCount, chapterId, formattedResults);
+        console.log("✅ 복습 완료 API 호출 성공");
       }
       
       if (coins > 0 && chapterId) {

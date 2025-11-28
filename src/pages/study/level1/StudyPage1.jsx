@@ -216,6 +216,7 @@ function StudyPage({ user, login, setLogin }){
 
     const fullTitle="";
     const [preloadDone, setPreloadDone] = useState(false);
+    const [isTtsCompleted, setIsTtsCompleted] = useState(false); // TTS 재생 완료 상태
 
     // 토스트 메시지 자동 숨김 (5초 후)
     useEffect(() => {
@@ -282,6 +283,7 @@ function StudyPage({ user, login, setLogin }){
         if (step===0){
             setStep(1);
             setPreloadDone(false);
+            setIsTtsCompleted(false); // TTS 완료 상태 초기화
         }else{
             await completeSession(); // Level 1 완료 상태 전송
             navigate(`/study/2?chapterId=${chapterData?.chapterId}`);
@@ -293,6 +295,7 @@ function StudyPage({ user, login, setLogin }){
         if (step===1){
             setStep(0);
             setPreloadDone(false);
+            setIsTtsCompleted(false); // TTS 완료 상태 초기화
         }else{
             // step이 0이면 이전 페이지로 이동
             navigate(-1);
@@ -344,6 +347,7 @@ function StudyPage({ user, login, setLogin }){
                         autoPlay={true}
                         style={{ display: "none" }}
                         onPreloadDone={() => setPreloadDone(true)}
+                        onTtsEnd={() => setIsTtsCompleted(true)}  // TTS 재생 완료 시 호출
                     />
                     { !preloadDone ? (
                         <TextBox>화면을 준비 중입니다...</TextBox>
@@ -356,6 +360,8 @@ function StudyPage({ user, login, setLogin }){
                                         ? "안녕! 나는 호랑이 선생님이야"
                                         : `이번 단원을 소개할게.\n오늘은 ${titleText}이야`}
                             </TextBox>
+                              {/* TTS 재생 완료 시에만 버튼 표시 */}
+                              {isTtsCompleted && (
                               <ButtonWrapper>
                                  {step > 0 && (
                                     <BackButton onClick={handleBack}>
@@ -366,6 +372,7 @@ function StudyPage({ user, login, setLogin }){
                                           {step===0?"다음":"시작하기"}
                                  </BubbleButton>
                               </ButtonWrapper>
+                              )}
 
                         </SpeechBubble>
                     )}
