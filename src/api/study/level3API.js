@@ -42,7 +42,7 @@ export async function fetchChapters(bookId){
 
 // 수업 중 AI와 상호작용(피드백)
 export async function fetchFeedback(){
-    const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/feedback`,{
+    const response=await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/study/ai/content-chat`,{
         method:"POST",
         credentials:"include"
     });

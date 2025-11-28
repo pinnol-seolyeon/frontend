@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 
 import Header from "../../../components/Header";
 import Box from "../../../components/Box";
@@ -210,6 +210,34 @@ const AiResponseBox = styled.div`
   font-family: "Noto Sans KR", sans-serif;
 `;
 
+const LoadingSpinner = styled.div`
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(71, 140, 238, 0.3);
+  border-radius: 50%;
+  border-top-color: #478CEE;
+  animation: spin 1s ease-in-out infinite;
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 16px;
+  width: 80%;
+  max-width: 600px;
+  padding: 20px;
+  background-color: transparent;
+  font-size: 16px;
+  color: #333;
+`;
+
 const QuestionButton = styled.button`
   display: flex;
   align-items: center;
@@ -394,6 +422,9 @@ function StudyPage({ user, login, setLogin }){
     const [searchParams] = useSearchParams();
     const [sentences,setSentences]=useState([]);
     const [currentIndex,setCurrentIndex]=useState(0);
+    const [answers, setAnswers] = useState([]); // AI 응답 문장 배열
+    const [isAnsweringPhase, setIsAnsweringPhase] = useState(false); // AI 응답 재생 단계 여부
+    const questionIndexBeforeAnswerRef = useRef(null); // AI 답변 전 원래 질문 인덱스 저장
 
     
     const {chapterData, setChapterData}=useChapter();
@@ -409,6 +440,9 @@ function StudyPage({ user, login, setLogin }){
     const [recognizedText, setRecognizedText] = useState("");
     const [isVoiceRecognitionComplete, setIsVoiceRecognitionComplete] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [isAiLoading, setIsAiLoading] = useState(false); // AI 응답 로딩 상태
+    const [isTtsCompleted, setIsTtsCompleted] = useState(false); // TTS 재생 완료 상태
+    const recognitionRef = React.useRef(null); // 음성인식 객체를 ref로 관리
     const ttsSentences = useMemo(() => sentences, [sentences]);
     const nextContext=sentences[currentIndex+1]||"다음 학습 내용 없음";
     const returnToIndex=location.state?.returnToIndex??0;
@@ -698,35 +732,15 @@ function StudyPage({ user, login, setLogin }){
                 if (contents) {
                     console.log("✅ Chapter content:", contents);
                     
-                    //문장 분리 (\n 기준으로 먼저 분리, 그 다음 .?! 기준으로 분리)
-                    const baseSentences = contents
-                        .split(/\n/)  // \n 기준으로 먼저 분리
-                        .flatMap(paragraph => 
-                            paragraph.split(/(?<=[.?!])\s+/)  // 각 문단을 .?! 기준으로 분리
-                        )
+                    //문장 분리 (\n 기준으로만 분리)
+                    const splitSentences = contents
+                        .split(/\n/)  // \n 기준으로만 분리
                         .filter((s) => s.trim() !== ""); //공백만 있는 문장 등을 제거
                     
+                    console.log("🐋분할된 최종 문장 배열:",splitSentences);
+
                     //질문 감지 함수
                     const isQuestion = (s) => s.includes("?");
-
-                    //긴 문장 분할 함수(질문 제외)
-                    const breakLongSentence = (sentence, max = 50) => {
-                        if (isQuestion(sentence)) return [sentence]; // ✅ 질문이면 그대로
-                        if (sentence.length <= max) return [sentence];
-
-                        const mid = Math.floor(sentence.length / 2);
-                        let splitIndex = sentence.lastIndexOf(" ", mid);
-                        if (splitIndex === -1) splitIndex = mid;
-                        const first = sentence.slice(0, splitIndex).trim();
-                        const second = sentence.slice(splitIndex).trim();
-                        return [first, second];
-                    };
-
-                    //문장분해
-                    const splitSentences=baseSentences
-                        .map((s)=>breakLongSentence(s))
-                        .flat();
-                    console.log("🐋분할된 최종 문장 배열:",splitSentences);
 
                     //질문이 포함된 문장의 인덱스만 추출
                     const questionIndexes=splitSentences
@@ -755,7 +769,13 @@ function StudyPage({ user, login, setLogin }){
     useEffect(()=>{
         console.log("🐛returnToIndex",returnToIndex);
         setCurrentIndex(returnToIndex);
+        setIsTtsCompleted(false); // TTS 완료 상태 초기화
     },[]); //의존성 배열이 비어 있어야 컴포넌트 최초 마운트 시 한 번만 실행
+
+    // currentIndex가 변경될 때마다 TTS 완료 상태 초기화
+    useEffect(() => {
+        setIsTtsCompleted(false);
+    }, [currentIndex]);
 
 
 
@@ -764,13 +784,75 @@ function StudyPage({ user, login, setLogin }){
     const goToNextSentence = async () => {
     if (!preloadDone) return;
     
+    // AI 응답 재생 단계인 경우
+    if (isAnsweringPhase) {
+        if (currentIndex < answers.length - 1) {
+            console.log("✅ AI 응답 다음 문장:", currentIndex + 1);
+            setIsTtsCompleted(false); // TTS 완료 상태 초기화
+            setCurrentIndex(currentIndex + 1);
+        } else {
+            // AI 응답 + 이후 컨텐츠 재생 완료 - 질문 단계로 돌아감
+            console.log("✅ AI 응답 및 이후 컨텐츠 재생 완료");
+            setAiResponse("");
+            setIsTtsCompleted(false);
+            
+            // 저장된 원래 질문 인덱스 다음의 일반 문장으로 이동
+            const originalQuestionIndex = questionIndexBeforeAnswerRef.current;
+            if (originalQuestionIndex !== null && originalQuestionIndex !== undefined) {
+                // 질문 다음의 첫 번째 일반 문장 인덱스 계산
+                const nextContentIndex = originalQuestionIndex + 1;
+                console.log("✅ 질문 다음 컨텐츠로 이동:", nextContentIndex, "(원래 질문 인덱스:", originalQuestionIndex + ")");
+                
+                // 다음 질문 인덱스 찾기
+                const nextQuestionIndex = questionIndexes.find(idx => idx > originalQuestionIndex);
+                const endIndex = nextQuestionIndex !== undefined ? nextQuestionIndex : sentences.length;
+                
+                // 이미 재생한 컨텐츠를 건너뛰고 다음 위치로 이동
+                if (endIndex < sentences.length) {
+                    // 다음 질문이 있으면 그 질문으로 이동
+                    setCurrentIndex(endIndex);
+                } else {
+                    // 다음 질문이 없으면 마지막 문장으로 이동
+                    setCurrentIndex(sentences.length - 1);
+                }
+                
+                // 질문 단계로 돌아가기
+                setIsAnsweringPhase(false);
+                setAnswers([]);
+                questionIndexBeforeAnswerRef.current = null; // ref 초기화
+            } else {
+                // 저장된 인덱스가 없으면 다음 질문으로 이동
+                const questionIdx = questionIndexes.find(idx => idx > currentIndex) || questionIndexes[questionIndexes.length - 1];
+                if (questionIdx !== undefined) {
+                    setIsAnsweringPhase(false);
+                    setAnswers([]);
+                    setCurrentIndex(questionIdx);
+                } else {
+                    // 다음 질문이 없으면 그냥 단계만 변경
+                    setIsAnsweringPhase(false);
+                    setAnswers([]);
+                }
+            }
+        }
+        return;
+    }
+    
     // 모든 문장을 다 본 후에 완료
+    console.log("🔍 goToNextSentence 체크:", { currentIndex, sentencesLength: sentences.length, isLast: currentIndex >= sentences.length - 1 });
+    
     if (currentIndex < sentences.length - 1){
-        console.log("✅currentIndex:",currentIndex);
+        console.log("✅currentIndex:",currentIndex, "/", sentences.length - 1, "- 다음 문장으로 이동");
+        setIsTtsCompleted(false); // TTS 완료 상태 초기화
         setCurrentIndex(currentIndex+1);
     } else {
+        // 마지막 문장까지 모두 본 경우 (currentIndex === sentences.length - 1)
+        console.log("✅ 모든 문장 완료, 다음 단계로 이동", { currentIndex, sentencesLength: sentences.length });
         setIsQuestionFinished(true); //질문 끝났다는 상태
         setIsFinished(true);
+        setIsTtsCompleted(true); // TTS 완료 상태 설정
+        
+        // 즉시 다음 단계로 이동 (비동기 처리)
+        (async () => {
         
         // Level 3 완료 시 질문/답변 저장 API 호출
         const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
@@ -842,9 +924,15 @@ function StudyPage({ user, login, setLogin }){
             }
         }
         
-        alert("✅학습을 모두 완료했어요! 게임 단계로 이동해볼까요?")
-        await completeSession(); // Level 3 완료 상태 전송
-        navigate("/game")
+            alert("✅학습을 모두 완료했어요! 게임 단계로 이동해볼까요?")
+            await completeSession(); // Level 3 완료 상태 전송
+            
+            // 학습 완료 시 적절한 게임 선택
+            const finalChapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+            const { getGameForChapter } = await import('../../../utils/gameSelector');
+            const gamePath = getGameForChapter(finalChapterId, 'study');
+            navigate(gamePath);
+        })();
     }
    };
 
@@ -859,50 +947,104 @@ function StudyPage({ user, login, setLogin }){
             return; //함수 실행 중단 
         }
 
-        // 다른 API 요청과 동일한 패턴으로 시도
+        // 로딩 시작
+        setIsAiLoading(true);
+        setAiResponse("");
 
-        const feedback=await handleFeedback();
-        console.log("✅AI피드백:",feedback.result)
-        // 임시 응답 시뮬레이션 //AI 모델 추후에 연결.. 
-        setAiResponse(feedback.result);
-        setIsAnswering(false);
-        setIsVoiceRecognitionComplete(false);
-        setRecognizedText("");
-        setUserAnswer("");
+        try {
+            // 다른 API 요청과 동일한 패턴으로 시도
+            const feedback=await handleFeedback();
+            console.log("✅AI피드백:",feedback.result)
+            
+            const fullResponse = feedback.result;
+            setAiResponse(fullResponse);
+            
+            // AI 응답을 문장부호(.,!) 단위로 분리
+            const splitAnswers = fullResponse
+                .split(/(?<=[.,!])\s+/)
+                .filter((s) => s.trim() !== "");
+            
+            // 문장이 너무 길 경우 추가 분리 (예: 100자 이상)
+            const finalAnswers = splitAnswers.flatMap(sentence => {
+                if (sentence.length > 100) {
+                    // 긴 문장은 추가로 분리
+                    return sentence.split(/(?<=[.?!])\s+/).filter((s) => s.trim() !== "");
+                }
+                return [sentence];
+            });
+            
+            // AI 답변 전 원래 질문 인덱스 저장
+            questionIndexBeforeAnswerRef.current = currentIndex;
+            
+            // AI 답변 이후 재생할 컨텐츠 문장들을 미리 추가
+            const nextContentIndex = currentIndex + 1;
+            const contentAfterAnswer = [];
+            
+            // 질문 다음부터 다음 질문 전까지의 문장들을 추가
+            if (nextContentIndex < sentences.length) {
+                const nextQuestionIndex = questionIndexes.find(idx => idx > currentIndex);
+                const endIndex = nextQuestionIndex !== undefined ? nextQuestionIndex : sentences.length;
+                
+                for (let i = nextContentIndex; i < endIndex; i++) {
+                    // 질문이 아닌 일반 문장만 추가
+                    if (!questionIndexes.includes(i)) {
+                        contentAfterAnswer.push(sentences[i]);
+                    }
+                }
+            }
+            
+            // AI 답변 + 이후 컨텐츠를 하나의 배열로 합치기
+            const allAnswers = [...finalAnswers, ...contentAfterAnswer];
+            
+            setAnswers(allAnswers);
+            setIsAnsweringPhase(true);
+            setCurrentIndex(0); // AI 응답은 항상 0부터 시작
+            setIsTtsCompleted(false); // TTS 완료 상태 초기화
+        } catch (error) {
+            console.error("❌ AI 응답 처리 실패:", error);
+            const errorResponse = "응답을 받아오는 중 오류가 발생했습니다.";
+            setAiResponse(errorResponse);
+            setAnswers([errorResponse]);
+            setIsAnsweringPhase(true);
+            setCurrentIndex(0);
+            setIsTtsCompleted(false);
+        } finally {
+            // 로딩 종료
+            setIsAiLoading(false);
+            setIsAnswering(false);
+            setIsVoiceRecognitionComplete(false);
+            setRecognizedText("");
+            setUserAnswer("");
+        }
     };
 
     const handleFeedback=async()=>{
                 try{
-                    console.log("🔍 피드백 요청 시작 - 현재 인덱스:", currentIndex);
+                    console.log("🔍 AI 반응 요청 시작 - 현재 인덱스:", currentIndex);
                     console.log("🔍 질문:", sentences[currentIndex]);
                     console.log("🔍 사용자 답변:", userAnswer);
                     console.log("🔍 브라우저 쿠키:", document.cookie); // 쿠키 확인
                     
                     const requestBody = {
-                        chapter: chapterData.content,
-                        sentenceIndex: currentIndex,  // 다시 추가
-                        question: sentences[currentIndex],
-                        userAnswer: userAnswer,
-                        nextContext: nextContext,
+                        quiz: sentences[currentIndex], // 질문
+                        userAnswer: userAnswer, // 사용자 답변
                     };
                     
                     console.log("🔍 요청 본문:", requestBody);
                     
-                    const res=await api.post('/api/study/feedback', requestBody);
+                    const res=await api.post('/api/study/ai/content-chat', requestBody);
 
                     console.log("📡 응답 상태:", res.status, res.statusText);
-                    console.log("✅저장된 피드백:",res.data);
-                    return res.data;
+                    console.log("✅AI 반응:", res.data);
+                    
+                    // 응답 구조: { message, status, data: { conversation_id, result } }
+                    return { result: res.data?.data?.result || res.data?.result || "응답을 받아오지 못했습니다." };
                 }catch(e){
-                    console.error("❌피드백 요청 실패:", e);
+                    console.error("❌AI 반응 요청 실패:", e);
                     console.error("🔍 에러 응답:", e.response);
                     console.error("🔍 에러 상태:", e.response?.status);
                     console.error("🔍 에러 데이터:", e.response?.data);
                     
-                    // if (e.response?.status === 401) {
-                    //     console.error("🚨 401 Unauthorized - 로그인 필요");
-                    //     return{result:"😟오류 발생: 로그인이 필요합니다. 다시 로그인해주세요."};
-                    // }
                     return{result:"😟오류 발생: " + (e.response?.data?.message || e.message)};
                 }
             };
@@ -970,6 +1112,9 @@ function StudyPage({ user, login, setLogin }){
          const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
          const recognition = new SpeechRecognition();
          
+         // recognition 객체를 ref에 저장
+         recognitionRef.current = recognition;
+         
          recognition.lang = 'ko-KR';
          recognition.continuous = false;
          recognition.interimResults = false;
@@ -989,12 +1134,14 @@ function StudyPage({ user, login, setLogin }){
          recognition.onend = () => {
              setIsRecording(false);
              setIsVoiceRecognitionComplete(true);
+             recognitionRef.current = null; // 종료 시 ref 초기화
              console.log('음성인식 종료');
          };
          
          recognition.onerror = (event) => {
              console.error('음성인식 오류:', event.error);
              setIsRecording(false);
+             recognitionRef.current = null; // 에러 시 ref 초기화
              alert('음성인식에 실패했습니다. 다시 시도해주세요.');
          };
          
@@ -1006,8 +1153,13 @@ function StudyPage({ user, login, setLogin }){
 
 // 음성인식 종료
 const stopVoiceRecognition = () => {
+    if (recognitionRef.current) {
+        recognitionRef.current.stop(); // 음성인식 중지
+        recognitionRef.current = null;
+    }
     setIsRecording(false);
     setIsVoiceRecognitionComplete(true);
+    console.log('음성인식 수동 중지');
 };
 
 
@@ -1066,12 +1218,13 @@ const stopVoiceRecognition = () => {
 
               <TtsPlayer
                 sentences={ttsSentences}     // useMemo로 감싼 배열
-                answers={[]}                 // 답변 단계는 없으니 빈 배열
-                isAnsweringPhase={false}     // 항상 질문 단계
+                answers={answers}             // AI 응답 문장 배열
+                isAnsweringPhase={isAnsweringPhase}  // AI 응답 재생 단계 여부
                 currentIndex={currentIndex}  // 현재 읽을 인덱스
-                autoPlay={true}
+                autoPlay={!isFinished}  // isFinished가 true면 자동 재생 중지
                 style={{ display: "none" }}
                 onPreloadDone={() => setPreloadDone(true)}  // 캐싱 끝나면 true
+                onTtsEnd={() => setIsTtsCompleted(true)}  // TTS 재생 완료 시 호출
             />
             
             {!preloadDone ? (
@@ -1084,8 +1237,17 @@ const stopVoiceRecognition = () => {
                     <SpeechBubble>
                         
                          <TextBox>
-                            {/* ✅ 응답이 있으면 응답만 표시 */}
-                            {aiResponse ? (
+                            {/* ✅ 응답이 있으면 응답만 표시, 로딩 중이면 스피너 표시 */}
+                            {isAiLoading ? (
+                            <LoadingContainer>
+                                <LoadingSpinner />
+                                <span>AI가 답변을 생각하고 있어요...</span>
+                            </LoadingContainer>
+                            ) : isAnsweringPhase && answers.length > 0 ? (
+                            <div>
+                                 {answers[currentIndex] || ""}
+                            </div>
+                            ) : aiResponse ? (
                             <div>
                                  {aiResponse}
                             </div>
@@ -1098,19 +1260,27 @@ const stopVoiceRecognition = () => {
 
                         
 
-                            {/*일반 문장 or 질문+답변 완료 시에만 next 버튼 표시*/}
-                            {(!questionIndexes.includes(currentIndex)||aiResponse)&&(
+                            {/*일반 문장 or 질문+답변 완료 시에만 next 버튼 표시 (질문이고 답변 없을 때는 제외) */}
+                            {(!questionIndexes.includes(currentIndex) || (isAnsweringPhase && answers.length > 0)) && isTtsCompleted && (
                                 <ButtonWrapper>
-                                    {currentIndex > 0 && (
+                                    {((isAnsweringPhase && currentIndex > 0) || (!isAnsweringPhase && currentIndex > 0)) && (
                                         <BackButton onClick={()=>{
-                                            setCurrentIndex(currentIndex-1);
-                                            setAiResponse(""); //이전 문장으로 갈 때 aiResponse초기화
+                                            if (isAnsweringPhase) {
+                                                setCurrentIndex(Math.max(0, currentIndex - 1));
+                                            } else {
+                                                setCurrentIndex(currentIndex - 1);
+                                                setAiResponse(""); //이전 문장으로 갈 때 aiResponse초기화
+                                            }
+                                            setIsTtsCompleted(false); // TTS 완료 상태 초기화
                                         }}>
                                             이전
                                         </BackButton>
                                     )}
                                     <BubbleButton onClick={()=>{
-                                        setAiResponse(""); //다음 문장 넘어갈 때 aiResponse초기화
+                                        if (!isAnsweringPhase) {
+                                            setAiResponse(""); //다음 문장 넘어갈 때 aiResponse초기화
+                                        }
+                                        setIsTtsCompleted(false); // TTS 완료 상태 초기화
                                         goToNextSentence();
                                     }}>
                                         다음
@@ -1119,8 +1289,8 @@ const stopVoiceRecognition = () => {
                             )}
                     
 
-                    {/* ✅ 질문이고 아직 대답 전일 경우만 버튼 표시 */}
-                    {questionIndexes.includes(currentIndex) && !aiResponse && (
+                    {/* ✅ 질문이고 아직 대답 전일 경우만 버튼 표시 (TTS 완료 후 활성화) */}
+                    {questionIndexes.includes(currentIndex) && !aiResponse && isTtsCompleted && (
                         !isVoiceRecognitionComplete ? (
                             <AnswerButton onClick={handleVoiceRecognition}>
                                 {isRecording ? "음성인식 중..." : "대답하기"}
@@ -1150,7 +1320,12 @@ const stopVoiceRecognition = () => {
                             placeholder="너의 생각을 입력해봐"
                         />
                         <SubmitButton onClick={handleUserSubmit}>답변하기</SubmitButton>
-                        {aiResponse && <AiResponseBox>{aiResponse}</AiResponseBox>}
+                        {isAiLoading ? (
+                            <LoadingContainer>
+                                <LoadingSpinner />
+                                <span>AI가 답변을 생각하고 있어요...</span>
+                            </LoadingContainer>
+                        ) : aiResponse && <AiResponseBox>{aiResponse}</AiResponseBox>}
                     </AnswerInputBox>
                 )}
                </ImageWithSpeechWrapper>

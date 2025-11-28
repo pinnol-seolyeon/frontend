@@ -6,9 +6,10 @@ import backgroundImg from '../../assets/game2/Game_Background.png';
 import readybackgroundImg from '../../assets/game2/Ready_Background.png';
 import startBtn from '../../assets/game2/Ready_Btn_GameStart.png';
 import coinImg from '../../assets/game2/Coin.png';
-import { fetchQuizByChapterId } from '../../api/study/fetchQuiz';
+import { fetchChapterContents } from '../../api/study/level3API';
 import { useChapter } from "../../context/ChapterContext";
 import { useNavigate } from "react-router-dom";
+import { useActivityTracker } from "../../hooks/useActivityTracker";
 import { saveCoinToDB } from '../../api/analyze/saveCoinToDB';
 import { sendQuizResults } from '../../api/analyze/sendQuizResults';
 import pause_btn from '../../assets/pause_btn.svg';
@@ -664,10 +665,17 @@ const EndNextButton = styled.button`
   }
 `;
 
-export default function Game2() {
+export default function Game2({ user }) {
   const { chapterData } = useChapter();
   const chapterId = chapterData?.chapterId;
   const navigate = useNavigate();
+  
+  const { completeSession, sendExit } = useActivityTracker(
+    chapterId, 
+    4,
+    user?.userId,
+    chapterData?.bookId
+  );
   
   const canvasRef = useRef(null);
   const animationIdRef = useRef(null);
@@ -730,6 +738,7 @@ export default function Game2() {
   const moveAnimationFrameRef = useRef(0);
   const quizTimerRef = useRef(null);
   const quizResultsRef = useRef([]);
+  const sessionDescriptionRef = useRef(null); // session=4에서 받아온 description 저장
   const virusSpawnTimerRef = useRef(0);
   const coinSpawnTimerRef = useRef(0);
   // 고정된 개수 추적
@@ -900,9 +909,20 @@ export default function Game2() {
     
     async function loadQuiz() {
       try {
-        const data = await fetchQuizByChapterId(chapterId);
-        console.log("✅ 퀴즈 응답:", data);
-        setQuizList(data);
+        console.log("🎮 Level 4 (퀴즈) 데이터 로딩 중... chapterId:", chapterId, "bookId:", chapterData?.bookId);
+        const level4Data = await fetchChapterContents(4, chapterId, chapterData?.bookId);
+        console.log("✅ Level 4 (퀴즈) 응답:", level4Data);
+        
+        // session=4에서 받아온 description 저장
+        if (level4Data?.description) {
+          sessionDescriptionRef.current = level4Data.description;
+          console.log("✅ Description 저장:", level4Data.description);
+        }
+        
+        // session=4에서 quiz 필드로 받아옴 (data.quiz 배열)
+        const quizData = level4Data?.quiz || [];
+        console.log("✅ 퀴즈 데이터:", quizData);
+        setQuizList(quizData);
         setQuizLoaded(true);
       } catch (err) {
         console.error("❌ 퀴즈 불러오기 실패:", err);
@@ -951,11 +971,19 @@ export default function Game2() {
       pendingQuizIndexRef.current = pickedIndex;
 
       const raw = quizList[pickedIndex];
+      const derivedQuizId = raw?.quizId ?? raw?.id ?? raw?._id ?? raw?.questionId ?? '';
+      // 퀴즈에 description이 있으면 사용하고, 없으면 session description 사용
+      const quizDescription = raw?.description || sessionDescriptionRef.current;
+      // question 필드로 받아오므로 raw.question 사용
+      const quizQuestion = raw?.question || raw?.quiz;
+      
       const normalized = {
-        quizId: raw?.quizId ?? raw?.id ?? raw?._id ?? raw?.questionId ?? '',
-        question: raw?.quiz ?? raw?.question ?? '',
+        quizId: derivedQuizId,
+        question: quizQuestion,
+        quiz: quizQuestion, // quiz 필드도 함께 저장
         options: raw?.options ?? [],
         answer: raw?.answer ?? raw?.correctAnswer,
+        description: quizDescription,
       };
       setCurrentQuiz(normalized);
     }, randomTime);
@@ -1000,6 +1028,41 @@ export default function Game2() {
     return () => clearTimeout(quizStartTimer);
   }, [showQuizAlert, isQuizActive]);
   
+  // 게임 종료 시 코인 저장 및 퀴즈 결과 전송
+  useEffect(() => {
+    if (!gameEnded || !showResults) return;
+    
+    const saveGameResults = async () => {
+      try {
+        // 코인 저장
+        if (coins > 0) {
+          await saveCoinToDB(coins, chapterId);
+          console.log('✅ 코인 저장 성공:', coins);
+        }
+        
+        // 퀴즈 결과 전송
+        if (quizResultsRef.current.length > 0) {
+          const formattedResults = quizResultsRef.current.map(result => ({
+            quizId: result.quizId || '',
+            question: result.quiz || result.question, // quiz 필드도 함께 전달
+            options: result.options || [],
+            correctAnswer: result.correctAnswer,
+            userAnswer: result.userAnswer,
+            isCorrect: result.isCorrect,
+            description: result.description,
+            quizDate: new Date().toISOString().split('T')[0]
+          }));
+          await sendQuizResults(formattedResults);
+          console.log('✅ 퀴즈 결과 저장 성공');
+        }
+      } catch (error) {
+        console.error('❌ 게임 결과 저장 실패:', error);
+      }
+    };
+    
+    saveGameResults();
+  }, [gameEnded, showResults, coins, chapterId]);
+  
   // 게임 종료 이미지가 화면을 지나가면 게임 종료 처리
   useEffect(() => {
     if (!showGameEnd) return;
@@ -1030,11 +1093,13 @@ export default function Game2() {
     const isCorrect = answer === currentQuiz.answer;
     quizResultsRef.current.push({
       quizId: currentQuiz.quizId || '',
-      question: currentQuiz.question,
+      question: currentQuiz.quiz || currentQuiz.question,
+      quiz: currentQuiz.quiz || currentQuiz.question, // quiz 필드도 함께 저장
       options: currentQuiz.options || [],
       correctAnswer: currentQuiz.answer,
       userAnswer: answer,
       isCorrect,
+      description: currentQuiz.description,
       quizDate: new Date().toISOString().split('T')[0]
     });
     
@@ -1582,11 +1647,19 @@ export default function Game2() {
               const pickedIndex = available[Math.floor(Math.random() * available.length)];
               pendingQuizIndexRef.current = pickedIndex;
               const raw = quizList[pickedIndex];
+              const derivedQuizId = raw?.quizId ?? raw?.id ?? raw?._id ?? raw?.questionId ?? '';
+              // 퀴즈에 description이 있으면 사용하고, 없으면 session description 사용
+              const quizDescription = raw?.description || sessionDescriptionRef.current;
+              // question 필드로 받아오므로 raw.question 사용
+              const quizQuestion = raw?.question || raw?.quiz;
+              
               const normalized = {
-                quizId: raw?.quizId ?? raw?.id ?? raw?._id ?? raw?.questionId ?? '',
-                question: raw?.quiz ?? raw?.question ?? '',
+                quizId: derivedQuizId,
+                question: quizQuestion,
+                quiz: quizQuestion, // quiz 필드도 함께 저장
                 options: raw?.options ?? [],
                 answer: raw?.answer ?? raw?.correctAnswer,
+                description: quizDescription,
               };
               setCurrentQuiz(normalized);
             }
@@ -1611,28 +1684,49 @@ export default function Game2() {
     
     if (quizResultsRef.current.length > 0) {
       try {
-        await sendQuizResults(quizResultsRef.current);
+        const formattedResults = quizResultsRef.current.map(result => ({
+          quizId: result.quizId || '',
+          question: result.quiz || result.question, // quiz 필드도 함께 전달
+          options: result.options || [],
+          correctAnswer: result.correctAnswer,
+          userAnswer: result.userAnswer,
+          isCorrect: result.isCorrect,
+          description: result.description,
+          quizDate: new Date().toISOString().split('T')[0]
+        }));
+        await sendQuizResults(formattedResults);
         console.log('✅ 퀴즈 결과 저장 성공');
       } catch (error) {
         console.error('❌ 퀴즈 결과 저장 실패:', error);
       }
     }
     
-    navigate('/');
+    await sendExit();
+    navigate('/main');
   };
 
   const handleFinishAndExit = async () => {
     try {
       if (quizResultsRef.current.length > 0) {
-        await sendQuizResults(quizResultsRef.current);
+        const formattedResults = quizResultsRef.current.map(result => ({
+          quizId: result.quizId || '',
+          question: result.quiz || result.question, // quiz 필드도 함께 전달
+          options: result.options || [],
+          correctAnswer: result.correctAnswer,
+          userAnswer: result.userAnswer,
+          isCorrect: result.isCorrect,
+          description: result.description,
+          quizDate: new Date().toISOString().split('T')[0]
+        }));
+        await sendQuizResults(formattedResults);
       }
       if (coins > 0) {
         await saveCoinToDB(coins, chapterId);
       }
+      await completeSession(); // Level 4 완료 상태 전송
+      navigate(`/study/level6/summary?chapterId=${chapterId}`);
     } catch (e) {
       console.error(e);
-    } finally {
-      navigate('/');
     }
   };
   

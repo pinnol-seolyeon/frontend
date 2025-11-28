@@ -15,6 +15,7 @@ import TtsPlayer from "../../../components/TtsPlayer";
 import background from "../../../assets/study_background.png";
 import hoppin from "../../../assets/hopin.svg";
 import questionIcon from "../../../assets/question_icon.svg";
+import api from "../../../api/login/axiosInstance";
 
 /*학습하기2단계 - 학습목표+이미지 제시하며 질문..*/
 
@@ -212,6 +213,34 @@ const AiResponseBox = styled.div`
   font-family: "Noto Sans KR", sans-serif;
 `;
 
+const LoadingSpinner = styled.div`
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(71, 140, 238, 0.3);
+  border-radius: 50%;
+  border-top-color: #478CEE;
+  animation: spin 1s ease-in-out infinite;
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`;
+
+const LoadingContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 16px;
+  width: 80%;
+  max-width: 600px;
+  padding: 20px;
+  background-color: transparent;
+  font-size: 16px;
+  color: #333;
+`;
+
 const ImageButton=styled.img`
 position: absolute;
   right: 20px;
@@ -354,6 +383,11 @@ function StudyLv2_withImg({ user, login, setLogin }){
     const [sentences,setSentences]=useState([]);
     const [answers,setAnswers]=useState([]);
     const [currentIndex,setCurrentIndex]=useState(0);
+    
+    // currentIndex가 변경될 때마다 TTS 완료 상태 초기화
+    useEffect(() => {
+        setIsTtsCompleted(false);
+    }, [currentIndex]);
     const [image,setImage]=useState();
 
     const [isQuestionFinished,setIsQuestionFinished]=useState(false);
@@ -371,6 +405,9 @@ function StudyLv2_withImg({ user, login, setLogin }){
     const [recognizedText, setRecognizedText] = useState("");
     const [isVoiceRecognitionComplete, setIsVoiceRecognitionComplete] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [isTtsCompleted, setIsTtsCompleted] = useState(false); // TTS 재생 완료 상태
+    const [isAiLoading, setIsAiLoading] = useState(false); // AI 응답 로딩 상태
+    const recognitionRef = React.useRef(null); // 음성인식 객체를 ref로 관리
 
     // 활동 감지 Hook 사용 (level 2, start-level 스킵)
     // FIXME: 백엔드 start-level API 401 에러로 임시 스킵
@@ -407,6 +444,7 @@ function StudyLv2_withImg({ user, login, setLogin }){
             
             setCurrentIndex(0);
             setPreloadDone(false);
+            setIsTtsCompleted(false); // TTS 완료 상태 초기화
             setLoading(false);
         } else {
             console.error("❌ chapterData가 없습니다!");
@@ -421,12 +459,14 @@ function StudyLv2_withImg({ user, login, setLogin }){
    const handleAnswer = async () => {
     if(!aiResponse){
       if(currentIndex<sentences.length-1){
+        setIsTtsCompleted(false); // TTS 완료 상태 초기화
         setCurrentIndex(currentIndex+1);
       }else{
         setIsQuestionFinished(true);
       }
     }else{
       if(currentIndex<answers.length-1){
+        setIsTtsCompleted(false); // TTS 완료 상태 초기화
         setCurrentIndex(currentIndex+1);
       }else{
         // 답변을 맞추는 화면이 아니면 다음 단계로 이동
@@ -441,28 +481,81 @@ function StudyLv2_withImg({ user, login, setLogin }){
 
    //AI로부터 답변 받기.. 
    const handleUserSubmit = async () => {
-        // 실제로는 여기에 AI 호출 로직이 들어감 (예: fetch("/chat", { method: POST ... }))
         console.log("🙋 유저 입력:", userAnswer);
+        if(!userAnswer||userAnswer.trim()===""){
+            alert("🚨답변을 입력해주세요!")
+            return; //함수 실행 중단 
+        }
 
-        // objectiveAnswer가 있으면 사용, 없으면 기본 응답 사용
-        const response = chapterData?.objectiveAnswer || "좋은 답변이에요";
-        const fullResponse = `${response}. 그럼 이제 본격적으로 수업을 들어가볼까?`;
-        // setNextResponse(`그럼 이제 본격적으로 수업을 들어가볼까?`);
-        setAiResponse(fullResponse);
+        // 로딩 시작
+        setIsAiLoading(true);
+        setAiResponse("");
 
-        const splitAnswers = fullResponse
-            .split(/(?<=[.?!])\s+/)
-            .filter((s) => s.trim() !== "");
+        try {
+            // AI API 호출
+            const feedback=await handleFeedback();
+            console.log("✅AI피드백:",feedback.result)
+            
+            const fullResponse = feedback.result;
+            setAiResponse(fullResponse);
 
-        setAnswers(splitAnswers);
-        setIsAnsweringPhase(true);
-        setCurrentIndex(0);
-        setIsAnswering(false);
-        setPreloadDone(false);
-        setIsVoiceRecognitionComplete(false);
-        setRecognizedText("");
-        setUserAnswer("");
+            // 전체 답변을 한 번에 재생하기 위해 하나의 요소로 설정
+            setAnswers([fullResponse]);
+            setIsAnsweringPhase(true);
+            setCurrentIndex(0);
+        } catch (error) {
+            console.error("❌ AI 응답 처리 실패:", error);
+            // 에러 발생 시 기본 응답 사용
+            const defaultResponse = chapterData?.objectiveAnswer || "좋은 답변이에요";
+            const fullResponse = `${defaultResponse}. 그럼 이제 본격적으로 수업을 들어가볼까?`;
+            setAiResponse(fullResponse);
+
+            // 전체 답변을 한 번에 재생하기 위해 하나의 요소로 설정
+            setAnswers([fullResponse]);
+            setIsAnsweringPhase(true);
+            setCurrentIndex(0);
+        } finally {
+            // 로딩 종료
+            setIsAiLoading(false);
+            setIsAnswering(false);
+            setPreloadDone(false);
+            setIsTtsCompleted(false); // TTS 완료 상태 초기화
+            setIsVoiceRecognitionComplete(false);
+            setRecognizedText("");
+            setUserAnswer("");
+        }
     };
+
+    const handleFeedback=async()=>{
+                try{
+                    console.log("🔍 AI 반응 요청 시작 - 현재 인덱스:", currentIndex);
+                    console.log("🔍 질문:", sentences[currentIndex]);
+                    console.log("🔍 사용자 답변:", userAnswer);
+                    console.log("🔍 브라우저 쿠키:", document.cookie); // 쿠키 확인
+                    
+                    const requestBody = {
+                        quiz: sentences[currentIndex], // 질문
+                        userAnswer: userAnswer, // 사용자 답변
+                    };
+                    
+                    console.log("🔍 요청 본문:", requestBody);
+                    
+                    const res=await api.post('/api/study/ai/content-chat', requestBody);
+
+                    console.log("📡 응답 상태:", res.status, res.statusText);
+                    console.log("✅AI 반응:", res.data);
+                    
+                    // 응답 구조: { message, status, data: { conversation_id, result } }
+                    return { result: res.data?.data?.result || res.data?.result || "응답을 받아오지 못했습니다." };
+                }catch(e){
+                    console.error("❌AI 반응 요청 실패:", e);
+                    console.error("🔍 에러 응답:", e.response);
+                    console.error("🔍 에러 상태:", e.response?.status);
+                    console.error("🔍 에러 데이터:", e.response?.data);
+                    
+                    return{result:"😟오류 발생: " + (e.response?.data?.message || e.message)};
+                }
+            };
 
     // 음성인식 시작/종료 함수
     const handleVoiceRecognition = () => {
@@ -478,6 +571,9 @@ function StudyLv2_withImg({ user, login, setLogin }){
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             const recognition = new SpeechRecognition();
+            
+            // recognition 객체를 ref에 저장
+            recognitionRef.current = recognition;
             
             recognition.lang = 'ko-KR';
             recognition.continuous = false;
@@ -498,12 +594,14 @@ function StudyLv2_withImg({ user, login, setLogin }){
             recognition.onend = () => {
                 setIsRecording(false);
                 setIsVoiceRecognitionComplete(true);
+                recognitionRef.current = null; // 종료 시 ref 초기화
                 console.log('음성인식 종료');
             };
             
             recognition.onerror = (event) => {
                 console.error('음성인식 오류:', event.error);
                 setIsRecording(false);
+                recognitionRef.current = null; // 에러 시 ref 초기화
                 alert('음성인식에 실패했습니다. 다시 시도해주세요.');
             };
             
@@ -515,8 +613,13 @@ function StudyLv2_withImg({ user, login, setLogin }){
 
     // 음성인식 종료
     const stopVoiceRecognition = () => {
+        if (recognitionRef.current) {
+            recognitionRef.current.stop(); // 음성인식 중지
+            recognitionRef.current = null;
+        }
         setIsRecording(false);
         setIsVoiceRecognitionComplete(true);
+        console.log('음성인식 수동 중지');
     };
     
     return(
@@ -560,6 +663,7 @@ function StudyLv2_withImg({ user, login, setLogin }){
                 autoPlay={true}
                 style={{ display: "none" }}
                 onPreloadDone={() => setPreloadDone(true)}
+                onTtsEnd={() => setIsTtsCompleted(true)}  // TTS 재생 완료 시 호출
               />
               { !preloadDone ? (
                 <TextBox>화면을 준비 중입니다...</TextBox>
@@ -569,13 +673,25 @@ function StudyLv2_withImg({ user, login, setLogin }){
                     <>
                     <SpeechBubble>
                         <TextBox>
-                          {isAnsweringPhase?(
+                          {/* ✅ 응답이 있으면 응답만 표시, 로딩 중이면 스피너 표시 */}
+                          {isAiLoading ? (
+                            <LoadingContainer>
+                                <LoadingSpinner />
+                                <span>AI가 답변을 생각하고 있어요...</span>
+                            </LoadingContainer>
+                          ) : aiResponse ? (
+                            <div>
+                                {aiResponse}
+                            </div>
+                          ) : isAnsweringPhase ? (
                             answers.length>0?answers[currentIndex]:"답변이 없습니다."
-                          ):(
+                          ) : (
                             sentences.length>0?sentences[currentIndex]:"질문이 없습니다."
                           )}
                         </TextBox>
-                        {!aiResponse ? (
+                        {!aiResponse && !isAiLoading ? (
+                            // TTS 재생 완료 시에만 버튼 표시
+                            isTtsCompleted && (
                             !isVoiceRecognitionComplete ? (
                                 <AnswerButton onClick={handleVoiceRecognition}>
                                     {isRecording ? "음성인식 중..." : "대답하기"}
@@ -591,10 +707,14 @@ function StudyLv2_withImg({ user, login, setLogin }){
                                     <SendButton onClick={handleUserSubmit}>보내기</SendButton>
                                 </AnswerInputBox>
                             )
+                            )
                         ) : (
+                            // TTS 재생 완료 시에만 버튼 표시
+                            isTtsCompleted && (
                             <AnswerButton onClick={handleAnswer} style={{marginTop: '1rem'}}>
                                 다음 단계로
                             </AnswerButton>
+                            )
                         )}
                     </SpeechBubble>
                             </> 

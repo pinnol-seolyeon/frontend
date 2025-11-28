@@ -810,13 +810,18 @@ export default function ReviewGame({ user }) {
 
     const responseTime = Date.now() - quizStartTimeRef.current;
 
+    // quizList에서 explanation 찾기
+    const quizFromList = quizList.find(q => q.quizId === quiz.quizId);
+    const explanation = quizFromList?.explanation || '';
+    
     quizResultsRef.current.push({
-      quizId: quiz.quizId,
+      quizId: quiz.quizId, // sourceQuizId에서 온 값
       question: quiz.question,
       options: quiz.options,
       correctAnswer: quiz.answer,
       userAnswer: answer,
       isCorrect: answer === quiz.answer,
+      explanation: explanation, // explanation 저장
       responseTime,
     });
   
@@ -991,21 +996,19 @@ export default function ReviewGame({ user }) {
               await saveCoinToDB(scoreRef.current, chapterId);
             }
             
-            // 퀴즈 결과 포맷팅
-            const formattedResults = quizResultsRef.current.map(result => ({
-              quizId: result.quizId || '',
-              question: result.question,
+            // 퀴즈 결과 포맷팅 (quizId는 임시로 1, 2, 3... 인덱스 기반 INT 값 사용)
+            const formattedResults = quizResultsRef.current.map((result, index) => ({
+              quizId: index + 1, // 임시로 1부터 시작하는 INT 값 (백엔드 수정 필요)
+              question: result.quiz || result.question, // quiz 필드도 함께 전달
               options: result.options || [],
               correctAnswer: result.correctAnswer,
               userAnswer: result.userAnswer,
               isCorrect: result.isCorrect,
+              description: result.explanation || '', // explanation을 description으로 전달
               quizDate: new Date().toISOString().split('T')[0]
             }));
             
-            // 일반 퀴즈 결과 전송
-            await sendQuizResults(formattedResults);
-            
-            // 복습 완료 API 호출
+            // 복습 완료 API 호출 (quiz-result는 제외)
             if (chapterId && formattedResults.length > 0) {
               console.log("🔍 복습 완료 API 호출, reviewCount:", reviewCount, "chapterId:", chapterId);
               await reviewCompleted(reviewCount, chapterId, formattedResults);

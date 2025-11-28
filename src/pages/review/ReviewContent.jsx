@@ -375,6 +375,42 @@ const LadybugImage = styled.img`
   object-fit: contain;
 `;
 
+// 로딩 스피너 스타일
+const LoadingOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+`;
+
+const Spinner = styled.div`
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid #478CEE;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+const LoadingText = styled.div`
+  margin-top: 20px;
+  color: white;
+  font-size: 18px;
+  font-weight: 500;
+`;
+
 
 function ReviewContent({ user, login, setLogin }){
 
@@ -397,7 +433,9 @@ function ReviewContent({ user, login, setLogin }){
     const [isRecording, setIsRecording] = useState(false);
     const [recognizedText, setRecognizedText] = useState("");
     const [isVoiceRecognitionComplete, setIsVoiceRecognitionComplete] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(false); // text-review 로딩용
+    const [isLoadingQuiz, setIsLoadingQuiz] = useState(false); // quiz-review 로딩용
+    const [isTtsCompleted, setIsTtsCompleted] = useState(false); // TTS 재생 완료 상태
     const ttsSentences = useMemo(() => sentences, [sentences]);
     const nextContext=sentences[currentIndex+1]||"다음 학습 내용 없음";
     const returnToIndex=location.state?.returnToIndex??0;
@@ -512,6 +550,8 @@ function ReviewContent({ user, login, setLogin }){
 
                     setSentences(splitSentences);
                     setQuestionIndexes(questionIndexes);
+                    setCurrentIndex(0); // 문장 로드 시 인덱스 초기화
+                    setIsTtsCompleted(false); // TTS 완료 상태 초기화
                 } else {
                     setSentences(["❌ 내용이 없습니다."]);
                 }
@@ -529,9 +569,17 @@ function ReviewContent({ user, login, setLogin }){
 
     //질문 버튼 누른 후 다시 학습하기 3단계로 돌아온 경우 포함
     useEffect(()=>{
-        console.log("🐛returnToIndex",returnToIndex);
-        setCurrentIndex(returnToIndex);
+        if (returnToIndex > 0) {
+            console.log("🐛returnToIndex",returnToIndex);
+            setCurrentIndex(returnToIndex);
+            setIsTtsCompleted(false); // TTS 완료 상태 초기화
+        }
     },[]); //의존성 배열이 비어 있어야 컴포넌트 최초 마운트 시 한 번만 실행
+
+    // currentIndex가 변경될 때마다 TTS 완료 상태 초기화
+    useEffect(() => {
+        setIsTtsCompleted(false);
+    }, [currentIndex]);
 
 
 
@@ -543,6 +591,7 @@ function ReviewContent({ user, login, setLogin }){
     // 모든 문장을 다 본 후에 완료
     if (currentIndex < sentences.length - 1){
         console.log("✅currentIndex:",currentIndex);
+        setIsTtsCompleted(false); // TTS 완료 상태 초기화
         setCurrentIndex(currentIndex+1);
     } else {
         setIsQuestionFinished(true); //질문 끝났다는 상태
@@ -582,16 +631,19 @@ function ReviewContent({ user, login, setLogin }){
         
         if (chapterId) {
             try {
+                setIsLoadingQuiz(true); // quiz-review 로딩 시작
                 console.log("🔍 복습 완료 - 퀴즈 리뷰 API 호출, chapterId:", chapterId, "reviewCount:", reviewCount);
                 const quizData = await fetchQuizReview(reviewCount, chapterId);
                 console.log("✅ 퀴즈 데이터 받음:", quizData);
                 
-                // 게임을 랜덤으로 선택 (Game, Game2, Game3 중 하나)
-                const gameTypes = ['game', 'game2', 'game3'];
-                const randomGameType = gameTypes[Math.floor(Math.random() * gameTypes.length)];
+                // 복습 횟수에 따라 적절한 게임 선택 (중복 없이)
+                const { getGameForChapter } = await import('../../utils/gameSelector');
+                const sessionType = reviewCount === 1 ? 'review1' : 'review2';
+                const gamePath = getGameForChapter(chapterId, sessionType);
+                const gameType = gamePath.replace('/', ''); // '/game' -> 'game'
                 
                 // 퀴즈 데이터를 state로 전달하며 선택된 ReviewGame으로 이동
-                navigate(`/review/${randomGameType}`, {
+                navigate(`/review/${gameType}`, {
                     state: {
                         quizData: quizData.data || [],
                         chapterId: chapterId,
@@ -601,11 +653,20 @@ function ReviewContent({ user, login, setLogin }){
             } catch (error) {
                 console.error("❌ 퀴즈 리뷰 로드 실패:", error);
                 alert("퀴즈를 불러오는 중 오류가 발생했습니다. 게임으로 이동합니다.");
-                navigate("/game");
+                // 에러 발생 시에도 적절한 게임 선택
+                const { getGameForChapter } = await import('../../utils/gameSelector');
+                const sessionType = reviewCount === 1 ? 'review1' : 'review2';
+                const gamePath = getGameForChapter(chapterId, sessionType);
+                navigate(gamePath);
+            } finally {
+                setIsLoadingQuiz(false); // quiz-review 로딩 종료
             }
         } else {
             alert("✅학습을 모두 완료했어요! 게임 단계로 이동해볼까요?")
-            navigate("/game");
+            // chapterId가 없어도 기본 게임으로 이동
+            const { getGameForChapter } = await import('../../utils/gameSelector');
+            const gamePath = getGameForChapter(chapterId || '', 'review1'); // 기본값으로 review1 사용
+            navigate(gamePath);
         }
     }
    };
@@ -769,6 +830,12 @@ const stopVoiceRecognition = () => {
 
     return(
     <>
+        {isLoadingQuiz && (
+            <LoadingOverlay>
+                <Spinner />
+                <LoadingText>퀴즈를 불러오는 중...</LoadingText>
+            </LoadingOverlay>
+        )}
         <Wrapper> 
                 <MainWrapper>
                 {/* <MiniHeader
@@ -797,9 +864,10 @@ const stopVoiceRecognition = () => {
                 answers={[]}                 // 답변 단계는 없으니 빈 배열
                 isAnsweringPhase={false}     // 항상 질문 단계
                 currentIndex={currentIndex}  // 현재 읽을 인덱스
-                autoPlay={true}
+                autoPlay={!isFinished}  // isFinished가 true면 자동 재생 중지
                 style={{ display: "none" }}
                 onPreloadDone={() => setPreloadDone(true)}  // 캐싱 끝나면 true
+                onTtsEnd={() => setIsTtsCompleted(true)}  // TTS 재생 완료 시 호출
             />
             
             {!preloadDone ? (
@@ -826,19 +894,21 @@ const stopVoiceRecognition = () => {
 
                         
 
-                            {/*일반 문장 or 질문+답변 완료 시에만 next 버튼 표시*/}
-                            {(!questionIndexes.includes(currentIndex)||aiResponse)&&(
+                            {/*일반 문장 or 질문+답변 완료 시에만 next 버튼 표시 (TTS 완료 후)*/}
+                            {((!questionIndexes.includes(currentIndex) || aiResponse) && isTtsCompleted) && (
                                 <ButtonWrapper>
                                     {currentIndex > 0 && (
                                         <BackButton onClick={()=>{
                                             setCurrentIndex(currentIndex-1);
                                             setAiResponse(""); //이전 문장으로 갈 때 aiResponse초기화
+                                            setIsTtsCompleted(false); // TTS 완료 상태 초기화
                                         }}>
                                             이전
                                         </BackButton>
                                     )}
                                     <BubbleButton onClick={()=>{
                                         setAiResponse(""); //다음 문장 넘어갈 때 aiResponse초기화
+                                        setIsTtsCompleted(false); // TTS 완료 상태 초기화
                                         goToNextSentence();
                                     }}>
                                         다음
@@ -847,8 +917,8 @@ const stopVoiceRecognition = () => {
                             )}
                     
 
-                    {/* ✅ 질문이고 아직 대답 전일 경우만 버튼 표시 */}
-                    {questionIndexes.includes(currentIndex) && !aiResponse && (
+                    {/* ✅ 질문이고 아직 대답 전일 경우만 버튼 표시 (TTS 완료 후 활성화) */}
+                    {questionIndexes.includes(currentIndex) && !aiResponse && isTtsCompleted && (
                         !isVoiceRecognitionComplete ? (
                             <AnswerButton onClick={handleVoiceRecognition}>
                                 {isRecording ? "음성인식 중..." : "대답하기"}
