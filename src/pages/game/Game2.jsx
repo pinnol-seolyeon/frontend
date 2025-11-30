@@ -1037,39 +1037,8 @@ export default function Game2({ user }) {
   }, [showQuizAlert, isQuizActive]);
   
   // 게임 종료 시 코인 저장 및 퀴즈 결과 전송
-  useEffect(() => {
-    if (!gameEnded || !showResults) return;
-    
-    const saveGameResults = async () => {
-      try {
-        // 코인 저장
-        if (coins > 0) {
-          await saveCoinToDB(coins, chapterId);
-          console.log('✅ 코인 저장 성공:', coins);
-        }
-        
-        // 퀴즈 결과 전송
-        if (quizResultsRef.current.length > 0) {
-          const formattedResults = quizResultsRef.current.map(result => ({
-            quizId: result.quizId || '',
-            question: result.quiz || result.question, // quiz 필드도 함께 전달
-            options: result.options || [],
-            correctAnswer: result.correctAnswer,
-            userAnswer: result.userAnswer,
-            isCorrect: result.isCorrect,
-            description: result.description,
-            quizDate: new Date().toISOString().split('T')[0]
-          }));
-          await sendQuizResults(formattedResults);
-          console.log('✅ 퀴즈 결과 저장 성공');
-        }
-      } catch (error) {
-        console.error('❌ 게임 결과 저장 실패:', error);
-      }
-    };
-    
-    saveGameResults();
-  }, [gameEnded, showResults, coins, chapterId]);
+  // 게임 결과 저장은 handleFinishAndExit에서만 수행하도록 변경
+  // useEffect에서 자동 저장 제거 (중복 호출 방지)
   
   // 게임 종료 이미지가 화면을 지나가면 게임 종료 처리
   useEffect(() => {
