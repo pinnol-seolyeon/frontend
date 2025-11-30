@@ -297,6 +297,10 @@ function ChapterPage({ user, login, setLogin }) {
 
   // 챕터 상태를 판단하는 함수
   const getChapterStatus = (chapterId) => {
+    // currentChapterId가 null이면 모든 학습을 완료한 것이므로 모든 chapter가 completed
+    if (currentChapterId === null) return { isCompleted: true, isCurrent: false };
+    
+    // currentChapterId가 없으면 (undefined 등) locked 상태
     if (!currentChapterId) return { isCompleted: false, isCurrent: false };
     
     // currentChapterId보다 낮은 ID는 완료된 것으로 간주

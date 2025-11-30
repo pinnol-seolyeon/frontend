@@ -81,6 +81,7 @@ function AppContent() {
     preloadMainImages();
   }, []);
 
+
   // 로그인 체크 함수
   const checkLoginStatus = () => {
     console.log("🔍 로그인 상태 체크 시작");
