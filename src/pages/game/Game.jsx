@@ -13,7 +13,18 @@ import { useChapter } from "../../context/ChapterContext";
 import { fetchChapterContents } from '../../api/study/level3API';
 import { useNavigate } from "react-router-dom";
 import { useActivityTracker } from "../../hooks/useActivityTracker";
-import bgmSrc from '../../assets/Tiki_Bar_Mixer.mp3';
+import bgmSrc from '../../assets/game1/game1_main_BGM.wav';
+import startbgmSrc from '../../assets/game1/game1_lobby_BGM.wav';
+import startHoverSoundSrc from '../../assets/game1/game1_game_start_Hover.wav';
+import clickSoundSrc from '../../assets/game1/game1_click.wav';
+import playerHitSoundSrc from '../../assets/game1/game1_player_hit.wav';
+import playerJumpSoundSrc from '../../assets/game1/game1_player_jump.wav';
+import quizOpenSoundSrc from '../../assets/game1/game1_quiz_open.wav';
+import quizHoverSoundSrc from '../../assets/game1/game1_Hover.wav';
+import correctSoundSrc from '../../assets/game1/game1_correct.wav';
+import wrongSoundSrc from '../../assets/game1/game1_wrong.wav';
+import gameFinishSoundSrc from '../../assets/game1/game1_game_finish.wav';
+import gameOverStarSoundSrc from '../../assets/game1/game1_game_over_star.wav';
 import { sendQuizResults } from '../../api/analyze/sendQuizResults';
 import gameStartTitle from '../../assets/game_startoverlay_title.svg';
 import gameStartCoin from '../../assets/game_coin_start.svg';
@@ -697,6 +708,14 @@ export default function Game({ user }) {
   
   const [imagesLoaded, setImagesLoaded] = useState(false);
 
+  // 게임 시작 기록
+  useEffect(() => {
+    if (chapterId) {
+      const { markGameStarted } = require('../../utils/gameSelector');
+      markGameStarted(chapterId, '/game');
+    }
+  }, [chapterId]);
+
   const frameRef = useRef(0);
   const gameSpeedRef = useRef(16); // 속도 조절
   const backgroundXRef = useRef(0);
@@ -758,11 +777,24 @@ export default function Game({ user }) {
 
   const [isGameStarted, setIsGameStarted] = useState(false);
   const bgmRef = useRef(null);
+  const startBgmRef = useRef(null);
   
   // 코인 사운드 미리 생성 (프레임 드롭 방지)
   // 여러 개 준비해서 재생 중인 사운드가 있어도 즉시 재생 가능
   const coinSoundPoolRef = useRef([]);
   const coinSoundIndexRef = useRef(0);
+  
+  // 사운드 refs
+  const startHoverSoundRef = useRef(null);
+  const clickSoundRef = useRef(null);
+  const playerHitSoundRef = useRef(null);
+  const playerJumpSoundRef = useRef(null);
+  const quizOpenSoundRef = useRef(null);
+  const quizHoverSoundRef = useRef(null);
+  const correctSoundRef = useRef(null);
+  const wrongSoundRef = useRef(null);
+  const gameFinishSoundRef = useRef(null);
+  const gameOverStarSoundRef = useRef(null);
   
   const [showPauseModal, setShowPauseModal] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
@@ -822,6 +854,13 @@ export default function Game({ user }) {
       quizScoreRef.current += 1;
       setIsPaused(false);
       bgmRef.current?.play();
+      // 퀴즈 맞힌 경우 사운드 재생
+      if (correctSoundRef.current) {
+        correctSoundRef.current.currentTime = 0;
+        correctSoundRef.current.play().catch(err => {
+          console.warn('정답 사운드 재생 실패:', err);
+        });
+      }
       setCorrectVisible(true);
       setTimeout(() => setCorrectVisible(false), 1000);
       requestAnimationFrame(updateRef.current);
@@ -831,6 +870,13 @@ export default function Game({ user }) {
       scoreRef.current = Math.max(0, scoreRef.current - 10);
       setIsPaused(false);
       bgmRef.current?.play();
+      // 퀴즈 틀린 경우 사운드 재생
+      if (wrongSoundRef.current) {
+        wrongSoundRef.current.currentTime = 0;
+        wrongSoundRef.current.play().catch(err => {
+          console.warn('오답 사운드 재생 실패:', err);
+        });
+      }
       setWrongVisible(true);
       setTimeout(() => setWrongVisible(false), 1000);
       requestAnimationFrame(updateRef.current);
@@ -888,7 +934,7 @@ export default function Game({ user }) {
     // 코인 사운드 풀 미리 생성 (초반 렉 방지)
     const coinSoundPool = [];
     for (let i = 0; i < 3; i++) {
-      const audio = new Audio(require('../../assets/coin-recieved-230517.mp3'));
+      const audio = new Audio(require('../../assets/game1/game1_coin.wav'));
       audio.volume = 0.7;
       audio.preload = 'auto';
       // 미리 재생했다가 멈춰서 디코딩 완료 상태로 만들기
@@ -901,6 +947,47 @@ export default function Game({ user }) {
       coinSoundPool.push(audio);
     }
     coinSoundPoolRef.current = coinSoundPool;
+    
+    // 사운드 파일들 미리 로드
+    startHoverSoundRef.current = new Audio(startHoverSoundSrc);
+    startHoverSoundRef.current.volume = 0.7;
+    startHoverSoundRef.current.preload = 'auto';
+    
+    clickSoundRef.current = new Audio(clickSoundSrc);
+    clickSoundRef.current.volume = 0.7;
+    clickSoundRef.current.preload = 'auto';
+    
+    playerHitSoundRef.current = new Audio(playerHitSoundSrc);
+    playerHitSoundRef.current.volume = 0.7;
+    playerHitSoundRef.current.preload = 'auto';
+    
+    playerJumpSoundRef.current = new Audio(playerJumpSoundSrc);
+    playerJumpSoundRef.current.volume = 0.7;
+    playerJumpSoundRef.current.preload = 'auto';
+    
+    quizOpenSoundRef.current = new Audio(quizOpenSoundSrc);
+    quizOpenSoundRef.current.volume = 0.7;
+    quizOpenSoundRef.current.preload = 'auto';
+    
+    quizHoverSoundRef.current = new Audio(quizHoverSoundSrc);
+    quizHoverSoundRef.current.volume = 0.7;
+    quizHoverSoundRef.current.preload = 'auto';
+    
+    correctSoundRef.current = new Audio(correctSoundSrc);
+    correctSoundRef.current.volume = 0.7;
+    correctSoundRef.current.preload = 'auto';
+    
+    wrongSoundRef.current = new Audio(wrongSoundSrc);
+    wrongSoundRef.current.volume = 0.7;
+    wrongSoundRef.current.preload = 'auto';
+    
+    gameFinishSoundRef.current = new Audio(gameFinishSoundSrc);
+    gameFinishSoundRef.current.volume = 0.7;
+    gameFinishSoundRef.current.preload = 'auto';
+    
+    gameOverStarSoundRef.current = new Audio(gameOverStarSoundSrc);
+    gameOverStarSoundRef.current.volume = 0.7;
+    gameOverStarSoundRef.current.preload = 'auto';
 
     loadImages();
   }, []);
@@ -1079,6 +1166,13 @@ export default function Game({ user }) {
         description: quizDescription,
       });
       bgmRef.current?.pause();
+      // 퀴즈를 만날 경우 사운드 재생
+      if (quizOpenSoundRef.current) {
+        quizOpenSoundRef.current.currentTime = 0;
+        quizOpenSoundRef.current.play().catch(err => {
+          console.warn('퀴즈 오픈 사운드 재생 실패:', err);
+        });
+      }
     }
 
     let lastQuizFrame = -1000;
@@ -1324,9 +1418,13 @@ export default function Game({ user }) {
           entities.splice(i, 1);
           bgmRef.current?.pause();
           bgmRef.current.currentTime = 0;
-          const finishSound = new Audio(require('../../assets/cute-level-up-3-189853.mp3'));
-          finishSound.volume = 0.7;
-          finishSound.play().catch(err => console.warn("끝 효과음 재생 실패:", err));
+          // 게임 끝날 때 사운드 재생
+          if (gameFinishSoundRef.current) {
+            gameFinishSoundRef.current.currentTime = 0;
+            gameFinishSoundRef.current.play().catch(err => {
+              console.warn('게임 종료 사운드 재생 실패:', err);
+            });
+          }
           showEndEffect();
           break;
         }
@@ -1345,6 +1443,13 @@ export default function Game({ user }) {
           if (ent.type === 'hurdle') {
             scoreRef.current = Math.max(0, scoreRef.current - 5)
             showPenaltyEffect();
+            // 장애물에 맞을 경우 사운드 재생
+            if (playerHitSoundRef.current) {
+              playerHitSoundRef.current.currentTime = 0;
+              playerHitSoundRef.current.play().catch(err => {
+                console.warn('장애물 사운드 재생 실패:', err);
+              });
+            }
             entities.splice(i, 1);
             i--;
           } else if (ent.type === 'coin') {
@@ -1429,32 +1534,56 @@ export default function Game({ user }) {
     if(!player.isJumping&&!gameOver&&!isPaused){
       player.vy=player.jumpForce;
       player.isJumping=true;
+      // 캐릭터 점프 시 사운드 재생
+      if (playerJumpSoundRef.current) {
+        playerJumpSoundRef.current.currentTime = 0;
+        playerJumpSoundRef.current.play().catch(err => {
+          console.warn('점프 사운드 재생 실패:', err);
+        });
+      }
     }
   };
 
   useEffect(() => {
-
-  if (!bgmRef.current) return;
-  const bgm = bgmRef.current;
-
-  const tryPlayBGM = () => {
-    if (bgm) {
-      bgm.volume = 0.5;
-      bgm.play().catch(err => console.warn("🎵 BGM 자동재생 실패:", err));
+    // start modal BGM 재생
+    if (startBgmRef.current && !isGameStarted) {
+      startBgmRef.current.volume = 0.5;
+      startBgmRef.current.play().catch(err => console.warn("🎵 Start BGM 자동재생 실패:", err));
     }
-  };
+    
+    return () => {
+      if (startBgmRef.current) {
+        startBgmRef.current?.pause();
+        startBgmRef.current.currentTime = 0;
+      }
+    };
+  }, [isGameStarted]);
 
-  window.addEventListener('click', tryPlayBGM, { once: true });
+  useEffect(() => {
+    if (!bgmRef.current) return;
+    const bgm = bgmRef.current;
 
-  return () => {
-    window.removeEventListener('click', tryPlayBGM);
-    bgm?.pause();
-    bgm.currentTime = 0;
-  };
-}, []);
+    const tryPlayBGM = () => {
+      if (bgm && isGameStarted) {
+        bgm.volume = 0.5;
+        bgm.play().catch(err => console.warn("🎵 BGM 자동재생 실패:", err));
+      }
+    };
+
+    if (isGameStarted) {
+      tryPlayBGM();
+    }
+
+    return () => {
+      bgm?.pause();
+      bgm.currentTime = 0;
+    };
+  }, [isGameStarted]);
 
   const handlePauseClick = (e) => {
     e.stopPropagation();
+    // 모달 표시 시 배경음악 일시정지
+    bgmRef.current?.pause();
     setShowPauseModal(true);
     setIsPaused(true);
     cancelAnimationFrame(animationIdRef.current);
@@ -1463,6 +1592,8 @@ export default function Game({ user }) {
 
   const handleExitClick = (e) => {
     e.stopPropagation();
+    // 모달 표시 시 배경음악 일시정지
+    bgmRef.current?.pause();
     setShowExitModal(true);
     setIsPaused(true);
     cancelAnimationFrame(animationIdRef.current);
@@ -1475,6 +1606,7 @@ export default function Game({ user }) {
     setIsPaused(false);
     restoreSnapshot();
     animationIdRef.current = requestAnimationFrame(updateRef.current);
+    bgmRef.current?.play();
   };
 
   const handleExitFromPause = async () => {
@@ -1489,6 +1621,8 @@ export default function Game({ user }) {
 
   const handleCancelExit = () => {
     console.log('🚫 Exit 취소 - EXIT 상태 전송하지 않음');
+    // 모달 닫을 때 배경음악 재생
+    bgmRef.current?.play();
     setShowExitModal(false);
     setIsPaused(false);
     restoreSnapshot();
@@ -1515,8 +1649,34 @@ export default function Game({ user }) {
             <CoinText>{scoreRef.current} F</CoinText>
           </CoinDisplay>
           <ControlDisplay>
-            <ControlButton src={pause_btn} alt="일시정지" onClick={handlePauseClick} />
-            <ControlButton src={exit_btn} alt="나가기" onClick={handleExitClick} />
+            <ControlButton 
+              src={pause_btn} 
+              alt="일시정지" 
+              onClick={handlePauseClick}
+              onMouseEnter={() => {
+                // pause 버튼 hover 시 사운드 재생
+                if (quizHoverSoundRef.current) {
+                  quizHoverSoundRef.current.currentTime = 0;
+                  quizHoverSoundRef.current.play().catch(err => {
+                    console.warn('hover 사운드 재생 실패:', err);
+                  });
+                }
+              }}
+            />
+            <ControlButton 
+              src={exit_btn} 
+              alt="나가기" 
+              onClick={handleExitClick}
+              onMouseEnter={() => {
+                // exit 버튼 hover 시 사운드 재생
+                if (quizHoverSoundRef.current) {
+                  quizHoverSoundRef.current.currentTime = 0;
+                  quizHoverSoundRef.current.play().catch(err => {
+                    console.warn('hover 사운드 재생 실패:', err);
+                  });
+                }
+              }}
+            />
           </ControlDisplay>
         </GameControls>
       )}
@@ -1536,6 +1696,15 @@ export default function Game({ user }) {
                     onClick={(e) => {
                       e.stopPropagation();
                       handleQuizAnswer(opt);
+                    }}
+                    onMouseEnter={() => {
+                      // 퀴즈 선택지 hover 시 사운드 재생
+                      if (quizHoverSoundRef.current) {
+                        quizHoverSoundRef.current.currentTime = 0;
+                        quizHoverSoundRef.current.play().catch(err => {
+                          console.warn('퀴즈 hover 사운드 재생 실패:', err);
+                        });
+                      }
                     }}
                     isOdd={idx % 2 === 0}
                   >
@@ -1586,10 +1755,33 @@ export default function Game({ user }) {
             지금까지의 학습 기록과 포인트가 초기화됩니다.`}</ModalDescription>
 
             <ModalButtonContainer>
-              <ModalButton primary onClick={handleResume}>
+              <ModalButton 
+                primary 
+                onClick={handleResume}
+                onMouseEnter={() => {
+                  // 모달 버튼 hover 시 사운드 재생
+                  if (quizHoverSoundRef.current) {
+                    quizHoverSoundRef.current.currentTime = 0;
+                    quizHoverSoundRef.current.play().catch(err => {
+                      console.warn('hover 사운드 재생 실패:', err);
+                    });
+                  }
+                }}
+              >
                 이어하기
               </ModalButton>
-              <ModalButton onClick={handleExitFromPause}>
+              <ModalButton 
+                onClick={handleExitFromPause}
+                onMouseEnter={() => {
+                  // 모달 버튼 hover 시 사운드 재생
+                  if (quizHoverSoundRef.current) {
+                    quizHoverSoundRef.current.currentTime = 0;
+                    quizHoverSoundRef.current.play().catch(err => {
+                      console.warn('hover 사운드 재생 실패:', err);
+                    });
+                  }
+                }}
+              >
                 종료하기
               </ModalButton>
             </ModalButtonContainer>
@@ -1604,10 +1796,33 @@ export default function Game({ user }) {
             <ModalDescription>{`게임을 종료하게 되면
             지금까지의 학습 기록과 포인트가 초기화됩니다.`}</ModalDescription>
             <ModalButtonContainer>
-              <ModalButton onClick={handleCancelExit}>
+              <ModalButton 
+                onClick={handleCancelExit}
+                onMouseEnter={() => {
+                  // 모달 버튼 hover 시 사운드 재생
+                  if (quizHoverSoundRef.current) {
+                    quizHoverSoundRef.current.currentTime = 0;
+                    quizHoverSoundRef.current.play().catch(err => {
+                      console.warn('hover 사운드 재생 실패:', err);
+                    });
+                  }
+                }}
+              >
                 이어하기
               </ModalButton>
-              <ModalButton primary onClick={handleConfirmExit}>
+              <ModalButton 
+                primary 
+                onClick={handleConfirmExit}
+                onMouseEnter={() => {
+                  // 모달 버튼 hover 시 사운드 재생
+                  if (quizHoverSoundRef.current) {
+                    quizHoverSoundRef.current.currentTime = 0;
+                    quizHoverSoundRef.current.play().catch(err => {
+                      console.warn('hover 사운드 재생 실패:', err);
+                    });
+                  }
+                }}
+              >
                 종료하기
               </ModalButton>
             </ModalButtonContainer>
@@ -1652,11 +1867,25 @@ export default function Game({ user }) {
                 ))}
               </QuizResultsContainer>
 
-              <NextButton onClick={async (e) => { 
-                e.stopPropagation();
-                await completeSession();
-                navigate(`/study/level6/summary?chapterId=${chapterId}`); 
-              }}>
+              <NextButton 
+                onClick={async (e) => { 
+                  e.stopPropagation();
+                  // 게임 완료 기록
+                  const { markGameCompleted } = await import('../../utils/gameSelector');
+                  markGameCompleted(chapterId, '/game');
+                  await completeSession();
+                  navigate(`/study/level6/summary?chapterId=${chapterId}`); 
+                }}
+                onMouseEnter={() => {
+                  // game over modal 버튼 hover 시 사운드 재생
+                  if (gameOverStarSoundRef.current) {
+                    gameOverStarSoundRef.current.currentTime = 0;
+                    gameOverStarSoundRef.current.play().catch(err => {
+                      console.warn('game over star 사운드 재생 실패:', err);
+                    });
+                  }
+                }}
+              >
                 다음단계로
               </NextButton>
             </GameOverContent>
@@ -1666,6 +1895,20 @@ export default function Game({ user }) {
 
       {!isGameStarted && (
         <StartOverlay>
+          <audio 
+            ref={startBgmRef} 
+            src={startbgmSrc} 
+            loop 
+            onLoadedData={() => {
+              // audio가 로드된 후 재생 시도
+              if (startBgmRef.current && !isGameStarted) {
+                startBgmRef.current.volume = 0.5;
+                startBgmRef.current.play().catch(err => {
+                  console.warn("🎵 Start BGM 자동재생 실패:", err);
+                });
+              }
+            }}
+          />
           <StartModalBox>
             <TitleBanner />
             
@@ -1689,15 +1932,33 @@ export default function Game({ user }) {
                 마우스를 클릭하거나 화면을 터치하여 점프하세요!
               </TutorialJump>
 
-              <StartButton onClick={(e) => {
-                e.stopPropagation();
-            bgmRef.current?.play();
-            setIsGameStarted(true);
-              }} />
+              <StartButton 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // start button click 시 사운드 재생
+                  if (clickSoundRef.current) {
+                    clickSoundRef.current.currentTime = 0;
+                    clickSoundRef.current.play().catch(err => {
+                      console.warn('클릭 사운드 재생 실패:', err);
+                    });
+                  }
+                  bgmRef.current?.play();
+                  setIsGameStarted(true);
+                }}
+                onMouseEnter={() => {
+                  // start button hover 시 사운드 재생
+                  if (startHoverSoundRef.current) {
+                    startHoverSoundRef.current.currentTime = 0;
+                    startHoverSoundRef.current.play().catch(err => {
+                      console.warn('시작 버튼 hover 사운드 재생 실패:', err);
+                    });
+                  }
+                }}
+              />
 
-              <BgmCredit>
+              {/* <BgmCredit>
                 BGM " Tiki_Bar_Mixer.mp3 " by Kevin MacLeod (incompetech.com) — CC BY 3.0
-              </BgmCredit>
+              </BgmCredit> */}
             </ModalContent>
           </StartModalBox>
         </StartOverlay>

@@ -337,18 +337,34 @@ function ChapterPage({ user, login, setLogin }) {
       isAvailable: isAvailable
     });
     console.log("✅API응답 chapter:",chapter.chapterId, "bookId:", bookId);
+    console.log("🔍 targetLevel 체크:", { targetLevel, isLevel4: targetLevel === 4 });
 
     // currentLevel에 따라 해당 레벨로 이동
-    const levelRoutes = {
-      1: `/study/1?chapterId=${chapter.chapterId}`,
-      2: `/study/2?chapterId=${chapter.chapterId}`,
-      3: `/study/level3?chapterId=${chapter.chapterId}`,
-      4: `/game`,
-      5: `/study/level6/summary?chapterId=${chapter.chapterId}`,
-      6: `/study/level6/2?chapterId=${chapter.chapterId}`
-    };
+    let targetRoute;
+    if (targetLevel === 4) {
+      console.log('🎮 ChapterPage - Level 4 감지! gameSelector 사용');
+      // level 4일 때는 gameSelector를 사용하여 chapter별로 선택된 게임으로 라우팅
+      const { getGameForChapter } = await import('../../../utils/gameSelector');
+      const gamePath = getGameForChapter(chapter.chapterId, 'study');
+      console.log('🎮 ChapterPage - 게임 선택:', {
+        chapterId: chapter.chapterId,
+        gamePath,
+        targetLevel
+      });
+      targetRoute = `${gamePath}?chapterId=${chapter.chapterId}`;
+      console.log('🎮 ChapterPage - 최종 라우팅 경로:', targetRoute);
+    } else {
+      console.log('⚠️ ChapterPage - Level 4가 아님, 기본 라우팅 사용:', targetLevel);
+      const levelRoutes = {
+        1: `/study/1?chapterId=${chapter.chapterId}`,
+        2: `/study/2?chapterId=${chapter.chapterId}`,
+        3: `/study/level3?chapterId=${chapter.chapterId}`,
+        5: `/study/level6/summary?chapterId=${chapter.chapterId}`,
+        6: `/study/level6/2?chapterId=${chapter.chapterId}`
+      };
+      targetRoute = levelRoutes[targetLevel] || `/study/1?chapterId=${chapter.chapterId}`;
+    }
     
-    const targetRoute = levelRoutes[targetLevel] || `/study/1?chapterId=${chapter.chapterId}`;
     console.log("🚀 이동할 경로:", targetRoute);
     navigate(targetRoute);
   } catch (err) {

@@ -311,8 +311,10 @@ function StudyPage({ user, login, setLogin }){
                              {/* TTS 재생 완료 시에만 버튼 표시 */}
                              {isTtsCompleted && (
                              <ButtonWrapper>
-                                  <BubbleButton onClick={() => {
-                                      navigate(`/study/level2-img?chapterId=${chapterData?.chapterId}`);
+                                  <BubbleButton onClick={async () => {
+                                    await completeSession(); // Level 2 완료 상태 전송
+                                    navigate(`/study/level3?chapterId=${chapterData?.chapterId}`);
+                                    //   navigate(`/study/level2-img?chapterId=${chapterData?.chapterId}`);
                                   }}>
                                          다음
                                   </BubbleButton>

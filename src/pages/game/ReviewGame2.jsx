@@ -1659,9 +1659,9 @@ export default function ReviewGame2({ user }) {
       
       // 복습 완료 API 호출 (quiz-result는 제외)
       if (chapterId && formattedResults.length > 0) {
-        console.log("🔍 복습 완료 API 호출, reviewCount:", reviewCount, "chapterId:", chapterId);
-        await reviewCompleted(reviewCount, chapterId, formattedResults);
-        console.log("✅ 복습 완료 API 호출 성공");
+          console.log("🔍 복습 완료 API 호출, reviewCount:", reviewCount, "chapterId:", chapterId);
+          await reviewCompleted(reviewCount, chapterId, formattedResults);
+          console.log("✅ 복습 완료 API 호출 성공");
       }
       
       if (coins > 0 && chapterId) {
