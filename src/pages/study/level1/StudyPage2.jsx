@@ -303,7 +303,7 @@ function StudyPage({ user, login, setLogin }){
                                         <span style={{ fontWeight: "bold", color: "#2774B2" }}>
                                         {objective}
                                         </span><br/>
-                                        그럼 시작해볼까? 🐯
+                                        그럼 시작해볼까?
                                     </p>
                                     }
 
