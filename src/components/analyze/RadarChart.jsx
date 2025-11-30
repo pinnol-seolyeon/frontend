@@ -236,14 +236,14 @@ return (
           </RadarChart>
         </ResponsiveContainer>
       </ChartContainer>
-        <KeywordMessage>
+        {/* <KeywordMessage>
           {getKeywordText()}
         </KeywordMessage>
 
 
       <SummaryMessage>
         {getSummaryText()}
-      </SummaryMessage>
+      </SummaryMessage> */}
     </AnalysisCard>
   );
 }

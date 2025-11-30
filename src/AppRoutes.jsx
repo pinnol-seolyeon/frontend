@@ -34,6 +34,8 @@ import ReviewContent from './pages/review/ReviewContent';
 import ReviewGame from './pages/game/ReviewGame';
 import ReviewGame2 from './pages/game/ReviewGame2';
 import ReviewGame3 from './pages/game/ReviewGame3';
+import ReviewGame2Ready from './pages/game/ReviewGame2Ready';
+import ReviewGame3Ready from './pages/game/ReviewGame3Ready';
 
 const GlobalStyles = createGlobalStyle`
   ${reset};
@@ -82,6 +84,8 @@ const routes = [
   {path:'/review/game',element:<ReviewGame/>},
   {path:'/review/game2',element:<ReviewGame2/>},
   {path:'/review/game3',element:<ReviewGame3/>},
+  {path:'/review/game2/ready',element:<ReviewGame2Ready/>},
+  {path:'/review/game3/ready',element:<ReviewGame3Ready/>},
 ];
 
 export default function AppRoutes({ login, setLogin, user }) {

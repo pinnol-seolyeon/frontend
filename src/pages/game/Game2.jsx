@@ -695,6 +695,14 @@ export default function Game2({ user }) {
   const [isGameStarted, setIsGameStarted] = useState(true);
   const [isGameRunning, setIsGameRunning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+
+  // 게임 시작 기록
+  useEffect(() => {
+    if (chapterId) {
+      const { markGameStarted } = require('../../utils/gameSelector');
+      markGameStarted(chapterId, '/game2');
+    }
+  }, [chapterId]);
   const [coins, setCoins] = useState(0);
   const [showQuiz, setShowQuiz] = useState(false);
   const [currentQuiz, setCurrentQuiz] = useState(null);
@@ -1673,34 +1681,7 @@ export default function Game2({ user }) {
   }, [isGameRunning, isPaused, gameEnded, isQuizActive, showQuizAlert, showGameEnd, quizList, startQuizEvent]);
   
   const handleExit = async () => {
-    if (coins > 0) {
-      try {
-        await saveCoinToDB(coins, chapterId);
-        console.log('✅ 코인 저장 성공:', coins);
-      } catch (error) {
-        console.error('❌ 코인 저장 실패:', error);
-      }
-    }
-    
-    if (quizResultsRef.current.length > 0) {
-      try {
-        const formattedResults = quizResultsRef.current.map(result => ({
-          quizId: result.quizId || '',
-          question: result.quiz || result.question, // quiz 필드도 함께 전달
-          options: result.options || [],
-          correctAnswer: result.correctAnswer,
-          userAnswer: result.userAnswer,
-          isCorrect: result.isCorrect,
-          description: result.description,
-          quizDate: new Date().toISOString().split('T')[0]
-        }));
-        await sendQuizResults(formattedResults);
-        console.log('✅ 퀴즈 결과 저장 성공');
-      } catch (error) {
-        console.error('❌ 퀴즈 결과 저장 실패:', error);
-      }
-    }
-    
+    // 게임을 완료하지 않고 나가는 경우에는 코인과 퀴즈 결과를 저장하지 않음
     await sendExit();
     navigate('/main');
   };
@@ -1723,6 +1704,9 @@ export default function Game2({ user }) {
       if (coins > 0) {
         await saveCoinToDB(coins, chapterId);
       }
+      // 게임 완료 기록
+      const { markGameCompleted } = await import('../../utils/gameSelector');
+      markGameCompleted(chapterId, '/game2');
       await completeSession(); // Level 4 완료 상태 전송
       navigate(`/study/level6/summary?chapterId=${chapterId}`);
     } catch (e) {

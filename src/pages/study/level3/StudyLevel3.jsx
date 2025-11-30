@@ -425,6 +425,7 @@ function StudyPage({ user, login, setLogin }){
     const [answers, setAnswers] = useState([]); // AI 응답 문장 배열
     const [isAnsweringPhase, setIsAnsweringPhase] = useState(false); // AI 응답 재생 단계 여부
     const questionIndexBeforeAnswerRef = useRef(null); // AI 답변 전 원래 질문 인덱스 저장
+    const contentAfterAnswerEndIndexRef = useRef(null); // AI 응답에 포함된 마지막 컨텐츠 인덱스 저장
 
     
     const {chapterData, setChapterData}=useChapter();
@@ -772,10 +773,12 @@ function StudyPage({ user, login, setLogin }){
         setIsTtsCompleted(false); // TTS 완료 상태 초기화
     },[]); //의존성 배열이 비어 있어야 컴포넌트 최초 마운트 시 한 번만 실행
 
-    // currentIndex가 변경될 때마다 TTS 완료 상태 초기화
+    // currentIndex가 변경될 때마다 TTS 완료 상태 초기화 (isFinished가 false일 때만)
     useEffect(() => {
-        setIsTtsCompleted(false);
-    }, [currentIndex]);
+        if (!isFinished) {
+            setIsTtsCompleted(false);
+        }
+    }, [currentIndex, isFinished]);
 
 
 
@@ -798,28 +801,96 @@ function StudyPage({ user, login, setLogin }){
             
             // 저장된 원래 질문 인덱스 다음의 일반 문장으로 이동
             const originalQuestionIndex = questionIndexBeforeAnswerRef.current;
+            const contentEndIndex = contentAfterAnswerEndIndexRef.current;
+            
             if (originalQuestionIndex !== null && originalQuestionIndex !== undefined) {
-                // 질문 다음의 첫 번째 일반 문장 인덱스 계산
-                const nextContentIndex = originalQuestionIndex + 1;
-                console.log("✅ 질문 다음 컨텐츠로 이동:", nextContentIndex, "(원래 질문 인덱스:", originalQuestionIndex + ")");
+                console.log("✅ AI 응답 재생 완료, 다음 컨텐츠로 이동", {
+                    originalQuestionIndex,
+                    contentEndIndex,
+                    sentencesLength: sentences.length
+                });
                 
-                // 다음 질문 인덱스 찾기
-                const nextQuestionIndex = questionIndexes.find(idx => idx > originalQuestionIndex);
-                const endIndex = nextQuestionIndex !== undefined ? nextQuestionIndex : sentences.length;
+                // AI 응답에 이미 포함된 컨텐츠는 건너뛰기
+                // contentAfterAnswerEndIndexRef에 저장된 인덱스 이후로 이동
+                const nextQuestionIndex = questionIndexes.find(idx => idx >= (contentEndIndex || originalQuestionIndex + 1));
                 
-                // 이미 재생한 컨텐츠를 건너뛰고 다음 위치로 이동
-                if (endIndex < sentences.length) {
+                if (nextQuestionIndex !== undefined && nextQuestionIndex < sentences.length) {
                     // 다음 질문이 있으면 그 질문으로 이동
-                    setCurrentIndex(endIndex);
+                    setCurrentIndex(nextQuestionIndex);
+                } else if (contentEndIndex !== null && contentEndIndex < sentences.length) {
+                    // 다음 질문이 없고 contentEndIndex가 마지막이 아니면 contentEndIndex로 이동
+                    setCurrentIndex(contentEndIndex);
                 } else {
-                    // 다음 질문이 없으면 마지막 문장으로 이동
-                    setCurrentIndex(sentences.length - 1);
+                    // 모든 문장을 다 재생했으면 완료 처리
+                    console.log("✅ 모든 문장 완료, 다음 단계로 이동");
+                    setIsQuestionFinished(true);
+                    setIsFinished(true);
+                    setIsTtsCompleted(true);
+                    setIsAnsweringPhase(false);
+                    setAnswers([]);
+                    questionIndexBeforeAnswerRef.current = null;
+                    contentAfterAnswerEndIndexRef.current = null;
+                    
+                    // 즉시 다음 단계로 이동 (비동기 처리)
+                    (async () => {
+                        const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+                        if (chapterId) {
+                            try {
+                                console.log("💾 질문/답변 저장 API 호출 시작 - chapterId:", chapterId);
+                                const response = await api.post(`/api/question/save-all`, null, {
+                                    params: {
+                                        chapterId: chapterId
+                                    }
+                                });
+                                console.log("✅ 질문/답변 저장 성공:", response.data);
+                                
+                                try {
+                                    const storageKey = `questionData_${chapterId}`;
+                                    sessionStorage.removeItem(storageKey);
+                                    console.log("🧹 sessionStorage 질문 데이터 삭제 완료");
+                                } catch (error) {
+                                    console.error("⚠️ sessionStorage 삭제 실패 (무시):", error);
+                                }
+                            } catch (error) {
+                                console.error("❌ 질문/답변 저장 API 호출 실패:", error);
+                            }
+                        }
+                        
+                        if (chapterId) {
+                            const badgesToWin = [];
+                            
+                            if (speedHunter) {
+                                badgesToWin.push('SPEED_HUNTER');
+                            }
+                            
+                            if (fineHunter) {
+                                badgesToWin.push('FINE_HUNTER');
+                            }
+                            
+                            if (badgesToWin.length > 0) {
+                                try {
+                                    await winBadge(chapterId, badgesToWin);
+                                } catch (error) {
+                                    console.error('❌ 뱃지 획득 실패:', error);
+                                }
+                            }
+                        }
+                        
+                        await completeSession();
+                        
+                        const finalChapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+                        const { getGameForChapter } = await import('../../../utils/gameSelector');
+                        const gamePath = getGameForChapter(finalChapterId, 'study');
+                        navigate(gamePath);
+                    })();
+                    return; // 여기서 함수 종료
                 }
                 
                 // 질문 단계로 돌아가기
                 setIsAnsweringPhase(false);
                 setAnswers([]);
                 questionIndexBeforeAnswerRef.current = null; // ref 초기화
+                contentAfterAnswerEndIndexRef.current = null; // ref 초기화
             } else {
                 // 저장된 인덱스가 없으면 다음 질문으로 이동
                 const questionIdx = questionIndexes.find(idx => idx > currentIndex) || questionIndexes[questionIndexes.length - 1];
@@ -850,6 +921,8 @@ function StudyPage({ user, login, setLogin }){
         setIsQuestionFinished(true); //질문 끝났다는 상태
         setIsFinished(true);
         setIsTtsCompleted(true); // TTS 완료 상태 설정
+        // currentIndex는 마지막 인덱스로 유지 (텍스트가 바뀌지 않도록)
+        // setCurrentIndex는 호출하지 않음
         
         // 즉시 다음 단계로 이동 (비동기 처리)
         (async () => {
@@ -985,12 +1058,18 @@ function StudyPage({ user, login, setLogin }){
                 const nextQuestionIndex = questionIndexes.find(idx => idx > currentIndex);
                 const endIndex = nextQuestionIndex !== undefined ? nextQuestionIndex : sentences.length;
                 
+                // AI 응답에 포함된 마지막 컨텐츠 인덱스 저장
+                contentAfterAnswerEndIndexRef.current = endIndex;
+                
                 for (let i = nextContentIndex; i < endIndex; i++) {
                     // 질문이 아닌 일반 문장만 추가
                     if (!questionIndexes.includes(i)) {
                         contentAfterAnswer.push(sentences[i]);
                     }
                 }
+            } else {
+                // 다음 컨텐츠가 없으면 endIndex를 sentences.length로 설정
+                contentAfterAnswerEndIndexRef.current = sentences.length;
             }
             
             // AI 답변 + 이후 컨텐츠를 하나의 배열로 합치기
@@ -1050,7 +1129,14 @@ function StudyPage({ user, login, setLogin }){
             };
         
     const handleNavigate=async()=>{
-        navigate('/game');
+        const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+        if (chapterId) {
+            const { getGameForChapter } = await import('../../../utils/gameSelector');
+            const gamePath = getGameForChapter(chapterId, 'study');
+            navigate(gamePath);
+        } else {
+            navigate('/game');
+        }
     }
 
    //다음 문장으로 넘어가도록 함함
@@ -1085,7 +1171,14 @@ function StudyPage({ user, login, setLogin }){
 
         //피드백 저장
         await saveFeedbacks(chapterData?.chapterId);
-        navigate("/game")
+        const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+        if (chapterId) {
+            const { getGameForChapter } = await import('../../../utils/gameSelector');
+            const gamePath = getGameForChapter(chapterId, 'study');
+            navigate(gamePath);
+        } else {
+            navigate("/game");
+        }
     }
    };
 
@@ -1253,7 +1346,8 @@ const stopVoiceRecognition = () => {
                             </div>
                             ) : (
                             <div>
-                                {sentences.length > 0 ? sentences[currentIndex] : "❌"}
+                                {/* isFinished가 true일 때는 마지막 문장 유지 */}
+                                {sentences.length > 0 ? (isFinished ? sentences[sentences.length - 1] : sentences[currentIndex]) : "❌"}
                             </div>
                             )}
                         </TextBox>
@@ -1277,6 +1371,8 @@ const stopVoiceRecognition = () => {
                                         </BackButton>
                                     )}
                                     <BubbleButton onClick={()=>{
+                                        // isFinished가 true면 더 이상 진행하지 않음
+                                        if (isFinished) return;
                                         if (!isAnsweringPhase) {
                                             setAiResponse(""); //다음 문장 넘어갈 때 aiResponse초기화
                                         }

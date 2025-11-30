@@ -1,6 +1,13 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import styled, { createGlobalStyle } from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import mainBgmSrc from '../../assets/game3/game3_main_BGM.wav';
+import correctSoundSrc from '../../assets/game3/game3_correct.wav';
+import wrongSoundSrc from '../../assets/game3/game3_wrong.wav';
+import hoverSoundSrc from '../../assets/game3/game3_Hover.wav';
+import putWithFinishSoundSrc from '../../assets/game3/game3_put_with_finish.wav';
+import putWithSoundSrc from '../../assets/game3/game3_put_with.wav';
+import quizOpenSoundSrc from '../../assets/game3/game3_quiz_open.wav';
 import KNPSOdaesanFont from '../../assets/game3/KNPSOdaesan.otf';
 import coinImg from '../../assets/game3/Coin.png';
 import backgroundImg from '../../assets/game3/Game_Background.png';
@@ -734,7 +741,7 @@ function checkAndClearMatches(grid) {
   return clone;
 }
 
-const Game3 = () => {
+const Game3 = ({ user }) => {
   const [coins, setCoins] = useState(0);
   const [board, setBoard] = useState(() => generateInitialBoard());
   const [shelf, setShelf] = useState(Array.from({ length: SHELF_SLOTS }, () => null));
@@ -753,18 +760,85 @@ const Game3 = () => {
   const usedQuizIndicesRef = React.useRef(new Set()); // 사용한 퀴즈 인덱스 추적
   const touchDragRef = React.useRef(null); // 터치 드래그 정보 저장
   const sessionDescriptionRef = React.useRef(null); // session=4에서 받아온 description 저장
+  
+  // 사운드 refs
+  const mainBgmRef = useRef(null);
+  const correctSoundRef = useRef(null);
+  const wrongSoundRef = useRef(null);
+  const hoverSoundRef = useRef(null);
+  const putWithFinishSoundRef = useRef(null);
+  const putWithSoundRef = useRef(null);
+  const quizOpenSoundRef = useRef(null);
+  
   const navigate = useNavigate();
   const { chapterData } = useChapter();
   const chapterId = chapterData?.chapterId ?? chapterData?.id;
   
-  // user는 AppRoutes나 상위 컴포넌트에서 전달받아야 함
-  // 일단 null로 처리하고, 필요시 props로 받도록 수정
   const { completeSession, sendExit } = useActivityTracker(
     chapterId, 
     4,
-    null, // user?.userId - 필요시 props로 받기
+    user?.userId,
     chapterData?.bookId
   );
+
+  // 게임 시작 기록
+  React.useEffect(() => {
+    if (chapterId) {
+      const { markGameStarted } = require('../../utils/gameSelector');
+      markGameStarted(chapterId, '/game3');
+    }
+  }, [chapterId]);
+
+  // 사운드 파일들 미리 로드
+  React.useEffect(() => {
+    correctSoundRef.current = new Audio(correctSoundSrc);
+    correctSoundRef.current.volume = 0.7;
+    correctSoundRef.current.preload = 'auto';
+    
+    wrongSoundRef.current = new Audio(wrongSoundSrc);
+    wrongSoundRef.current.volume = 0.7;
+    wrongSoundRef.current.preload = 'auto';
+    
+    hoverSoundRef.current = new Audio(hoverSoundSrc);
+    hoverSoundRef.current.volume = 0.7;
+    hoverSoundRef.current.preload = 'auto';
+    
+    putWithFinishSoundRef.current = new Audio(putWithFinishSoundSrc);
+    putWithFinishSoundRef.current.volume = 0.7;
+    putWithFinishSoundRef.current.preload = 'auto';
+    
+    putWithSoundRef.current = new Audio(putWithSoundSrc);
+    putWithSoundRef.current.volume = 0.7;
+    putWithSoundRef.current.preload = 'auto';
+    
+    quizOpenSoundRef.current = new Audio(quizOpenSoundSrc);
+    quizOpenSoundRef.current.volume = 0.7;
+    quizOpenSoundRef.current.preload = 'auto';
+  }, []);
+
+  // main BGM 재생
+  React.useEffect(() => {
+    if (!mainBgmRef.current) return;
+    const bgm = mainBgmRef.current;
+
+    const tryPlayBGM = () => {
+      if (bgm) {
+        bgm.volume = 0.5;
+        bgm.play().catch(err => {
+          console.warn("🎵 Main BGM 자동재생 실패:", err);
+        });
+      }
+    };
+
+    // 약간의 지연 후 재생 시도 (audio 태그가 마운트될 때까지 대기)
+    const timer = setTimeout(tryPlayBGM, 100);
+
+    return () => {
+      clearTimeout(timer);
+      bgm?.pause();
+      bgm.currentTime = 0;
+    };
+  }, []);
 
   React.useEffect(() => {
     // Preload quiz list
@@ -850,6 +924,14 @@ const Game3 = () => {
     const matches = findMatches(board);
     if (matches.length === 0) return;
     
+    // 아이템 매칭(사라질 경우) 사운드 재생
+    if (putWithFinishSoundRef.current) {
+      putWithFinishSoundRef.current.currentTime = 0;
+      putWithFinishSoundRef.current.play().catch(err => {
+        console.warn('매칭 사운드 재생 실패:', err);
+      });
+    }
+    
     // Show phase 1 effect (fx1) immediately
     setDisappearingCells(matches.map(({ r, c }) => ({ r, c, phase: 1 })));
     
@@ -891,6 +973,13 @@ const Game3 = () => {
         // closed -> opened (show quiz popup immediately)
         quizTile.state = 'opened';
         setBoard(newBoard);
+        // 퀴즈 오픈 시 사운드 재생
+        if (quizOpenSoundRef.current) {
+          quizOpenSoundRef.current.currentTime = 0;
+          quizOpenSoundRef.current.play().catch(err => {
+            console.warn('퀴즈 오픈 사운드 재생 실패:', err);
+          });
+        }
         
         // pick a quiz (avoid duplicates)
         let normalized = null;
@@ -968,6 +1057,13 @@ const Game3 = () => {
           newShelf[slotIdx] = null;
           setShelf(newShelf);
           setBoard(newBoard);
+          // 아이템 옮길 경우 사운드 재생
+          if (putWithSoundRef.current) {
+            putWithSoundRef.current.currentTime = 0;
+            putWithSoundRef.current.play().catch(err => {
+              console.warn('아이템 이동 사운드 재생 실패:', err);
+            });
+          }
           placed = true;
           break;
         }
@@ -983,12 +1079,16 @@ const Game3 = () => {
     const tile = stack[tileIdx];
     if (!tile || tile.type !== 'item') { e.preventDefault(); return; }
     e.dataTransfer.setData('application/json', JSON.stringify({ from: 'cell', r, c, idx: tileIdx }));
+    // 드래그 이미지를 현재 요소로 설정하여 크기 유지
+    e.dataTransfer.setDragImage(e.target, e.target.offsetWidth / 2, e.target.offsetHeight / 2);
   };
 
   const onDragStartShelf = (e, idx) => {
     const t = shelf[idx];
     if (!t || t.type !== 'item') { e.preventDefault(); return; }
     e.dataTransfer.setData('application/json', JSON.stringify({ from: 'shelf', idx }));
+    // 드래그 이미지를 현재 요소로 설정하여 크기 유지
+    e.dataTransfer.setDragImage(e.target, e.target.offsetWidth / 2, e.target.offsetHeight / 2);
   };
 
   const onDragOverAllow = (e) => {
@@ -1016,6 +1116,13 @@ const Game3 = () => {
       if (targetIdx === -1) return;
       newBoard[tr][tc][targetIdx] = moving;
       setBoard(newBoard);
+      // 아이템 옮길 경우 사운드 재생
+      if (putWithSoundRef.current) {
+        putWithSoundRef.current.currentTime = 0;
+        putWithSoundRef.current.play().catch(err => {
+          console.warn('아이템 이동 사운드 재생 실패:', err);
+        });
+      }
     } else if (payload.from === 'shelf') {
       const { idx } = payload;
       const moving = shelf[idx];
@@ -1028,6 +1135,13 @@ const Game3 = () => {
       newShelf[idx] = null;
       setShelf(newShelf);
       setBoard(newBoard);
+      // 아이템 옮길 경우 사운드 재생
+      if (putWithSoundRef.current) {
+        putWithSoundRef.current.currentTime = 0;
+        putWithSoundRef.current.play().catch(err => {
+          console.warn('아이템 이동 사운드 재생 실패:', err);
+        });
+      }
     }
   };
 
@@ -1048,6 +1162,13 @@ const Game3 = () => {
       newShelf[slotIdx] = moving;
       setShelf(newShelf);
       setBoard(newBoard);
+      // 아이템 옮길 경우 사운드 재생
+      if (putWithSoundRef.current) {
+        putWithSoundRef.current.currentTime = 0;
+        putWithSoundRef.current.play().catch(err => {
+          console.warn('아이템 이동 사운드 재생 실패:', err);
+        });
+      }
     }
     // do not accept quiz or from shelf to shelf
   };
@@ -1190,8 +1311,22 @@ const Game3 = () => {
     // coin reward/penalty
     if (correct) {
       setCoins(v => v + QUIZ_REWARD);
+      // 퀴즈 맞힐 경우 사운드 재생
+      if (correctSoundRef.current) {
+        correctSoundRef.current.currentTime = 0;
+        correctSoundRef.current.play().catch(err => {
+          console.warn('정답 사운드 재생 실패:', err);
+        });
+      }
     } else {
       setCoins(v => Math.max(0, v - QUIZ_REWARD));
+      // 퀴즈 틀릴 경우 사운드 재생
+      if (wrongSoundRef.current) {
+        wrongSoundRef.current.currentTime = 0;
+        wrongSoundRef.current.play().catch(err => {
+          console.warn('오답 사운드 재생 실패:', err);
+        });
+      }
     }
     // Save quiz result
     setQuizResults(prev => [...prev, {
@@ -1215,40 +1350,15 @@ const Game3 = () => {
   };
 
   const handleExit = async () => {
-    if (coins > 0) {
-      try {
-        await saveCoinToDB(coins, chapterId);
-        console.log('✅ 코인 저장 성공:', coins);
-      } catch (error) {
-        console.error('❌ 코인 저장 실패:', error);
-      }
-    }
-    
-    if (quizResults.length > 0) {
-      try {
-        const formattedResults = quizResults.map(result => ({
-          quizId: result.quizId || '',
-          question: result.quiz || result.question, // quiz 필드도 함께 전달
-          options: result.options || [],
-          correctAnswer: result.correctAnswer,
-          userAnswer: result.userAnswer,
-          isCorrect: result.isCorrect,
-          description: result.description,
-          quizDate: new Date().toISOString().split('T')[0]
-        }));
-        await sendQuizResults(formattedResults);
-        console.log('✅ 퀴즈 결과 저장 성공');
-      } catch (error) {
-        console.error('❌ 퀴즈 결과 저장 실패:', error);
-      }
-    }
-    
-    navigate('/');
+    // 게임을 완료하지 않고 나가는 경우에는 코인과 퀴즈 결과를 저장하지 않음
+    await sendExit();
+    navigate('/main');
   };
 
   return (
     <Wrapper>
       <GlobalFonts />
+      <audio ref={mainBgmRef} src={mainBgmSrc} loop />
       <Topbar>
         <CoinDisplay>
           <CoinImage src={coinImg} alt="coin" />
@@ -1259,12 +1369,40 @@ const Game3 = () => {
           <ControlButton
             src={pause_btn}
             alt="pause"
-            onClick={(e) => { e.stopPropagation(); setShowPauseModal(true); }}
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              // 모달 표시 시 배경음악 일시정지
+              mainBgmRef.current?.pause();
+              setShowPauseModal(true); 
+            }}
+            onMouseEnter={() => {
+              // pause 버튼 hover 시 사운드 재생
+              if (hoverSoundRef.current) {
+                hoverSoundRef.current.currentTime = 0;
+                hoverSoundRef.current.play().catch(err => {
+                  console.warn('hover 사운드 재생 실패:', err);
+                });
+              }
+            }}
           />
           <ControlButton
             src={exit_btn}
             alt="exit"
-            onClick={(e) => { e.stopPropagation(); setShowExitModal(true); }}
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              // 모달 표시 시 배경음악 일시정지
+              mainBgmRef.current?.pause();
+              setShowExitModal(true); 
+            }}
+            onMouseEnter={() => {
+              // exit 버튼 hover 시 사운드 재생
+              if (hoverSoundRef.current) {
+                hoverSoundRef.current.currentTime = 0;
+                hoverSoundRef.current.play().catch(err => {
+                  console.warn('hover 사운드 재생 실패:', err);
+                });
+              }
+            }}
           />
         </GameControls>
       </Topbar>
@@ -1310,6 +1448,15 @@ const Game3 = () => {
                       onTouchStart={tile.type === 'item' && !disappearing ? (e) => onTouchStartCell(e, rIdx, cIdx, i) : undefined}
                       onTouchEnd={onTouchEnd}
                       onClick={isTop && tile.type === 'quiz' ? () => handleQuizClick(rIdx, cIdx) : undefined}
+                      onMouseEnter={() => {
+                        // 아이템 hover 시 사운드 재생
+                        if (tile.type === 'item' && !disappearing && hoverSoundRef.current) {
+                          hoverSoundRef.current.currentTime = 0;
+                          hoverSoundRef.current.play().catch(err => {
+                            console.warn('hover 사운드 재생 실패:', err);
+                          });
+                        }
+                      }}
                       style={{
                         cursor:
                           disappearing
@@ -1348,6 +1495,15 @@ const Game3 = () => {
                 onDragStart={(e) => onDragStartShelf(e, idx)}
                 onTouchStart={(e) => onTouchStartShelf(e, idx)}
                 onTouchEnd={onTouchEnd}
+                onMouseEnter={() => {
+                  // 아이템 hover 시 사운드 재생
+                  if (hoverSoundRef.current) {
+                    hoverSoundRef.current.currentTime = 0;
+                    hoverSoundRef.current.play().catch(err => {
+                      console.warn('hover 사운드 재생 실패:', err);
+                    });
+                  }
+                }}
                 style={{ cursor: 'grab' }}
               />
             ) : null}
@@ -1433,6 +1589,9 @@ const Game3 = () => {
                   )}
 
                   <EndNextButton onClick={async () => {
+                    // 게임 완료 기록
+                    const { markGameCompleted } = await import('../../utils/gameSelector');
+                    markGameCompleted(chapterId, '/game3');
                     await completeSession(); // Level 4 완료 상태 전송
                     navigate(`/study/level6/summary?chapterId=${chapterId}`);
                   }}>다음단계로</EndNextButton>
@@ -1450,10 +1609,40 @@ const Game3 = () => {
             <PauseModalDescription>{`게임을 종료하게 되면
 지금까지의 학습 기록과 포인트가 초기화됩니다.`}</PauseModalDescription>
             <PauseModalButtonContainer>
-              <PauseButton onClick={() => { setShowPauseModal(false); }}>
+              <PauseButton 
+                onClick={() => { 
+                  // 모달 닫을 때 배경음악 재생
+                  mainBgmRef.current?.play();
+                  setShowPauseModal(false); 
+                }}
+                onMouseEnter={() => {
+                  // 모달 버튼 hover 시 사운드 재생
+                  if (hoverSoundRef.current) {
+                    hoverSoundRef.current.currentTime = 0;
+                    hoverSoundRef.current.play().catch(err => {
+                      console.warn('hover 사운드 재생 실패:', err);
+                    });
+                  }
+                }}
+              >
                 이어하기
               </PauseButton>
-              <PauseButton $primary onClick={() => { setShowPauseModal(false); setShowExitModal(true); }}>
+              <PauseButton 
+                $primary 
+                onClick={() => { 
+                  setShowPauseModal(false); 
+                  setShowExitModal(true); 
+                }}
+                onMouseEnter={() => {
+                  // 모달 버튼 hover 시 사운드 재생
+                  if (hoverSoundRef.current) {
+                    hoverSoundRef.current.currentTime = 0;
+                    hoverSoundRef.current.play().catch(err => {
+                      console.warn('hover 사운드 재생 실패:', err);
+                    });
+                  }
+                }}
+              >
                 종료하기
               </PauseButton>
             </PauseModalButtonContainer>
@@ -1468,10 +1657,37 @@ const Game3 = () => {
             <PauseModalDescription>{`게임을 종료하게 되면
 지금까지의 학습 기록과 포인트가 초기화됩니다.`}</PauseModalDescription>
             <PauseModalButtonContainer>
-              <PauseButton onClick={() => { setShowExitModal(false); }}>
+              <PauseButton 
+                onClick={() => { 
+                  // 모달 닫을 때 배경음악 재생
+                  mainBgmRef.current?.play();
+                  setShowExitModal(false); 
+                }}
+                onMouseEnter={() => {
+                  // 모달 버튼 hover 시 사운드 재생
+                  if (hoverSoundRef.current) {
+                    hoverSoundRef.current.currentTime = 0;
+                    hoverSoundRef.current.play().catch(err => {
+                      console.warn('hover 사운드 재생 실패:', err);
+                    });
+                  }
+                }}
+              >
                 이어하기
               </PauseButton>
-              <PauseButton $primary onClick={handleExit}>
+              <PauseButton 
+                $primary 
+                onClick={handleExit}
+                onMouseEnter={() => {
+                  // 모달 버튼 hover 시 사운드 재생
+                  if (hoverSoundRef.current) {
+                    hoverSoundRef.current.currentTime = 0;
+                    hoverSoundRef.current.play().catch(err => {
+                      console.warn('hover 사운드 재생 실패:', err);
+                    });
+                  }
+                }}
+              >
                 종료하기
               </PauseButton>
             </PauseModalButtonContainer>
