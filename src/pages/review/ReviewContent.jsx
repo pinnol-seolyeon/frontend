@@ -520,12 +520,12 @@ function ReviewContent({ user, login, setLogin }){
                         .split(/(?<=[.?!])\s+/)
                         .filter((s) => s.trim() !== ""); //공백만 있는 문장 등을 제거
                     
-                    //질문 감지 함수
-                    const isQuestion = (s) => s.includes("?");
+                    //질문 감지 함수 (나중에 사용할 수 있으니 주석처리)
+                    // const isQuestion = (s) => s.includes("?");
 
                     //긴 문장 분할 함수(질문 제외)
                     const breakLongSentence = (sentence, max = 50) => {
-                        if (isQuestion(sentence)) return [sentence]; // ✅ 질문이면 그대로
+                        // if (isQuestion(sentence)) return [sentence]; // ✅ 질문이면 그대로 (나중에 사용할 수 있으니 주석처리)
                         if (sentence.length <= max) return [sentence];
 
                         const mid = Math.floor(sentence.length / 2);
@@ -542,14 +542,14 @@ function ReviewContent({ user, login, setLogin }){
                         .flat();
                     console.log("🐋분할된 최종 문장 배열:",splitSentences);
 
-                    //질문이 포함된 문장의 인덱스만 추출
-                    const questionIndexes=splitSentences
-                        .map((s,i)=>isQuestion(s)?i:null)
-                        .filter((i)=>i!=null);
-                    console.log("🧠 질문 문장 인덱스:", questionIndexes);
+                    //질문이 포함된 문장의 인덱스만 추출 (나중에 사용할 수 있으니 주석처리)
+                    // const questionIndexes=splitSentences
+                    //     .map((s,i)=>isQuestion(s)?i:null)
+                    //     .filter((i)=>i!=null);
+                    // console.log("🧠 질문 문장 인덱스:", questionIndexes);
 
                     setSentences(splitSentences);
-                    setQuestionIndexes(questionIndexes);
+                    setQuestionIndexes([]); // 질문 인덱스는 빈 배열로 설정 (나중에 사용할 수 있으니 주석처리)
                     setCurrentIndex(0); // 문장 로드 시 인덱스 초기화
                     setIsTtsCompleted(false); // TTS 완료 상태 초기화
                 } else {
@@ -594,8 +594,8 @@ function ReviewContent({ user, login, setLogin }){
         setIsTtsCompleted(false); // TTS 완료 상태 초기화
         setCurrentIndex(currentIndex+1);
     } else {
-        setIsQuestionFinished(true); //질문 끝났다는 상태
-        setIsFinished(true);
+        // setIsQuestionFinished(true); //질문 끝났다는 상태
+        // setIsFinished(true);
         
         // Level 3 완료 시 질문/답변 저장 API 호출
         // const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
@@ -640,10 +640,14 @@ function ReviewContent({ user, login, setLogin }){
                 const { getGameForChapter } = await import('../../utils/gameSelector');
                 const sessionType = reviewCount === 1 ? 'review1' : 'review2';
                 const gamePath = getGameForChapter(chapterId, sessionType);
-                const gameType = gamePath.replace('/', ''); // '/game' -> 'game'
+                // gamePath는 '/game', '/game2/ready', '/game3/ready' 형식
+                // review 경로로 변환: '/game' -> '/review/game', '/game2/ready' -> '/review/game2/ready'
+                const reviewGamePath = gamePath.startsWith('/game') 
+                    ? `/review${gamePath}` 
+                    : `/review${gamePath}`;
                 
-                // 퀴즈 데이터를 state로 전달하며 선택된 ReviewGame으로 이동
-                navigate(`/review/${gameType}`, {
+                // 퀴즈 데이터를 state로 전달하며 선택된 ReviewGame ready 페이지로 이동
+                navigate(reviewGamePath, {
                     state: {
                         quizData: quizData.data || [],
                         chapterId: chapterId,
@@ -657,7 +661,10 @@ function ReviewContent({ user, login, setLogin }){
                 const { getGameForChapter } = await import('../../utils/gameSelector');
                 const sessionType = reviewCount === 1 ? 'review1' : 'review2';
                 const gamePath = getGameForChapter(chapterId, sessionType);
-                navigate(gamePath);
+                const reviewGamePath = gamePath.startsWith('/game') 
+                    ? `/review${gamePath}` 
+                    : `/review${gamePath}`;
+                navigate(reviewGamePath);
             } finally {
                 setIsLoadingQuiz(false); // quiz-review 로딩 종료
             }
@@ -666,7 +673,10 @@ function ReviewContent({ user, login, setLogin }){
             // chapterId가 없어도 기본 게임으로 이동
             const { getGameForChapter } = await import('../../utils/gameSelector');
             const gamePath = getGameForChapter(chapterId || '', 'review1'); // 기본값으로 review1 사용
-            navigate(gamePath);
+            const reviewGamePath = gamePath.startsWith('/game') 
+                ? `/review${gamePath}` 
+                : `/review${gamePath}`;
+            navigate(reviewGamePath);
         }
     }
    };
@@ -894,8 +904,10 @@ const stopVoiceRecognition = () => {
 
                         
 
-                            {/*일반 문장 or 질문+답변 완료 시에만 next 버튼 표시 (TTS 완료 후)*/}
-                            {((!questionIndexes.includes(currentIndex) || aiResponse) && isTtsCompleted) && (
+                            {/*일반 문장 or 질문+답변 완료 시에만 next 버튼 표시 (TTS 완료 후) */}
+                            {/* 질문 감지 기능은 나중에 사용할 수 있으니 주석처리 - 현재는 모든 문장에 대해 다음 버튼 표시 */}
+                            {/* {((!questionIndexes.includes(currentIndex) || aiResponse) && isTtsCompleted) && ( */}
+                            {isTtsCompleted && (
                                 <ButtonWrapper>
                                     {currentIndex > 0 && (
                                         <BackButton onClick={()=>{
@@ -917,8 +929,8 @@ const stopVoiceRecognition = () => {
                             )}
                     
 
-                    {/* ✅ 질문이고 아직 대답 전일 경우만 버튼 표시 (TTS 완료 후 활성화) */}
-                    {questionIndexes.includes(currentIndex) && !aiResponse && isTtsCompleted && (
+                    {/* ✅ 질문이고 아직 대답 전일 경우만 버튼 표시 (TTS 완료 후 활성화) - 나중에 사용할 수 있으니 주석처리 */}
+                    {/* {questionIndexes.includes(currentIndex) && !aiResponse && isTtsCompleted && (
                         !isVoiceRecognitionComplete ? (
                             <AnswerButton onClick={handleVoiceRecognition}>
                                 {isRecording ? "음성인식 중..." : "대답하기"}
@@ -934,7 +946,7 @@ const stopVoiceRecognition = () => {
                                 <SendButton onClick={handleUserSubmit}>보내기</SendButton>
                             </AnswerInputBox>
                         )
-                    )}
+                    )} */}
                     </SpeechBubble>
 
                     </SpeechWrapper>

@@ -1,6 +1,13 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import styled, { createGlobalStyle } from 'styled-components';
 import { useNavigate } from 'react-router-dom';
+import mainBgmSrc from '../../assets/game3/game3_main_BGM.wav';
+import correctSoundSrc from '../../assets/game3/game3_correct.wav';
+import wrongSoundSrc from '../../assets/game3/game3_wrong.wav';
+import hoverSoundSrc from '../../assets/game3/game3_Hover.wav';
+import putWithFinishSoundSrc from '../../assets/game3/game3_put_with_finish.wav';
+import putWithSoundSrc from '../../assets/game3/game3_put_with.wav';
+import quizOpenSoundSrc from '../../assets/game3/game3_quiz_open.wav';
 import KNPSOdaesanFont from '../../assets/game3/KNPSOdaesan.otf';
 import coinImg from '../../assets/game3/Coin.png';
 import backgroundImg from '../../assets/game3/Game_Background.png';
@@ -760,6 +767,15 @@ const ReviewGame3 = ({ user }) => {
   const usedQuizIndicesRef = React.useRef(new Set()); // 사용한 퀴즈 인덱스 추적
   const touchDragRef = React.useRef(null); // 터치 드래그 정보 저장
   
+  // 사운드 refs
+  const mainBgmRef = useRef(null);
+  const correctSoundRef = useRef(null);
+  const wrongSoundRef = useRef(null);
+  const hoverSoundRef = useRef(null);
+  const putWithFinishSoundRef = useRef(null);
+  const putWithSoundRef = useRef(null);
+  const quizOpenSoundRef = useRef(null);
+  
   // chapterId가 없으면 리다이렉트
   React.useEffect(() => {
     if (!chapterId || !quizDataFromState || quizDataFromState.length === 0) {
@@ -813,6 +829,57 @@ const ReviewGame3 = ({ user }) => {
     usedQuizIndicesRef.current.clear();
   }, [quizDataFromState]);
 
+  // 사운드 파일들 미리 로드
+  React.useEffect(() => {
+    correctSoundRef.current = new Audio(correctSoundSrc);
+    correctSoundRef.current.volume = 0.7;
+    correctSoundRef.current.preload = 'auto';
+    
+    wrongSoundRef.current = new Audio(wrongSoundSrc);
+    wrongSoundRef.current.volume = 0.7;
+    wrongSoundRef.current.preload = 'auto';
+    
+    hoverSoundRef.current = new Audio(hoverSoundSrc);
+    hoverSoundRef.current.volume = 0.7;
+    hoverSoundRef.current.preload = 'auto';
+    
+    putWithFinishSoundRef.current = new Audio(putWithFinishSoundSrc);
+    putWithFinishSoundRef.current.volume = 0.7;
+    putWithFinishSoundRef.current.preload = 'auto';
+    
+    putWithSoundRef.current = new Audio(putWithSoundSrc);
+    putWithSoundRef.current.volume = 0.7;
+    putWithSoundRef.current.preload = 'auto';
+    
+    quizOpenSoundRef.current = new Audio(quizOpenSoundSrc);
+    quizOpenSoundRef.current.volume = 0.7;
+    quizOpenSoundRef.current.preload = 'auto';
+  }, []);
+
+  // main BGM 재생
+  React.useEffect(() => {
+    if (!mainBgmRef.current) return;
+    const bgm = mainBgmRef.current;
+
+    const tryPlayBGM = () => {
+      if (bgm) {
+        bgm.volume = 0.5;
+        bgm.play().catch(err => {
+          console.warn("🎵 Main BGM 자동재생 실패:", err);
+        });
+      }
+    };
+
+    // 약간의 지연 후 재생 시도 (audio 태그가 마운트될 때까지 대기)
+    const timer = setTimeout(tryPlayBGM, 100);
+
+    return () => {
+      clearTimeout(timer);
+      bgm?.pause();
+      bgm.currentTime = 0;
+    };
+  }, []);
+
   const allCleared = useMemo(() => {
     return board.every(row => row.every(stack => stack.every(cell => !cell)));
   }, [board]);
@@ -831,6 +898,14 @@ const ReviewGame3 = ({ user }) => {
     
     const matches = findMatches(board);
     if (matches.length === 0) return;
+    
+    // 아이템 매칭(사라질 경우) 사운드 재생
+    if (putWithFinishSoundRef.current) {
+      putWithFinishSoundRef.current.currentTime = 0;
+      putWithFinishSoundRef.current.play().catch(err => {
+        console.warn('매칭 사운드 재생 실패:', err);
+      });
+    }
     
     // Show phase 1 effect (fx1) immediately
     setDisappearingCells(matches.map(({ r, c }) => ({ r, c, phase: 1 })));
@@ -873,6 +948,13 @@ const ReviewGame3 = ({ user }) => {
         // closed -> opened (show quiz popup immediately)
         quizTile.state = 'opened';
         setBoard(newBoard);
+        // 퀴즈 오픈 시 사운드 재생
+        if (quizOpenSoundRef.current) {
+          quizOpenSoundRef.current.currentTime = 0;
+          quizOpenSoundRef.current.play().catch(err => {
+            console.warn('퀴즈 오픈 사운드 재생 실패:', err);
+          });
+        }
         
         // pick a quiz (avoid duplicates)
         let normalized = null;
@@ -942,6 +1024,13 @@ const ReviewGame3 = ({ user }) => {
           newShelf[slotIdx] = null;
           setShelf(newShelf);
           setBoard(newBoard);
+          // 아이템 옮길 경우 사운드 재생
+          if (putWithSoundRef.current) {
+            putWithSoundRef.current.currentTime = 0;
+            putWithSoundRef.current.play().catch(err => {
+              console.warn('아이템 이동 사운드 재생 실패:', err);
+            });
+          }
           placed = true;
           break;
         }
@@ -957,12 +1046,16 @@ const ReviewGame3 = ({ user }) => {
     const tile = stack[tileIdx];
     if (!tile || tile.type !== 'item') { e.preventDefault(); return; }
     e.dataTransfer.setData('application/json', JSON.stringify({ from: 'cell', r, c, idx: tileIdx }));
+    // 드래그 이미지를 현재 요소로 설정하여 크기 유지
+    e.dataTransfer.setDragImage(e.target, e.target.offsetWidth / 2, e.target.offsetHeight / 2);
   };
 
   const onDragStartShelf = (e, idx) => {
     const t = shelf[idx];
     if (!t || t.type !== 'item') { e.preventDefault(); return; }
     e.dataTransfer.setData('application/json', JSON.stringify({ from: 'shelf', idx }));
+    // 드래그 이미지를 현재 요소로 설정하여 크기 유지
+    e.dataTransfer.setDragImage(e.target, e.target.offsetWidth / 2, e.target.offsetHeight / 2);
   };
 
   const onDragOverAllow = (e) => {
@@ -990,6 +1083,13 @@ const ReviewGame3 = ({ user }) => {
       if (targetIdx === -1) return;
       newBoard[tr][tc][targetIdx] = moving;
       setBoard(newBoard);
+      // 아이템 옮길 경우 사운드 재생
+      if (putWithSoundRef.current) {
+        putWithSoundRef.current.currentTime = 0;
+        putWithSoundRef.current.play().catch(err => {
+          console.warn('아이템 이동 사운드 재생 실패:', err);
+        });
+      }
     } else if (payload.from === 'shelf') {
       const { idx } = payload;
       const moving = shelf[idx];
@@ -1002,6 +1102,13 @@ const ReviewGame3 = ({ user }) => {
       newShelf[idx] = null;
       setShelf(newShelf);
       setBoard(newBoard);
+      // 아이템 옮길 경우 사운드 재생
+      if (putWithSoundRef.current) {
+        putWithSoundRef.current.currentTime = 0;
+        putWithSoundRef.current.play().catch(err => {
+          console.warn('아이템 이동 사운드 재생 실패:', err);
+        });
+      }
     }
   };
 
@@ -1022,6 +1129,13 @@ const ReviewGame3 = ({ user }) => {
       newShelf[slotIdx] = moving;
       setShelf(newShelf);
       setBoard(newBoard);
+      // 아이템 옮길 경우 사운드 재생
+      if (putWithSoundRef.current) {
+        putWithSoundRef.current.currentTime = 0;
+        putWithSoundRef.current.play().catch(err => {
+          console.warn('아이템 이동 사운드 재생 실패:', err);
+        });
+      }
     }
     // do not accept quiz or from shelf to shelf
   };
@@ -1164,8 +1278,22 @@ const ReviewGame3 = ({ user }) => {
     // coin reward/penalty
     if (correct) {
       setCoins(v => v + QUIZ_REWARD);
+      // 퀴즈 맞힐 경우 사운드 재생
+      if (correctSoundRef.current) {
+        correctSoundRef.current.currentTime = 0;
+        correctSoundRef.current.play().catch(err => {
+          console.warn('정답 사운드 재생 실패:', err);
+        });
+      }
     } else {
       setCoins(v => Math.max(0, v - QUIZ_REWARD));
+      // 퀴즈 틀릴 경우 사운드 재생
+      if (wrongSoundRef.current) {
+        wrongSoundRef.current.currentTime = 0;
+        wrongSoundRef.current.play().catch(err => {
+          console.warn('오답 사운드 재생 실패:', err);
+        });
+      }
     }
     // quizList에서 explanation 찾기
     const quizFromList = quizList.find(q => q.quizId === currentQuiz.quizId);
@@ -1211,9 +1339,9 @@ const ReviewGame3 = ({ user }) => {
       
       // 복습 완료 API 호출 (quiz-result는 제외)
       if (chapterId && formattedResults.length > 0) {
-        console.log("🔍 복습 완료 API 호출, reviewCount:", reviewCount, "chapterId:", chapterId);
-        await reviewCompleted(reviewCount, chapterId, formattedResults);
-        console.log("✅ 복습 완료 API 호출 성공");
+          console.log("🔍 복습 완료 API 호출, reviewCount:", reviewCount, "chapterId:", chapterId);
+          await reviewCompleted(reviewCount, chapterId, formattedResults);
+          console.log("✅ 복습 완료 API 호출 성공");
       }
       
       if (coins > 0 && chapterId) {
@@ -1226,8 +1354,9 @@ const ReviewGame3 = ({ user }) => {
 
   return (
     <Wrapper>
-        <GlobalFonts />
-        <Topbar>
+      <GlobalFonts />
+      <audio ref={mainBgmRef} src={mainBgmSrc} loop preload="auto" />
+      <Topbar>
         <CoinDisplay>
           <CoinImage src={coinImg} alt="coin" />
           <CoinText>{coins}</CoinText>
@@ -1237,12 +1366,42 @@ const ReviewGame3 = ({ user }) => {
           <ControlButton
             src={pause_btn}
             alt="pause"
-            onClick={(e) => { e.stopPropagation(); setShowPauseModal(true); }}
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (mainBgmRef.current) {
+                mainBgmRef.current.pause();
+              }
+              setShowPauseModal(true); 
+            }}
+            onMouseEnter={() => {
+              // pause 버튼 hover 시 사운드 재생
+              if (hoverSoundRef.current) {
+                hoverSoundRef.current.currentTime = 0;
+                hoverSoundRef.current.play().catch(err => {
+                  console.warn('hover 사운드 재생 실패:', err);
+                });
+              }
+            }}
           />
           <ControlButton
             src={exit_btn}
             alt="exit"
-            onClick={(e) => { e.stopPropagation(); setShowExitModal(true); }}
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (mainBgmRef.current) {
+                mainBgmRef.current.pause();
+              }
+              setShowExitModal(true); 
+            }}
+            onMouseEnter={() => {
+              // exit 버튼 hover 시 사운드 재생
+              if (hoverSoundRef.current) {
+                hoverSoundRef.current.currentTime = 0;
+                hoverSoundRef.current.play().catch(err => {
+                  console.warn('hover 사운드 재생 실패:', err);
+                });
+              }
+            }}
           />
         </GameControls>
       </Topbar>
@@ -1288,6 +1447,15 @@ const ReviewGame3 = ({ user }) => {
                       onTouchStart={tile.type === 'item' && !disappearing ? (e) => onTouchStartCell(e, rIdx, cIdx, i) : undefined}
                       onTouchEnd={onTouchEnd}
                       onClick={isTop && tile.type === 'quiz' ? () => handleQuizClick(rIdx, cIdx) : undefined}
+                      onMouseEnter={() => {
+                        // 아이템 hover 시 사운드 재생
+                        if (tile.type === 'item' && !disappearing && hoverSoundRef.current) {
+                          hoverSoundRef.current.currentTime = 0;
+                          hoverSoundRef.current.play().catch(err => {
+                            console.warn('hover 사운드 재생 실패:', err);
+                          });
+                        }
+                      }}
                       style={{
                         cursor:
                           disappearing
@@ -1326,6 +1494,15 @@ const ReviewGame3 = ({ user }) => {
                 onDragStart={(e) => onDragStartShelf(e, idx)}
                 onTouchStart={(e) => onTouchStartShelf(e, idx)}
                 onTouchEnd={onTouchEnd}
+                onMouseEnter={() => {
+                  // 아이템 hover 시 사운드 재생
+                  if (hoverSoundRef.current) {
+                    hoverSoundRef.current.currentTime = 0;
+                    hoverSoundRef.current.play().catch(err => {
+                      console.warn('hover 사운드 재생 실패:', err);
+                    });
+                  }
+                }}
                 style={{ cursor: 'grab' }}
               />
             ) : null}
@@ -1429,10 +1606,38 @@ const ReviewGame3 = ({ user }) => {
             <PauseModalDescription>{`게임을 종료하게 되면
 지금까지의 학습 기록과 포인트가 초기화됩니다.`}</PauseModalDescription>
             <PauseModalButtonContainer>
-              <PauseButton onClick={() => { setShowPauseModal(false); }}>
+              <PauseButton 
+                onClick={() => { 
+                  if (mainBgmRef.current) {
+                    mainBgmRef.current.play().catch(err => {
+                      console.warn('BGM 재생 실패:', err);
+                    });
+                  }
+                  setShowPauseModal(false); 
+                }}
+                onMouseEnter={() => {
+                  if (hoverSoundRef.current) {
+                    hoverSoundRef.current.currentTime = 0;
+                    hoverSoundRef.current.play().catch(err => {
+                      console.warn('hover 사운드 재생 실패:', err);
+                    });
+                  }
+                }}
+              >
                 이어하기
               </PauseButton>
-              <PauseButton $primary onClick={() => { setShowPauseModal(false); setShowExitModal(true); }}>
+              <PauseButton 
+                $primary 
+                onClick={() => { setShowPauseModal(false); setShowExitModal(true); }}
+                onMouseEnter={() => {
+                  if (hoverSoundRef.current) {
+                    hoverSoundRef.current.currentTime = 0;
+                    hoverSoundRef.current.play().catch(err => {
+                      console.warn('hover 사운드 재생 실패:', err);
+                    });
+                  }
+                }}
+              >
                 종료하기
               </PauseButton>
             </PauseModalButtonContainer>
@@ -1447,10 +1652,38 @@ const ReviewGame3 = ({ user }) => {
             <PauseModalDescription>{`게임을 종료하게 되면
 지금까지의 학습 기록과 포인트가 초기화됩니다.`}</PauseModalDescription>
             <PauseModalButtonContainer>
-              <PauseButton onClick={() => { setShowExitModal(false); }}>
+              <PauseButton 
+                onClick={() => { 
+                  if (mainBgmRef.current) {
+                    mainBgmRef.current.play().catch(err => {
+                      console.warn('BGM 재생 실패:', err);
+                    });
+                  }
+                  setShowExitModal(false); 
+                }}
+                onMouseEnter={() => {
+                  if (hoverSoundRef.current) {
+                    hoverSoundRef.current.currentTime = 0;
+                    hoverSoundRef.current.play().catch(err => {
+                      console.warn('hover 사운드 재생 실패:', err);
+                    });
+                  }
+                }}
+              >
                 이어하기
               </PauseButton>
-              <PauseButton $primary onClick={handleExit}>
+              <PauseButton 
+                $primary 
+                onClick={handleExit}
+                onMouseEnter={() => {
+                  if (hoverSoundRef.current) {
+                    hoverSoundRef.current.currentTime = 0;
+                    hoverSoundRef.current.play().catch(err => {
+                      console.warn('hover 사운드 재생 실패:', err);
+                    });
+                  }
+                }}
+              >
                 종료하기
               </PauseButton>
             </PauseModalButtonContainer>

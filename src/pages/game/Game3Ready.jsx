@@ -5,6 +5,10 @@ import coinImg from '../../assets/game3/Coin.png';
 import KNPSOdaesanFont from '../../assets/game3/KNPSOdaesan.otf';
 import ReadyButton from '../../assets/game3/Ready_Btn_GameStart.png';
 import { useNavigate } from 'react-router-dom';
+import { useRef, useEffect } from 'react';
+import lobbyBgmSrc from '../../assets/game3/game3_lobby_BGM.wav';
+import hoverSoundSrc from '../../assets/game3/game3_game_start_Hover.wav';
+import clickSoundSrc from '../../assets/game3/game3_click.wav';
 
 const GlobalFonts = createGlobalStyle`
   @font-face {
@@ -116,8 +120,47 @@ const StartButton = styled.button`
 `;
 
 const Game3Ready = () => {
-
     const navigate = useNavigate();
+    const lobbyBgmRef = useRef(null);
+    const hoverSoundRef = useRef(null);
+    const clickSoundRef = useRef(null);
+
+    useEffect(() => {
+        // 사운드 파일들 미리 로드
+        lobbyBgmRef.current = new Audio(lobbyBgmSrc);
+        lobbyBgmRef.current.volume = 0.5;
+        lobbyBgmRef.current.loop = true;
+        lobbyBgmRef.current.preload = 'auto';
+        
+        hoverSoundRef.current = new Audio(hoverSoundSrc);
+        hoverSoundRef.current.volume = 0.7;
+        hoverSoundRef.current.preload = 'auto';
+        
+        clickSoundRef.current = new Audio(clickSoundSrc);
+        clickSoundRef.current.volume = 0.7;
+        clickSoundRef.current.preload = 'auto';
+
+        // lobby BGM 재생 시도
+        const tryPlayBGM = () => {
+            if (lobbyBgmRef.current) {
+                lobbyBgmRef.current.play().catch(err => {
+                    console.warn("🎵 Lobby BGM 자동재생 실패:", err);
+                });
+            }
+        };
+
+        // 약간의 지연 후 재생 시도
+        const timer = setTimeout(tryPlayBGM, 100);
+
+        return () => {
+            clearTimeout(timer);
+            if (lobbyBgmRef.current) {
+                lobbyBgmRef.current.pause();
+                lobbyBgmRef.current.currentTime = 0;
+            }
+        };
+    }, []);
+
     return (
         <Wrapper>
             <GlobalFonts />
@@ -139,9 +182,29 @@ const Game3Ready = () => {
                 </DescribeItemWrapper>
             </DescribeWrapper>
 
-            <StartButton src={ReadyButton} alt="ready button" onClick={() => {
-                navigate('/game3');
-            }} />
+            <StartButton 
+                src={ReadyButton} 
+                alt="ready button" 
+                onClick={() => {
+                    // 버튼 click 시 사운드 재생
+                    if (clickSoundRef.current) {
+                        clickSoundRef.current.currentTime = 0;
+                        clickSoundRef.current.play().catch(err => {
+                            console.warn('클릭 사운드 재생 실패:', err);
+                        });
+                    }
+                    navigate('/game3');
+                }}
+                onMouseEnter={() => {
+                    // 버튼 hover 시 사운드 재생
+                    if (hoverSoundRef.current) {
+                        hoverSoundRef.current.currentTime = 0;
+                        hoverSoundRef.current.play().catch(err => {
+                            console.warn('hover 사운드 재생 실패:', err);
+                        });
+                    }
+                }}
+            />
         </Wrapper>
     )
 }
