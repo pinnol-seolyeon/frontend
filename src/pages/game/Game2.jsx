@@ -113,6 +113,7 @@ const SafeZone = styled.img`
   z-index: 5;
   pointer-events: none;
   object-fit: fill;
+  margin-top: 0px;
 `;
 
 const QuizAlertLine = styled.img`
@@ -676,6 +677,62 @@ export default function Game2({ user }) {
     user?.userId,
     chapterData?.bookId
   );
+
+  // 화면 크기에 따른 safeZoneHeight와 playerHeight 설정 (px 고정)
+  const getSafeZoneHeight = () => {
+    const width = window.innerWidth;
+    // PC 데스크탑: 1280px 이상
+    // 랩탑, 태블릿: 1025px ~ 1280px
+    // 태블릿, 아이패드: 768px ~ 1024px
+    // 모바일: 768px 미만
+    
+    if (width >= 1280) {
+      return 150; // PC 데스크탑: 150px
+    } else if (width >= 1025) {
+      return 130; // 랩탑, 태블릿: 130px
+    } else if (width >= 768) {
+      return 120; // 태블릿, 아이패드: 120px
+    } else {
+      return 100; // 모바일: 100px (기본값)
+    }
+  };
+
+  const getPlayerHeight = () => {
+    const width = window.innerWidth;
+    // PC 데스크탑: 1280px 이상
+    // 랩탑, 태블릿: 1025px ~ 1280px
+    // 태블릿, 아이패드: 768px ~ 1024px
+    // 모바일: 768px 미만
+    
+    if (width >= 1280) {
+      return 150; // PC 데스크탑: 150px
+    } else if (width >= 1025) {
+      return 130; // 랩탑, 태블릿: 130px
+    } else if (width >= 768) {
+      return 120; // 태블릿, 아이패드: 120px
+    } else {
+      return 90; // 모바일: 90px
+    }
+  };
+
+  // player 위치 조정을 위한 높이 배율 (태블릿/데스크톱별로 다름)
+  const getPlayerPositionMultiplier = () => {
+    const width = window.innerWidth;
+    // PC 데스크탑: 1280px 이상
+    // 랩탑, 태블릿: 1025px ~ 1280px
+    // 태블릿, 아이패드: 768px ~ 1024px
+    // 모바일: 768px 미만
+    
+    if (width >= 1280) {
+      return 1; // PC 데스크탑: 0.8
+    } else if (width >= 1025) {
+      return 0.88; // 랩탑, 태블릿: 0.85
+    } else if (width >= 768) {
+      return 0.9; // 태블릿, 아이패드: 0.9
+    } else {
+      return 0.9; // 모바일: 0.9 (기본값)
+    }
+  };
   
   const canvasRef = useRef(null);
   const animationIdRef = useRef(null);
@@ -797,7 +854,7 @@ export default function Game2({ user }) {
     playerImgEl.src = playerImg;
     playerImgEl.onload = () => {
       // 이미지가 로드되면 원본 비율을 유지하면서 크기 설정
-      const targetHeight = playerImageRef.current.height; // 원하는 높이 설정
+      const targetHeight = getPlayerHeight(); // 화면 크기에 따른 고정 높이
       const aspectRatio = playerImgEl.naturalWidth / playerImgEl.naturalHeight;
       const targetWidth = targetHeight * aspectRatio;
       
@@ -1330,7 +1387,7 @@ export default function Game2({ user }) {
   };
 
   const updateCoins = (canvas) => {
-    const safeZoneHeight = window.innerHeight * 0.15; // 15vh
+    const safeZoneHeight = getSafeZoneHeight(); // px 고정
     const safeZoneTop = canvas.height - safeZoneHeight;
     coinsRef.current = coinsRef.current.filter(coin => {
       // 아래로 이동
@@ -1369,7 +1426,7 @@ export default function Game2({ user }) {
   };
   
   const updateViruses = (canvas) => {
-    const safeZoneHeight = window.innerHeight * 0.15; // 15vh
+    const safeZoneHeight = getSafeZoneHeight(); // px 고정
     const safeZoneTop = canvas.height - safeZoneHeight;
     
     virusesRef.current = virusesRef.current.filter(virus => {
@@ -1437,6 +1494,12 @@ export default function Game2({ user }) {
     }
     
     updatePlayer(canvas);
+    
+    // player의 y 좌표를 항상 safeZone의 top에 딱 붙도록 고정 (px 고정)
+    const safeZoneHeight = getSafeZoneHeight();
+    const positionMultiplier = getPlayerPositionMultiplier();
+    playerRef.current.y = canvas.height - safeZoneHeight - playerRef.current.height * positionMultiplier; // player의 bottom이 safeZone의 top에 딱 붙음
+    
     // 바이러스 생성 중단 상태 감지
     const virusBlocked = (showGameEnd || gameEnded || allQuizzesCompleted);
     if (virusBlocked) {
@@ -1563,14 +1626,23 @@ export default function Game2({ user }) {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
-    const safeZoneHeight = window.innerHeight * 0.15; // 15vh
+    const safeZoneHeight = getSafeZoneHeight(); // px 고정
     
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     
+    // player 높이도 화면 크기에 맞게 재설정
+    if (playerImageRef.current && playerImageRef.current.complete) {
+      const targetHeight = getPlayerHeight();
+      const aspectRatio = playerImageRef.current.naturalWidth / playerImageRef.current.naturalHeight;
+      playerRef.current.width = targetHeight * aspectRatio;
+      playerRef.current.height = targetHeight;
+    }
+    
     if (!isGameRunning) {
       playerRef.current.x = canvas.width / 2 - playerRef.current.width / 2;
-      playerRef.current.y = canvas.height - safeZoneHeight - playerRef.current.height;
+      const positionMultiplier = getPlayerPositionMultiplier();
+      playerRef.current.y = canvas.height - safeZoneHeight - playerRef.current.height * positionMultiplier; // player의 bottom이 safeZone의 top에 딱 붙음
     }
     
     // 게임 시작 시 바이러스/코인 카운터 초기화

@@ -13,6 +13,7 @@ import Graph from "../assets/graph.svg";
 import Pencil from "../assets/pencil.svg";
 import CircleGraph from "../assets/circle_graph.svg";
 import { fetchCurrentSituation } from "../api/status/currentSituation";
+import { fetchTotalProgress } from "../api/analyze/analytics";
 
 const Wrapper = styled.div`
   background-color: #ffffff;
@@ -153,7 +154,12 @@ const Status = ({user, login, setLogin}) => {
   useEffect(() => {
     const load = async () => {
       try {
-        const page = await fetchCurrentSituation(0);
+        // 두 API를 병렬로 호출
+        const [page, overallPercent] = await Promise.all([
+          fetchCurrentSituation(0),
+          fetchTotalProgress()
+        ]);
+        
         const list = Array.isArray(page?.content) ? page.content : [];
 
         const mapped = list.map((item, idx) => ({
@@ -171,12 +177,11 @@ const Status = ({user, login, setLogin}) => {
 
         const total = list.length;
         const completed = list.filter(i => i.status === 'COMPLETED').length;
-        const avgProgress = total > 0 
-          ? Math.round(list.reduce((s, i) => s + (i.progress || 0), 0) / total)
-          : 0;
+        // overall-progress API에서 받은 percent 사용 (숫자 값, 예: 33.3)
+        const percent = typeof overallPercent === 'number' ? Math.round(overallPercent) : 0;
 
         setStatusBoxes(mapped);
-        setOverall({ percent: avgProgress, total, completed });
+        setOverall({ percent, total, completed });
       } catch (e) {
         console.error('학습 현황 로드 실패:', e);
       } finally {

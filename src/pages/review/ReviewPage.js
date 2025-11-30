@@ -117,6 +117,7 @@ const ReviewTitle = styled.div`
   font-size: 20px;
   font-weight: 700;
   color: #191919;
+  white-space: nowrap;
 `;
 
 const ReviewSubTitle = styled.div`
@@ -147,6 +148,11 @@ const ReviewButton = styled.button`
   color: #F0F4FC;
   background-color: #2D7BED;
   transition: opacity 0.2s;
+  white-space: nowrap;
+  max-width: 30vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   
   &:disabled {
     background-color: #CCCCCC;
@@ -246,30 +252,33 @@ function ReviewPage({ user, login, setLogin }) {
         //   };
         // });
         
-        // 새로운 로직: 모든 것이 locked이면 맨 처음 것 하나만 열어주고, 앞에 completed 상태가 있으면 그 다음 locked를 열어주기
+        // 새로운 로직: UNLOCKED 상태는 바로 사용 가능, LOCKED는 조건부로 열기
         const modules = chaptersData.map((chapter, index) => {
           let isFirstReviewAvailable = false;
           let isSecondReviewAvailable = false;
           
-          // 모든 chapter가 모두 locked인지 확인
-          const allChaptersLocked = chaptersData.every(ch => 
-            ch.isFirstReviewLocked && ch.isSecondReviewLocked
-          );
+          // UNLOCKED 상태는 바로 사용 가능
+          if (chapter.firstReviewStatus === 'UNLOCKED') {
+            isFirstReviewAvailable = true;
+          }
           
-          if (allChaptersLocked) {
-            // 모든 것이 locked이면 맨 처음 것 하나만 열어주기
-            if (index === 0) {
-              isFirstReviewAvailable = true;
-            }
-          } else {
-            // 앞에 completed 상태가 있으면 그 다음 locked를 열어주기
-            // 1. firstReview가 COMPLETED이고 secondReview가 LOCKED이면 secondReview 열기
-            if (chapter.isFirstReviewCompleted && chapter.isSecondReviewLocked) {
-              isSecondReviewAvailable = true;
-            }
+          if (chapter.secondReviewStatus === 'UNLOCKED') {
+            isSecondReviewAvailable = true;
+          }
+          
+          // LOCKED 상태인 경우에만 조건부 로직 적용
+          if (chapter.isFirstReviewLocked) {
+            // 모든 chapter가 모두 locked인지 확인
+            const allChaptersLocked = chaptersData.every(ch => 
+              ch.isFirstReviewLocked && ch.isSecondReviewLocked
+            );
             
-            // 2. firstReview가 LOCKED이면, 이전 항목들이 모두 completed인지 확인
-            if (chapter.isFirstReviewLocked) {
+            if (allChaptersLocked) {
+              // 모든 것이 locked이면 맨 처음 것 하나만 열어주기
+              if (index === 0) {
+                isFirstReviewAvailable = true;
+              }
+            } else {
               // 첫 번째 항목이거나, 이전 항목들이 모두 completed인 경우
               if (index === 0) {
                 isFirstReviewAvailable = true;
@@ -284,6 +293,11 @@ function ReviewPage({ user, login, setLogin }) {
                 }
               }
             }
+          }
+          
+          // secondReview가 LOCKED이고 firstReview가 COMPLETED인 경우
+          if (chapter.isSecondReviewLocked && chapter.isFirstReviewCompleted) {
+            isSecondReviewAvailable = true;
           }
           
           return {

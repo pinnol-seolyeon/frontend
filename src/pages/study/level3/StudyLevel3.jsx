@@ -431,6 +431,7 @@ function StudyPage({ user, login, setLogin }){
     const {chapterData, setChapterData}=useChapter();
     const [questionIndexes, setQuestionIndexes] = useState([]);
     const [isFinished,setIsFinished]=useState(false);
+    const [showFinalMessage, setShowFinalMessage] = useState(false); // 최종 메시지 표시 여부
 
     const [isQuestionFinished,setIsQuestionFinished]=useState(false);
     const [userAnswer, setUserAnswer] = useState("");
@@ -445,6 +446,8 @@ function StudyPage({ user, login, setLogin }){
     const [isTtsCompleted, setIsTtsCompleted] = useState(false); // TTS 재생 완료 상태
     const recognitionRef = React.useRef(null); // 음성인식 객체를 ref로 관리
     const ttsSentences = useMemo(() => sentences, [sentences]);
+    const [finalMessagePreloaded, setFinalMessagePreloaded] = useState(false); // 최종 메시지 TTS preload 완료 여부
+    const finalMessageAudioRef = useRef(null); // 최종 메시지 오디오 URL 저장
     const nextContext=sentences[currentIndex+1]||"다음 학습 내용 없음";
     const returnToIndex=location.state?.returnToIndex??0;
 
@@ -665,7 +668,7 @@ function StudyPage({ user, login, setLogin }){
     useEffect(() => {
         if (ladybugCount >= 3 || loading) return;
 
-        const randomDelay = Math.random() * 20000 + 10000; // 10~30초
+        const randomDelay = Math.random() * 20000 + 30000; // 10~30초
         console.log(`⏰ 다음 무당벌레 생성까지: ${Math.floor(randomDelay / 1000)}초`);
 
         const timer = setTimeout(() => {
@@ -780,6 +783,46 @@ function StudyPage({ user, login, setLogin }){
         }
     }, [currentIndex, isFinished]);
 
+    // 최종 메시지 TTS 미리 preload (로딩 시간 단축)
+    useEffect(() => {
+        const finalMessage = "잘했어. 이제 게임하면서 배운 내용을 복습해볼까?";
+        
+        const preloadFinalMessage = async () => {
+            try {
+                const res = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/tts/text`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ text: finalMessage }),
+                });
+                if (!res.ok) throw new Error("TTS 요청 실패: " + res.statusText);
+                const buffer = await res.arrayBuffer();
+                const blob = new Blob([buffer], { type: "audio/mpeg" });
+                const url = URL.createObjectURL(blob);
+                finalMessageAudioRef.current = url;
+                setFinalMessagePreloaded(true);
+                console.log("✅ 최종 메시지 TTS preload 완료");
+            } catch (error) {
+                console.error("❌ 최종 메시지 TTS preload 실패:", error);
+                setFinalMessagePreloaded(false);
+            }
+        };
+        
+        // 컴포넌트 마운트 시 미리 preload
+        preloadFinalMessage();
+        
+        // cleanup: 컴포넌트 언마운트 시 URL 해제
+        return () => {
+            if (finalMessageAudioRef.current && finalMessageAudioRef.current.startsWith('blob:')) {
+                try {
+                    URL.revokeObjectURL(finalMessageAudioRef.current);
+                } catch (e) {
+                    console.warn('최종 메시지 Blob URL 해제 실패 (무시):', e);
+                }
+            }
+        };
+    }, []);
+
 
 
     //질문 문장인 경우 -> 사용자 입력 UI 노출 + 답변 수집
@@ -821,69 +864,28 @@ function StudyPage({ user, login, setLogin }){
                     // 다음 질문이 없고 contentEndIndex가 마지막이 아니면 contentEndIndex로 이동
                     setCurrentIndex(contentEndIndex);
                 } else {
-                    // 모든 문장을 다 재생했으면 완료 처리
-                    console.log("✅ 모든 문장 완료, 다음 단계로 이동");
-                    setIsQuestionFinished(true);
-                    setIsFinished(true);
-                    setIsTtsCompleted(true);
+                    // 모든 문장을 다 재생했으면 최종 메시지 표시
+                    console.log("✅ 모든 문장 완료, 최종 메시지 표시");
                     setIsAnsweringPhase(false);
                     setAnswers([]);
                     questionIndexBeforeAnswerRef.current = null;
                     contentAfterAnswerEndIndexRef.current = null;
                     
-                    // 즉시 다음 단계로 이동 (비동기 처리)
-                    (async () => {
-                        const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
-                        if (chapterId) {
-                            try {
-                                console.log("💾 질문/답변 저장 API 호출 시작 - chapterId:", chapterId);
-                                const response = await api.post(`/api/question/save-all`, null, {
-                                    params: {
-                                        chapterId: chapterId
-                                    }
-                                });
-                                console.log("✅ 질문/답변 저장 성공:", response.data);
-                                
-                                try {
-                                    const storageKey = `questionData_${chapterId}`;
-                                    sessionStorage.removeItem(storageKey);
-                                    console.log("🧹 sessionStorage 질문 데이터 삭제 완료");
-                                } catch (error) {
-                                    console.error("⚠️ sessionStorage 삭제 실패 (무시):", error);
-                                }
-                            } catch (error) {
-                                console.error("❌ 질문/답변 저장 API 호출 실패:", error);
-                            }
+                    // 최종 메시지 추가
+                    const finalMessage = "잘했어. 이제 게임하면서 배운 내용을 복습해볼까?";
+                    setSentences(prev => {
+                        // 이미 최종 메시지가 추가되어 있지 않은 경우에만 추가
+                        if (!prev.includes(finalMessage)) {
+                            const newSentences = [...prev, finalMessage];
+                            // 업데이트된 배열의 길이를 사용하여 currentIndex 설정
+                            setCurrentIndex(newSentences.length - 1);
+                            return newSentences;
                         }
-                        
-                        if (chapterId) {
-                            const badgesToWin = [];
-                            
-                            if (speedHunter) {
-                                badgesToWin.push('SPEED_HUNTER');
-                            }
-                            
-                            if (fineHunter) {
-                                badgesToWin.push('FINE_HUNTER');
-                            }
-                            
-                            if (badgesToWin.length > 0) {
-                                try {
-                                    await winBadge(chapterId, badgesToWin);
-                                } catch (error) {
-                                    console.error('❌ 뱃지 획득 실패:', error);
-                                }
-                            }
-                        }
-                        
-                        await completeSession();
-                        
-                        const finalChapterId = searchParams.get('chapterId') || chapterData?.chapterId;
-                        const { getGameForChapter } = await import('../../../utils/gameSelector');
-                        const gamePath = getGameForChapter(finalChapterId, 'study');
-                        navigate(gamePath);
-                    })();
-                    return; // 여기서 함수 종료
+                        return prev;
+                    });
+                    setShowFinalMessage(true);
+                    setIsTtsCompleted(false); // TTS 완료 상태 초기화
+                    return; // 여기서 함수 종료, 최종 메시지 재생 후 게임으로 이동
                 }
                 
                 // 질문 단계로 돌아가기
@@ -917,96 +919,80 @@ function StudyPage({ user, login, setLogin }){
         setCurrentIndex(currentIndex+1);
     } else {
         // 마지막 문장까지 모두 본 경우 (currentIndex === sentences.length - 1)
-        console.log("✅ 모든 문장 완료, 다음 단계로 이동", { currentIndex, sentencesLength: sentences.length });
-        setIsQuestionFinished(true); //질문 끝났다는 상태
-        setIsFinished(true);
-        setIsTtsCompleted(true); // TTS 완료 상태 설정
-        // currentIndex는 마지막 인덱스로 유지 (텍스트가 바뀌지 않도록)
-        // setCurrentIndex는 호출하지 않음
+        console.log("✅ 모든 문장 완료, 최종 메시지 표시", { currentIndex, sentencesLength: sentences.length });
         
-        // 즉시 다음 단계로 이동 (비동기 처리)
-        (async () => {
-        
-        // Level 3 완료 시 질문/답변 저장 API 호출
-        const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
-        if (chapterId) {
-            try {
-                console.log("💾 질문/답변 저장 API 호출 시작 - chapterId:", chapterId);
-                const response = await api.post(`/api/question/save-all`, null, {
-                    params: {
-                        chapterId: chapterId
-                    }
-                });
-                console.log("✅ 질문/답변 저장 성공:", response.data);
-                
-                // sessionStorage에서 해당 chapterId의 질문 데이터 삭제 (선택적)
-                try {
-                    const storageKey = `questionData_${chapterId}`;
-                    sessionStorage.removeItem(storageKey);
-                    console.log("🧹 sessionStorage 질문 데이터 삭제 완료");
-                } catch (error) {
-                    console.error("⚠️ sessionStorage 삭제 실패 (무시):", error);
-                }
-            } catch (error) {
-                console.error("❌ 질문/답변 저장 API 호출 실패:", error);
-                // 에러가 발생해도 학습 완료는 진행 (사용자 경험을 위해)
-            }
-        } else {
-            console.error("⚠️ chapterId가 없어서 질문/답변 저장 API를 호출할 수 없습니다.");
-        }
-        
-        // 무당벌레 뱃지 체크 및 API 호출
-        if (chapterId) {
-            const badgesToWin = [];
-            
-            console.log('🔍 학습 종료 시 무당벌레 뱃지 체크:', {
-                chapterId,
-                clickedLadybugs: clickedLadybugs.length,
-                speedHunter,
-                fineHunter
-            });
-
-            // SPEED_HUNTER: 실시간으로 체크한 결과 사용
-            if (speedHunter) {
-                badgesToWin.push('SPEED_HUNTER');
-                console.log('🏆 SPEED_HUNTER 뱃지 획득 조건 만족! (모든 무당벌레를 2초 이내에 잡음)');
-            } else {
-                console.log('❌ SPEED_HUNTER 조건 불만족: 무당벌레를 놓치거나 2초 초과');
-            }
-
-            // FINE_HUNTER: 연속 3마리 잡았는지 확인
-            if (fineHunter) {
-                badgesToWin.push('FINE_HUNTER');
-                console.log('🏆 FINE_HUNTER 뱃지 획득 조건 만족! (연속 3마리 잡음)');
-            } else {
-                console.log('❌ FINE_HUNTER 조건 불만족: 연속 3마리를 잡지 않음');
-            }
-
-            // 뱃지 획득 API 호출
-            if (badgesToWin.length > 0) {
-                try {
-                    console.log('📡 학습 종료 시 뱃지 API 호출 시작:', { chapterId, badgesToWin });
-                    await winBadge(chapterId, badgesToWin);
-                    console.log('✅ 뱃지 획득 성공:', badgesToWin);
-                } catch (error) {
-                    console.error('❌ 뱃지 획득 실패:', error);
-                    console.error('❌ 에러 상세:', error.response?.data || error.message);
-                }
-            } else {
-                console.log('⚠️ 획득할 뱃지가 없어 API 호출하지 않음');
-            }
-        }
-        
-            alert("✅학습을 모두 완료했어요! 게임 단계로 이동해볼까요?")
-            await completeSession(); // Level 3 완료 상태 전송
-            
-            // 학습 완료 시 적절한 게임 선택
-            const finalChapterId = searchParams.get('chapterId') || chapterData?.chapterId;
-            const { getGameForChapter } = await import('../../../utils/gameSelector');
-            const gamePath = getGameForChapter(finalChapterId, 'study');
-            navigate(gamePath);
-        })();
+        // 최종 메시지 추가
+        const finalMessage = "잘했어. 이제 게임하면서 배운 내용을 복습해볼까?";
+        setSentences(prev => [...prev, finalMessage]);
+        setShowFinalMessage(true);
+        setIsTtsCompleted(false); // TTS 완료 상태 초기화
+        setCurrentIndex(sentences.length); // 최종 메시지로 이동
+        return; // 여기서 함수 종료, 최종 메시지 재생 후 게임으로 이동
     }
+   };
+   
+   // 게임으로 이동하는 함수 (다음 버튼 클릭 시 호출)
+   const navigateToGame = async () => {
+       if (!showFinalMessage || !isTtsCompleted || isFinished) return;
+       
+       console.log("✅ 최종 메시지 재생 완료, 게임으로 이동");
+       setIsFinished(true);
+       setShowFinalMessage(false);
+       
+       // 게임으로 이동 (비동기 처리)
+       // Level 3 완료 시 질문/답변 저장 API 호출
+       const chapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+       if (chapterId) {
+           try {
+               console.log("💾 질문/답변 저장 API 호출 시작 - chapterId:", chapterId);
+               const response = await api.post(`/api/question/save-all`, null, {
+                   params: {
+                       chapterId: chapterId
+                   }
+               });
+               console.log("✅ 질문/답변 저장 성공:", response.data);
+               
+               // sessionStorage에서 해당 chapterId의 질문 데이터 삭제 (선택적)
+               try {
+                   const storageKey = `questionData_${chapterId}`;
+                   sessionStorage.removeItem(storageKey);
+                   console.log("🧹 sessionStorage 질문 데이터 삭제 완료");
+               } catch (error) {
+                   console.error("⚠️ sessionStorage 삭제 실패 (무시):", error);
+               }
+           } catch (error) {
+               console.error("❌ 질문/답변 저장 API 호출 실패:", error);
+           }
+       }
+       
+       // 무당벌레 뱃지 체크 및 API 호출
+       if (chapterId) {
+           const badgesToWin = [];
+           
+           if (speedHunter) {
+               badgesToWin.push('SPEED_HUNTER');
+           }
+           if (fineHunter) {
+               badgesToWin.push('FINE_HUNTER');
+           }
+           
+           if (badgesToWin.length > 0) {
+               try {
+                   await winBadge(chapterId, badgesToWin);
+                   console.log('✅ 뱃지 획득 성공:', badgesToWin);
+               } catch (error) {
+                   console.error('❌ 뱃지 획득 실패:', error);
+               }
+           }
+       }
+       
+       await completeSession(); // Level 3 완료 상태 전송
+       
+       // 학습 완료 시 적절한 게임 선택
+       const finalChapterId = searchParams.get('chapterId') || chapterData?.chapterId;
+       const { getGameForChapter } = await import('../../../utils/gameSelector');
+       const gamePath = getGameForChapter(finalChapterId, 'study');
+       navigate(gamePath);
    };
 
 
@@ -1373,6 +1359,13 @@ const stopVoiceRecognition = () => {
                                     <BubbleButton onClick={()=>{
                                         // isFinished가 true면 더 이상 진행하지 않음
                                         if (isFinished) return;
+                                        
+                                        // 최종 메시지이고 TTS가 완료된 경우 게임으로 이동
+                                        if (showFinalMessage && isTtsCompleted) {
+                                            navigateToGame();
+                                            return;
+                                        }
+                                        
                                         if (!isAnsweringPhase) {
                                             setAiResponse(""); //다음 문장 넘어갈 때 aiResponse초기화
                                         }
