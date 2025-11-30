@@ -211,16 +211,13 @@ const ContentContainer = styled.div`
   display: flex;
   align-items: flex-end;
   gap: 2rem;
-  width: 100%;
-  max-width: 1200px;
-  justify-content: space-between;
+  justify-content: center;
 `;
 
 const LeftSection = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-left: 2rem;
   gap: 0; // 호핀과 말풍선 사이 간격 제거
 `;
 
@@ -238,6 +235,7 @@ const RightSection = styled.div`
   gap: 1rem;
   flex: 1;
   margin-bottom: 1rem;
+  width: 100%;
 `;
 
 

@@ -301,7 +301,7 @@ function StudyLevel6_2({ user, login, setLogin }){
         // } catch(e){
         //     console.error('학습 완료 처리 중 오류',e);
         // }
-        navigate('/review')
+        navigate('/dashboard')
       };
     
     return(
