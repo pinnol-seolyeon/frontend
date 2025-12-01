@@ -1115,6 +1115,17 @@ export default function ReviewGame2({ user }) {
     return () => clearInterval(interval);
   }, [showGameEnd]);
   
+  // 표시용 question에서 "이게맞는지~"와 "O또는X로 대답해" 같은 텍스트 제거 (데이터는 원본 유지)
+  const removeAnswerInstruction = (text) => {
+    if (!text) return text;
+    let cleaned = text;
+    // 앞부분의 "이게맞는지~" 제거 (공백, 물결표, 특수문자 포함, 문자열 시작 또는 공백 뒤)
+    cleaned = cleaned.replace(/(^|\s+)이게\s*맞는지[~\-\.\s]*/i, '').trim();
+    // 뒷부분의 "O또는X로 대답해" 제거 (여러 패턴 처리, "대답해" 뒤의 점도 포함)
+    cleaned = cleaned.replace(/\s*[Oo]\s*또는\s*[Xx]\s*로\s*대답해\s*\.?\s*/gi, '').trim();
+    return cleaned;
+  };
+
   const handleQuizAnswer = (answer) => {
     if (!currentQuiz) return;
     
@@ -1125,7 +1136,7 @@ export default function ReviewGame2({ user }) {
     
     quizResultsRef.current.push({
       quizId: currentQuiz.quizId || '', // sourceQuizId에서 온 값
-      question: currentQuiz.question,
+      question: currentQuiz.question, // 원본 데이터 유지
       options: currentQuiz.options || [],
       correctAnswer: currentQuiz.answer,
       userAnswer: answer,
@@ -1778,7 +1789,7 @@ export default function ReviewGame2({ user }) {
                   <QuizTopBanner src={GameBoxTop} alt="quiz top" />
                   <QuizCard>
                     <QuizContent>
-                      <QuizQuestion>{currentQuiz.question}</QuizQuestion>
+                      <QuizQuestion>{removeAnswerInstruction(currentQuiz.question)}</QuizQuestion>
                       {(() => {
                         const cols = (currentQuiz?.options?.length || 0) >= 3 ? 2 : 1;
                         return (
@@ -1829,7 +1840,7 @@ export default function ReviewGame2({ user }) {
                     <EndQuizResultsContainer>
                       {quizResultsRef.current.map((result, index) => (
                         <EndQuizResultItem key={index}>
-                          <EndQuizResultTitle>Q{index + 1}. {result.question}</EndQuizResultTitle>
+                          <EndQuizResultTitle>Q{index + 1}. {removeAnswerInstruction(result.question)}</EndQuizResultTitle>
                           <EndQuizResultAnswerContainer>
                             <EndQuizResultAnswer>답 : {result.correctAnswer}</EndQuizResultAnswer>
                             <EndQuizResultCorrect isCorrect={result.isCorrect}>{result.isCorrect ? '정답' : '오답'}</EndQuizResultCorrect>

@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
 import point from '../assets/point_img.svg';
 import { fetchPointHistory } from '../api/analyze/pointHistory';
+import axios from 'axios';
 
 const Wrapper = styled.div`
   background-color: #ffffff;
@@ -233,6 +234,9 @@ function Point({ user, login, setLogin }) {
   const [pointHistory, setPointHistory] = useState([]);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
+  
+  // 최신 coin 값 (직접 API에서 가져옴)
+  const [currentCoin, setCurrentCoin] = useState(user?.coin ?? 0);
 
   // 날짜 포맷팅 함수 (밀리초 제거, 시:분까지만)
   const formatDateTime = (dateTimeString) => {
@@ -256,6 +260,25 @@ function Point({ user, login, setLogin }) {
     return category === '계좌 환급' || category === '상품권 구매';
   };
   
+  // 최신 user 정보 불러오기 (coin 값 갱신)
+  const fetchUserCoin = async () => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/user`, { withCredentials: true });
+      if (response.data && response.data.coin !== undefined) {
+        setCurrentCoin(response.data.coin);
+        console.log('✅ 최신 coin 값:', response.data.coin);
+      }
+    } catch (err) {
+      console.error('❌ 사용자 정보 불러오기 실패:', err);
+      // 실패해도 기존 값 유지
+    }
+  };
+
+  // 컴포넌트 마운트 시 최신 coin 값 불러오기
+  useEffect(() => {
+    fetchUserCoin();
+  }, []);
+
   // 포인트 히스토리 불러오기
   useEffect(() => {
     const loadPointHistory = async () => {
@@ -270,6 +293,9 @@ function Point({ user, login, setLogin }) {
         setPointHistory(data.content || []);
         setTotalPages(data.totalPages || 0);
         setTotalElements(data.totalElements || 0);
+        
+        // 포인트 히스토리 로딩 완료 후 최신 coin 값 갱신
+        await fetchUserCoin();
       } catch (err) {
         console.error('❌ 포인트 히스토리 불러오기 실패:', err);
         setError(err.message);
@@ -353,9 +379,9 @@ function Point({ user, login, setLogin }) {
                 <PointIconWrapper>
                     <PointIcon src={point} alt="point" />
                 </PointIconWrapper>
-                <PointTextWrapper>
+                    <PointTextWrapper>
                     <PointText>현재 {user?.name}님의 피넛</PointText>
-                    <PointValue>{(user?.coin ?? 0).toLocaleString()}F</PointValue>
+                    <PointValue>{currentCoin.toLocaleString()}F</PointValue>
                 </PointTextWrapper>
             </TotalPointWrapper>
 
