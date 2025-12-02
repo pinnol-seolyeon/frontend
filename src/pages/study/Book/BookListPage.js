@@ -5,7 +5,7 @@ import '../Book/BookPage.css';
 import Header from '../../../components/Header';
 import lock from '../../../assets/lock.png';
 import Sidebar from '../../../components/Sidebar';
-import axios from 'axios';
+import api from '../../../api/login/axiosInstance';
 
 
 const Wrapper = styled.div`
@@ -217,7 +217,7 @@ function BookListPage({ user, login, setLogin }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get(`${process.env.REACT_APP_API_BASE_URL}/api/study/book-select`, { withCredentials: true })
+    api.get('/api/study/book-select')
       .then(res => {
         console.log("🔍 사용자 데이터:", res.data);
         if (res.data && res.data.data && res.data.data.bookList) {
