@@ -41,7 +41,27 @@ import Player2Attacked from '../../assets/game2/Player_Enemy2_Attacked.png';
 import Player3Attacked from '../../assets/game2/Player_Enemy3_Attacked.png';
 import GameBoxTop from '../../assets/game2/GameBox_Top.png';
 import GameEndTop from '../../assets/game2/GameEnd_Top.png';
-import PlayerCoin from '../../assets/game2/Player_CoinGet_Effect.png'
+import PlayerCoin from '../../assets/game2/Player_CoinGet_Effect.png';
+// 사운드 import
+import mainBGM from '../../assets/game2/game2_main_BGM.wav';
+import gunShot1 from '../../assets/game2/game2_gun_shot1.wav';
+import gunShot2 from '../../assets/game2/game2_gun_shot2.wav';
+import gunShot3 from '../../assets/game2/game2_gun_shot3.wav';
+import gunShot4 from '../../assets/game2/game2_gun_shot4.wav';
+import gunShot5 from '../../assets/game2/game2_gun_shot5.wav';
+import gunShot6 from '../../assets/game2/game2_gun_shot6.wav';
+import coinSound from '../../assets/game2/game2_coin.wav';
+import virusHit1 from '../../assets/game2/game2_virus_hit1.wav';
+import virusHit2 from '../../assets/game2/game2_virus_hit2.wav';
+import virusHit3 from '../../assets/game2/game2_virus_hit3.wav';
+import quizAlertSound from '../../assets/game2/game2_quiz_alert.wav';
+import quizOpenSound from '../../assets/game2/game2_quiz_open.wav';
+import safeZoneSound from '../../assets/game2/game2_safe_zone.wav';
+import hoverSound from '../../assets/game2/game2_Hover.wav';
+import clickSound from '../../assets/game2/game2_click.wav';
+import correctSound from '../../assets/game2/game2_correct.wav';
+import wrongSound from '../../assets/game2/game2_wrong.wav';
+import gameOverSound from '../../assets/game2/game2_game_over.wav'
 
 const GlobalFonts = createGlobalStyle`
   @font-face {
@@ -785,6 +805,23 @@ export default function Game2({ user }) {
   const coinEffectTimerRef = useRef(null);
   const playerCoinEffectImageRef = useRef(null);
   
+  // 사운드 refs
+  const mainBGMRef = useRef(null);
+  const gunShotSoundsRef = useRef([]);
+  const currentGunShotIndexRef = useRef(0);
+  const coinSoundRef = useRef(null);
+  const virusHitSoundsRef = useRef([]);
+  const quizAlertSoundRef = useRef(null);
+  const quizOpenSoundRef = useRef(null);
+  const safeZoneSoundRef = useRef(null);
+  const hoverSoundRef = useRef(null);
+  const clickSoundRef = useRef(null);
+  const correctSoundRef = useRef(null);
+  const wrongSoundRef = useRef(null);
+  const gameOverSoundRef = useRef(null);
+  const quizAlertBlinkCountRef = useRef(0);
+  const gameOverSoundPlayedRef = useRef(false); // 게임 오버 사운드 재생 여부
+  
   const playerRef = useRef({
     x: 0,
     y: 0,
@@ -819,6 +856,8 @@ export default function Game2({ user }) {
   const gameStartTimeRef = useRef(null); // 게임 시작 시간
   const lastVirusSpawnTimeRef = useRef(0); // 마지막 바이러스 생성 시간
   const lastCoinSpawnTimeRef = useRef(0); // 마지막 코인 생성 시간
+  const totalPausedTimeRef = useRef(0); // 총 일시정지 시간 (퀴즈/알림)
+  const pauseStartTimeRef = useRef(null); // 일시정지 시작 시간
   const quizAlertYRef = useRef(-100);
   const gameEndXRef = useRef(-100);
   const initialQuizScheduledRef = useRef(false);
@@ -846,6 +885,72 @@ export default function Game2({ user }) {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+  
+  // 사운드 초기화
+  useEffect(() => {
+    // BGM
+    mainBGMRef.current = new Audio(mainBGM);
+    mainBGMRef.current.loop = true;
+    mainBGMRef.current.volume = 0.3;
+    
+    // 총알 사운드 (6개)
+    gunShotSoundsRef.current = [
+      new Audio(gunShot1),
+      new Audio(gunShot2),
+      new Audio(gunShot3),
+      new Audio(gunShot4),
+      new Audio(gunShot5),
+      new Audio(gunShot6)
+    ];
+    gunShotSoundsRef.current.forEach(sound => sound.volume = 0.4);
+    
+    // 코인 사운드
+    coinSoundRef.current = new Audio(coinSound);
+    coinSoundRef.current.volume = 0.5;
+    
+    // 바이러스 타격 사운드 (3개)
+    virusHitSoundsRef.current = [
+      new Audio(virusHit1),
+      new Audio(virusHit2),
+      new Audio(virusHit3)
+    ];
+    virusHitSoundsRef.current.forEach(sound => sound.volume = 0.5);
+    
+    // 퀴즈 관련 사운드
+    quizAlertSoundRef.current = new Audio(quizAlertSound);
+    quizAlertSoundRef.current.volume = 0.6;
+    
+    quizOpenSoundRef.current = new Audio(quizOpenSound);
+    quizOpenSoundRef.current.volume = 0.6;
+    
+    // 세이프존 사운드
+    safeZoneSoundRef.current = new Audio(safeZoneSound);
+    safeZoneSoundRef.current.volume = 0.5;
+    
+    // UI 사운드
+    hoverSoundRef.current = new Audio(hoverSound);
+    hoverSoundRef.current.volume = 0.3;
+    
+    clickSoundRef.current = new Audio(clickSound);
+    clickSoundRef.current.volume = 0.4;
+    
+    correctSoundRef.current = new Audio(correctSound);
+    correctSoundRef.current.volume = 0.6;
+    
+    wrongSoundRef.current = new Audio(wrongSound);
+    wrongSoundRef.current.volume = 0.6;
+    
+    gameOverSoundRef.current = new Audio(gameOverSound);
+    gameOverSoundRef.current.volume = 0.6;
+    
+    return () => {
+      // 정리
+      if (mainBGMRef.current) {
+        mainBGMRef.current.pause();
+        mainBGMRef.current = null;
+      }
     };
   }, []);
   
@@ -1011,11 +1116,11 @@ export default function Game2({ user }) {
       return;
     }
 
-    const randomTime = 5000 + Math.random() * 4000;
+    const fixedTime = 3000; // 고정 3초
     
     if (quizTimerRef.current) clearTimeout(quizTimerRef.current);
     quizTimerStartedAtRef.current = Date.now();
-    console.log('[Game2] schedule quiz in', Math.round(randomTime), 'ms');
+    console.log('[Game2] schedule quiz in', fixedTime, 'ms');
     quizTimerRef.current = setTimeout(() => {
       if (!isGameRunning || isPaused || isQuizActive) return;
       
@@ -1023,6 +1128,8 @@ export default function Game2({ user }) {
       setShowQuizAlert(true);
       quizAlertYRef.current = 0;
       setQuizAlertY(0);
+      // 일시정지 시작 시간 기록
+      pauseStartTimeRef.current = Date.now();
       
       // 중복 방지: 아직 사용하지 않은 인덱스 중에서 선택
       const available = quizList
@@ -1051,7 +1158,7 @@ export default function Game2({ user }) {
         description: quizDescription,
       };
       setCurrentQuiz(normalized);
-    }, randomTime);
+    }, fixedTime);
   }, [quizList, isQuizActive, showQuizAlert, isGameRunning, isPaused, showGameEnd, gameEnded]);
 
   useEffect(() => {
@@ -1081,6 +1188,7 @@ export default function Game2({ user }) {
       setShowQuiz(true);
       setShowQuizAlert(false);
       setIsPaused(true);
+      // 알림 시간은 이미 pauseStartTime에서 시작했으므로 여기서는 추가 안 함
       
       // 중복 방지: 사용한 퀴즈 인덱스 기록 및 카운트 증가
       if (pendingQuizIndexRef.current !== null) {
@@ -1155,6 +1263,14 @@ export default function Game2({ user }) {
     quizAlertYRef.current = -100;
     setQuizAlertY(-100);
     setIsPaused(false);
+    
+    // 일시정지 시간 누적
+    if (pauseStartTimeRef.current) {
+      const pausedDuration = Date.now() - pauseStartTimeRef.current;
+      totalPausedTimeRef.current += pausedDuration;
+      pauseStartTimeRef.current = null;
+      console.log(`⏸️ 퀴즈 일시정지 시간: ${pausedDuration}ms, 총 누적: ${totalPausedTimeRef.current}ms`);
+    }
     
     if (quizShownCountRef.current < MAX_QUIZZES) {
       startQuizEvent();
@@ -1240,14 +1356,17 @@ export default function Game2({ user }) {
     // 고정된 간격으로 고르게 생성 (30초 / 23개 = 약 1.3초마다 1개)
     const gameDuration = 30000; // 30초
     const spawnInterval = gameDuration / totalTarget; // 각 바이러스 생성 간격
-    const elapsed = Date.now() - gameStartTimeRef.current;
+    // 실제 경과 시간에서 일시정지 시간 제외
+    const elapsed = Date.now() - gameStartTimeRef.current - totalPausedTimeRef.current;
     
     // 현재까지 생성되어야 할 개수 계산
     const expectedIndex = Math.floor(elapsed / spawnInterval);
     
     // 현재 생성된 개수가 예상 인덱스보다 적고, 최소 간격이 지났으면 생성
     const timeSinceLastSpawn = elapsed - lastVirusSpawnTimeRef.current;
-    const minInterval = spawnInterval * 0.8; // 최소 간격 (80%로 여유 있게)
+    // 밀린 바이러스가 있으면 더 빠르게 생성 (catch-up)
+    const isBehind = virusCountRef.current.total < expectedIndex - 2; // 2개 이상 밀렸으면
+    const minInterval = isBehind ? spawnInterval * 0.3 : spawnInterval * 0.8; // 밀렸으면 더 빠르게
     
     if (virusCountRef.current.total < expectedIndex && timeSinceLastSpawn >= minInterval) {
       const topBarHeight = 80;
@@ -1352,7 +1471,8 @@ export default function Game2({ user }) {
     // 고정된 간격으로 고르게 생성 (30초 / 10개 = 3초마다 1개)
     const gameDuration = 30000; // 30초
     const spawnInterval = gameDuration / targetCoinCount; // 각 코인 생성 간격
-    const elapsed = Date.now() - gameStartTimeRef.current;
+    // 실제 경과 시간에서 일시정지 시간 제외
+    const elapsed = Date.now() - gameStartTimeRef.current - totalPausedTimeRef.current;
     
     // 현재까지 생성되어야 할 개수 계산
     const expectedIndex = Math.floor(elapsed / spawnInterval);
@@ -1653,6 +1773,8 @@ export default function Game2({ user }) {
     gameStartTimeRef.current = Date.now(); // 게임 시작 시간 기록
     lastVirusSpawnTimeRef.current = 0;
     lastCoinSpawnTimeRef.current = 0;
+    totalPausedTimeRef.current = 0; // 일시정지 시간 초기화
+    pauseStartTimeRef.current = null;
     setIsGameRunning(true);
   }, [quizLoaded, isGameStarted, isGameRunning]);
 
