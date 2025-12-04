@@ -1,4 +1,5 @@
 import styled, { createGlobalStyle } from 'styled-components';
+import { useEffect, useRef } from 'react';
 import readybackgroundImg from '../../assets/game2/Ready_Background.png';
 import startBtn from '../../assets/game2/Ready_Btn_GameStart.png';
 import PlayerEnemy1 from '../../assets/game2/PlayerEnemy1.png';
@@ -7,6 +8,10 @@ import PlayerEnemy3 from '../../assets/game2/PlayerEnemy3.png';
 import Coin from '../../assets/game2/Coin.png';
 import GumiRomanceFont from '../../assets/game2/Gumi-Romance.otf';
 import { useNavigate, useLocation } from 'react-router-dom';
+// 사운드 import
+import lobbyBGM from '../../assets/game2/game2_lobby_BGM.wav';
+import hoverSound from '../../assets/game2/game2_Hover.wav';
+import playButtonSound from '../../assets/game2/game2_play_button.wav';
 
 const GlobalFonts = createGlobalStyle`
   @font-face {
@@ -139,6 +144,65 @@ export default function ReviewGame2Ready() {
     const chapterId = location.state?.chapterId;
     const reviewCount = location.state?.reviewCount || 1;
     
+    // 사운드 refs
+    const lobbyBGMRef = useRef(null);
+    const hoverSoundRef = useRef(null);
+    const playButtonSoundRef = useRef(null);
+    
+    // BGM 시작
+    useEffect(() => {
+        lobbyBGMRef.current = new Audio(lobbyBGM);
+        lobbyBGMRef.current.loop = true;
+        lobbyBGMRef.current.volume = 0.3;
+        lobbyBGMRef.current.play().catch(err => {
+            console.warn('로비 BGM 재생 실패:', err);
+        });
+        
+        hoverSoundRef.current = new Audio(hoverSound);
+        hoverSoundRef.current.volume = 0.5;
+        
+        playButtonSoundRef.current = new Audio(playButtonSound);
+        playButtonSoundRef.current.volume = 0.5;
+        
+        return () => {
+            if (lobbyBGMRef.current) {
+                lobbyBGMRef.current.pause();
+                lobbyBGMRef.current = null;
+            }
+        };
+    }, []);
+    
+    const playHoverSound = () => {
+        if (hoverSoundRef.current) {
+            hoverSoundRef.current.currentTime = 0;
+            hoverSoundRef.current.play().catch(err => {
+                console.warn('Hover 사운드 재생 실패:', err);
+            });
+        }
+    };
+    
+    const handleStartClick = () => {
+        if (playButtonSoundRef.current) {
+            playButtonSoundRef.current.play().catch(err => {
+                console.warn('버튼 사운드 재생 실패:', err);
+            });
+        }
+        
+        // BGM 정지
+        if (lobbyBGMRef.current) {
+            lobbyBGMRef.current.pause();
+        }
+        
+        // 퀴즈 데이터를 state로 전달하며 ReviewGame2로 이동
+        navigate('/review/game2', {
+            state: {
+                quizData: quizData,
+                chapterId: chapterId,
+                reviewCount: reviewCount
+            }
+        });
+    };
+    
     return (
       <>
       <GlobalFonts />
@@ -180,16 +244,10 @@ export default function ReviewGame2Ready() {
                 </DescribeItem>
             </DescribeWrapper>
             <ContentText>{`방향키로 좌우로 이동할 수 있어요.\n이동하면서 바이러스를 공격하세요!`}</ContentText>
-            <StartButton onClick={() => {
-                // 퀴즈 데이터를 state로 전달하며 ReviewGame2로 이동
-                navigate('/review/game2', {
-                    state: {
-                        quizData: quizData,
-                        chapterId: chapterId,
-                        reviewCount: reviewCount
-                    }
-                });
-            }}>
+            <StartButton 
+                onClick={handleStartClick}
+                onMouseEnter={playHoverSound}
+            >
             </StartButton>
             </ContentWrapper>
         </Wrapper>
