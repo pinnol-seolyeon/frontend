@@ -14,6 +14,7 @@ import TtsPlayer from "../../../components/TtsPlayer";
 import background from "../../../assets/study_background.png";
 import hoppin from "../../../assets/hopin.svg";
 import { useActivityTracker } from "../../../hooks/useActivityTracker";
+import api from "../../../api/login/axiosInstance";
 
 /*학습하기-1단계-1*/
 const Wrapper = styled.div`
@@ -198,6 +199,8 @@ function StudyPage({ user, login, setLogin }){
     const {chapterData}=useChapter();
     const [isFinished,setIsFinished]=useState(false);
     const [showToast, setShowToast] = useState(true); // 토스트 표시 여부
+    const [bookList, setBookList] = useState([]); // 책 리스트
+    const [isFirstBook, setIsFirstBook] = useState(false); // 첫 번째 책인지 여부
     
     // chapterData 디버깅
     console.log('📚 StudyPage1 - chapterData:', {
@@ -205,6 +208,29 @@ function StudyPage({ user, login, setLogin }){
         bookId: chapterData?.bookId,
         fullData: chapterData
     });
+    
+    // 책 리스트 가져오기
+    useEffect(() => {
+        api.get('/api/study/book-select')
+            .then(res => {
+                console.log("🔍 책 리스트 데이터:", res.data);
+                if (res.data && res.data.data && res.data.data.bookList) {
+                    const books = res.data.data.bookList;
+                    setBookList(books);
+                    
+                    // 첫 번째 책의 bookId와 현재 bookId 비교
+                    if (books.length > 0 && chapterData?.bookId) {
+                        const firstBookId = books[0].id;
+                        const currentBookId = chapterData.bookId;
+                        setIsFirstBook(firstBookId === currentBookId || String(firstBookId) === String(currentBookId));
+                        console.log('📖 첫 번째 책 확인:', { firstBookId, currentBookId, isFirstBook: firstBookId === currentBookId });
+                    }
+                }
+            })
+            .catch((err) => {
+                console.log("❌ 책 리스트 조회 실패:", err);
+            });
+    }, [chapterData?.bookId]);
     
     // 활동 감지 Hook 사용 (level 1)
     const { completeSession } = useActivityTracker(
@@ -302,14 +328,42 @@ function StudyPage({ user, login, setLogin }){
         }
     }
 
+    // 이름 처리 함수 (첫 글자 제외하고 "이" 붙이기)
+    const getNameForGreeting = (fullName) => {
+        if (!fullName || fullName.length <= 1) return fullName || "";
+        // 첫 글자 제외하고 나머지 + "이"
+        return fullName.substring(1) + "이";
+    };
+
+    // 이름 처리 함수 (첫 글자 제외)
+    const getNameForCalling = (fullName) => {
+        if (!fullName || fullName.length <= 1) return fullName || "";
+        // 첫 글자 제외
+        return fullName.substring(1);
+    };
+
+    // isFirstBook은 useEffect에서 설정됨
+    
+    const userName = user?.name || "";
+    const nameForGreeting = getNameForGreeting(userName);
+    const nameForCalling = getNameForCalling(userName);
+
     const textToRead = useMemo(() => {
         if (loading) {
         return;
         }
-        return step === 0
-        ? ["안녕! 나는 호랑이 선생님이야"]
-        : [`이번 단원을 소개할게.\n오늘은 ${titleText} 이야`];
-    }, [loading, step, titleText]);
+        if (step === 0) {
+            if (isFirstBook) {
+                // 1단원: "안녕 나는 OO이를 위한 금융 선생님 호핀이야. 만나서 반가워!"
+                return [`안녕! 나는 ${nameForGreeting}를 위한 금융 선생님 호핀이야. 만나서 반가워!`];
+            } else {
+                // 2단원 이상: "안녕 OO아! 오늘도 만나서 반가워!"
+                return [`안녕 ${nameForCalling}아! 오늘도 만나서 반가워!`];
+            }
+        } else {
+            return [`이번 단원을 소개할게.\n오늘은 ${titleText} 이야`];
+        }
+    }, [loading, step, titleText, isFirstBook, nameForGreeting, nameForCalling]);
 
       
     
@@ -357,7 +411,9 @@ function StudyPage({ user, login, setLogin }){
                                 {loading
                                     ? "단원을 준비 중이에요..."
                                     : step===0
-                                        ? "안녕! 나는 호랑이 선생님이야"
+                                        ? (isFirstBook
+                                            ? `안녕! 나는 ${nameForGreeting}를 위한 금융 선생님 호핀이야. 만나서 반가워!`
+                                            : `안녕 ${nameForCalling}아! 오늘도 만나서 반가워!`)
                                         : `이번 단원을 소개할게.\n오늘은 ${titleText}이야`}
                             </TextBox>
                               {/* TTS 재생 완료 시에만 버튼 표시 */}
