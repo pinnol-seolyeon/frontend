@@ -5,6 +5,7 @@ import RadarGraph from '../../components/analyze/RadarChart';
 import QnAViewer from '../../components/analyze/QnAViewer';
 import { fetchStudyStats, fetchStudyNowStats, fetchRadarScore, fetchTotalProgress } from '../../api/analyze/analytics';
 import Sidebar from '../../components/Sidebar';
+import lite from '../../assets/lite_analyze.png';
 
 const Wrapper = styled.div`
   background-color: #ffffff;
@@ -40,6 +41,18 @@ const ContentContainer = styled.div`
   text-align: left;
   width: 100%;
   max-width: 100%;
+`;
+
+const TitleTextWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 0.5rem;
+`;
+
+const LightImg = styled.img`
+  width: 2rem;
+  object-fit: contain;
 `;
 
 const TitleWrapper = styled.div`
@@ -261,7 +274,10 @@ export default function Dashboard({ user, login, setLogin }) {
         <MainWrapper>
           <ContentContainer>
             <TitleWrapper>
-              <TitleText>학습 분석</TitleText>
+              <TitleTextWrapper>
+                <TitleText>학습 분석</TitleText>
+                <LightImg src={lite} />
+              </TitleTextWrapper>
               <SubTitleText>학습 분석을 통해 학습 현황을 확인할 수 있습니다.</SubTitleText>
             </TitleWrapper>
             

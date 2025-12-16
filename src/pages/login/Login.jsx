@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { useEffect, useState } from "react";
-import logo from '../../assets/finnol-logo.png';
+import logo from '../../assets/finnol-logo-beta.png';
 import kakaologin from "../../assets/kakaologin.png";
 import hopin from "../../assets/hopin.svg";
 
