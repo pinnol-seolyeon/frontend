@@ -666,7 +666,11 @@ function StudyLv2_withImg({ user, login, setLogin }){
                 onTtsEnd={() => setIsTtsCompleted(true)}  // TTS 재생 완료 시 호출
               />
               { !preloadDone ? (
-                <TextBox>화면을 준비 중입니다...</TextBox>
+                <SpeechWrapper>
+                    <SpeechBubble>
+                        <TextBox>화면을 준비 중입니다...</TextBox>
+                    </SpeechBubble>
+                </SpeechWrapper>
                 ) : (
               <SpeechWrapper>
                 {!isAnswering?(//isAnswering이 false일 때 
