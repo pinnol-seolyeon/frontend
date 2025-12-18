@@ -3,7 +3,7 @@ import Header from "../../../components/Header";
 import Box from "../../../components/Box";
 import tiger from "../../../assets/tiger-pencil.png";
 import Button from "../../../components/Button";
-import { fetchChapterContents} from "../../../api/study/level3API";
+import { fetchChapterContents, fetchChapters} from "../../../api/study/level3API";
 import { fetchChapterTitle } from "../../../api/study/level1API";
 import { useNavigate } from "react-router-dom";
 import React, { useState, useEffect, useMemo } from "react";
@@ -199,8 +199,7 @@ function StudyPage({ user, login, setLogin }){
     const {chapterData}=useChapter();
     const [isFinished,setIsFinished]=useState(false);
     const [showToast, setShowToast] = useState(true); // 토스트 표시 여부
-    const [bookList, setBookList] = useState([]); // 책 리스트
-    const [isFirstBook, setIsFirstBook] = useState(false); // 첫 번째 책인지 여부
+    const [isFirstChapter, setIsFirstChapter] = useState(false); // 첫 번째 챕터인지 여부
     
     // chapterData 디버깅
     console.log('📚 StudyPage1 - chapterData:', {
@@ -209,28 +208,33 @@ function StudyPage({ user, login, setLogin }){
         fullData: chapterData
     });
     
-    // 책 리스트 가져오기
+    // 챕터 리스트 가져오기 (첫 번째 챕터 확인용)
     useEffect(() => {
-        api.get('/api/study/book-select')
-            .then(res => {
-                console.log("🔍 책 리스트 데이터:", res.data);
-                if (res.data && res.data.data && res.data.data.bookList) {
-                    const books = res.data.data.bookList;
-                    setBookList(books);
-                    
-                    // 첫 번째 책의 bookId와 현재 bookId 비교
-                    if (books.length > 0 && chapterData?.bookId) {
-                        const firstBookId = books[0].id;
-                        const currentBookId = chapterData.bookId;
-                        setIsFirstBook(firstBookId === currentBookId || String(firstBookId) === String(currentBookId));
-                        console.log('📖 첫 번째 책 확인:', { firstBookId, currentBookId, isFirstBook: firstBookId === currentBookId });
+        if (!chapterData?.bookId || !chapterData?.chapterId) return;
+        
+        const loadChapters = async () => {
+            try {
+                const data = await fetchChapters(chapterData.bookId);
+                console.log("🔍 챕터 리스트 데이터:", data);
+                
+                // API 응답 구조: data.data.chapterList.content[0].chapterId
+                if (data && data.data && data.data.chapterList && Array.isArray(data.data.chapterList.content)) {
+                    const chapters = data.data.chapterList.content;
+                    if (chapters.length > 0) {
+                        const firstChapterId = chapters[0].chapterId;
+                        const currentChapterId = chapterData.chapterId;
+                        const isFirst = firstChapterId === currentChapterId || String(firstChapterId) === String(currentChapterId);
+                        setIsFirstChapter(isFirst);
+                        console.log('📖 첫 번째 챕터 확인:', { firstChapterId, currentChapterId, isFirst });
                     }
                 }
-            })
-            .catch((err) => {
-                console.log("❌ 책 리스트 조회 실패:", err);
-            });
-    }, [chapterData?.bookId]);
+            } catch (err) {
+                console.log("❌ 챕터 리스트 조회 실패:", err);
+            }
+        };
+        
+        loadChapters();
+    }, [chapterData?.bookId, chapterData?.chapterId]);
     
     // 활동 감지 Hook 사용 (level 1)
     const { completeSession } = useActivityTracker(
@@ -244,7 +248,7 @@ function StudyPage({ user, login, setLogin }){
     const [preloadDone, setPreloadDone] = useState(false);
     const [isTtsCompleted, setIsTtsCompleted] = useState(false); // TTS 재생 완료 상태
 
-    // 토스트 메시지 자동 숨김 (5초 후)
+    //토스트 메시지 자동 숨김 (5초 후)
     useEffect(() => {
         if (showToast) {
             const timer = setTimeout(() => {
@@ -342,7 +346,7 @@ function StudyPage({ user, login, setLogin }){
         return fullName.substring(1);
     };
 
-    // isFirstBook은 useEffect에서 설정됨
+    // isFirstChapter는 useEffect에서 설정됨
     
     const userName = user?.name || "";
     const nameForGreeting = getNameForGreeting(userName);
@@ -353,17 +357,12 @@ function StudyPage({ user, login, setLogin }){
         return;
         }
         if (step === 0) {
-            if (isFirstBook) {
-                // 1단원: "안녕 나는 OO이를 위한 금융 선생님 호핀이야. 만나서 반가워!"
-                return [`안녕! 나는 ${nameForGreeting}를 위한 금융 선생님 호핀이야. 만나서 반가워!`];
-            } else {
-                // 2단원 이상: "안녕 OO아! 오늘도 만나서 반가워!"
-                return [`안녕 ${nameForCalling}아! 오늘도 만나서 반가워!`];
-            }
+            // TTS는 항상 동일하게 "안녕 OO아! 오늘도 만나서 반가워!"
+            return [`안녕 ${nameForCalling}아! 오늘도 만나서 반가워!`];
         } else {
             return [`이번 단원을 소개할게.\n오늘은 ${titleText} 이야`];
         }
-    }, [loading, step, titleText, isFirstBook, nameForGreeting, nameForCalling]);
+    }, [loading, step, titleText, nameForCalling]);
 
       
     
@@ -404,14 +403,16 @@ function StudyPage({ user, login, setLogin }){
                         onTtsEnd={() => setIsTtsCompleted(true)}  // TTS 재생 완료 시 호출
                     />
                     { !preloadDone ? (
-                        <TextBox>화면을 준비 중입니다...</TextBox>
+                        <SpeechBubble>
+                            <TextBox>화면을 준비 중입니다...</TextBox>
+                        </SpeechBubble>
                     ) : (
                         <SpeechBubble>
                             <TextBox>
                                 {loading
                                     ? "단원을 준비 중이에요..."
                                     : step===0
-                                        ? (isFirstBook
+                                        ? (isFirstChapter
                                             ? `안녕! 나는 ${nameForGreeting}를 위한 금융 선생님 호핀이야. 만나서 반가워!`
                                             : `안녕 ${nameForCalling}아! 오늘도 만나서 반가워!`)
                                         : `이번 단원을 소개할게.\n오늘은 ${titleText}이야`}
