@@ -6,7 +6,7 @@ import Button from "../../../components/Button";
 import { fetchChapterContents, fetchChapters} from "../../../api/study/level3API";
 import { fetchChapterTitle } from "../../../api/study/level1API";
 import { useNavigate } from "react-router-dom";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {useParams} from "react-router-dom";
 import MiniHeader from "../../../components/study/MiniHeader";
 import {useChapter} from "../../../context/ChapterContext";
@@ -15,6 +15,8 @@ import background from "../../../assets/study_background.png";
 import hoppin from "../../../assets/hopin.svg";
 import { useActivityTracker } from "../../../hooks/useActivityTracker";
 import api from "../../../api/login/axiosInstance";
+import hoppinVideo from "../../../assets/hoppin_video/hoppin_hello1-1.mp4";
+import hoppinTalkVideo from "../../../assets/hoppin_video/hoppin_talk.mp4";
 
 /*학습하기-1단계-1*/
 const Wrapper = styled.div`
@@ -66,6 +68,17 @@ const Image=styled.img`
      /*가로 중앙 정렬, 세로 원하는 위치에 자유롭게 배치*/
     align-self:center;/*가로 중앙 정렬*/
     // margin-bottom:0px;
+`;
+
+const Video=styled.video`
+    display:flex;
+    height:auto;
+    object-fit:contain; /*영상의 원본 비율을 유지 -> 영상 전체가 보이도록 안 잘리게 */
+    width: 50%;
+    display:block;
+    
+     /*가로 중앙 정렬, 세로 원하는 위치에 자유롭게 배치*/
+    align-self:center;/*가로 중앙 정렬*/
 `;
 
 const SpeechBubble=styled.div`
@@ -200,6 +213,10 @@ function StudyPage({ user, login, setLogin }){
     const [isFinished,setIsFinished]=useState(false);
     const [showToast, setShowToast] = useState(true); // 토스트 표시 여부
     const [isFirstChapter, setIsFirstChapter] = useState(false); // 첫 번째 챕터인지 여부
+    const [isTtsPlaying, setIsTtsPlaying] = useState(false); // TTS 재생 중인지 여부
+    const videoRef = useRef(null); // 영상 ref
+    const hasPlayedTtsRef = useRef(false); // TTS가 이미 재생되었는지 추적
+    const textToReadRef = useRef(""); // 현재 재생 중인 텍스트 추적
     
     // chapterData 디버깅
     console.log('📚 StudyPage1 - chapterData:', {
@@ -314,6 +331,12 @@ function StudyPage({ user, login, setLogin }){
             setStep(1);
             setPreloadDone(false);
             setIsTtsCompleted(false); // TTS 완료 상태 초기화
+            setIsTtsPlaying(false); // TTS 재생 상태 초기화
+            // 영상 정지
+            if (videoRef.current) {
+                videoRef.current.pause();
+                videoRef.current.currentTime = 0;
+            }
         }else{
             await completeSession(); // Level 1 완료 상태 전송
             navigate(`/study/2?chapterId=${chapterData?.chapterId}`);
@@ -322,6 +345,14 @@ function StudyPage({ user, login, setLogin }){
     }
 
     const handleBack=()=>{
+        // 영상 정지
+        if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.currentTime = 0;
+        }
+        setIsTtsPlaying(false);
+        hasPlayedTtsRef.current = false; // TTS 재생 플래그 초기화
+        
         if (step===1){
             setStep(0);
             setPreloadDone(false);
@@ -354,15 +385,28 @@ function StudyPage({ user, login, setLogin }){
 
     const textToRead = useMemo(() => {
         if (loading) {
-        return;
+        return [];
         }
         if (step === 0) {
-            // TTS는 항상 동일하게 "안녕 OO아! 오늘도 만나서 반가워!"
-            return [`안녕 ${nameForCalling}아! 오늘도 만나서 반가워!`];
+            return [isFirstChapter
+                ? `안녕! 나는 ${nameForGreeting}를 위한 금융 선생님 호핀이야. 만나서 반가워!`
+                : `안녕 ${nameForCalling}아! 오늘도 만나서 반가워!`];
         } else {
             return [`이번 단원을 소개할게.\n오늘은 ${titleText} 이야`];
         }
-    }, [loading, step, titleText, nameForCalling]);
+    }, [loading, step, titleText, nameForCalling, nameForGreeting, isFirstChapter]);
+    
+    // step이 변경될 때 TTS 재생 플래그 초기화
+    useEffect(() => {
+        hasPlayedTtsRef.current = false;
+        setIsTtsCompleted(false);
+        setIsTtsPlaying(false);
+        textToReadRef.current = "";
+        if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.currentTime = 0;
+        }
+    }, [step]);
 
       
     
@@ -390,17 +434,69 @@ function StudyPage({ user, login, setLogin }){
                         1/6 선생님과 학습하기
                         </MiniHeader> */}
                     <ImageWrapper>
-                        <Image src={hoppin} alt="샘플" />
+                        {isTtsPlaying ? (
+                            <Video
+                                ref={videoRef}
+                                src={step === 0 ? hoppinVideo : hoppinTalkVideo}
+                                autoPlay={false}
+                                loop={false}
+                                playsInline
+                                muted={false}
+                                onEnded={() => {
+                                    // 영상이 끝나면 정지하고 이미지로 전환
+                                    setIsTtsPlaying(false);
+                                    if (videoRef.current) {
+                                        videoRef.current.pause();
+                                        videoRef.current.currentTime = 0;
+                                    }
+                                }}
+                            />
+                        ) : (
+                            <Image src={hoppin} alt="샘플" />
+                        )}
                     </ImageWrapper>
                     <TtsPlayer
+                        key={`tts-${step}-${textToRead.join('')}`}
                         sentences={textToRead}
                         answers={[]}
                         isAnsweringPhase={false}
                         currentIndex={0}
-                        autoPlay={true}
+                        autoPlay={(() => {
+                            // 텍스트가 변경되었거나 아직 재생하지 않은 경우에만 자동 재생
+                            const currentText = textToRead.join('');
+                            if (textToReadRef.current !== currentText && preloadDone && !hasPlayedTtsRef.current) {
+                                textToReadRef.current = currentText;
+                                return true;
+                            }
+                            return false;
+                        })()}
                         style={{ display: "none" }}
-                        onPreloadDone={() => setPreloadDone(true)}
-                        onTtsEnd={() => setIsTtsCompleted(true)}  // TTS 재생 완료 시 호출
+                        onPreloadDone={() => {
+                            setPreloadDone(true);
+                        }}
+                        onTtsStart={() => {
+                            hasPlayedTtsRef.current = true;
+                            setIsTtsPlaying(true);
+                            // 영상 재생 시작 (약간의 지연을 두어 상태 업데이트 후 재생)
+                            setTimeout(() => {
+                                if (videoRef.current) {
+                                    videoRef.current.currentTime = 0;
+                                    videoRef.current.play().catch((e) => {
+                                        console.error("영상 재생 오류:", e);
+                                        setIsTtsPlaying(false);
+                                    });
+                                }
+                            }, 50);
+                        }}
+                        onTtsEnd={() => {
+                            setIsTtsCompleted(true);
+                            setIsTtsPlaying(false);
+                            // 영상 즉시 정지
+                            if (videoRef.current) {
+                                videoRef.current.pause();
+                                videoRef.current.currentTime = 0;
+                            }
+                        }}
                     />
                     { !preloadDone ? (
                         <SpeechBubble>
