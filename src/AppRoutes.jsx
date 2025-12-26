@@ -1,6 +1,6 @@
 // AppRoutes.jsx
 import React from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, BrowserRouter } from 'react-router-dom';
 import { createGlobalStyle } from "styled-components";
 import reset from "styled-reset";
 
@@ -36,6 +36,11 @@ import ReviewGame2 from './pages/game/ReviewGame2';
 import ReviewGame3 from './pages/game/ReviewGame3';
 import ReviewGame2Ready from './pages/game/ReviewGame2Ready';
 import ReviewGame3Ready from './pages/game/ReviewGame3Ready';
+import PayLayout from './layouts/PayLayout';
+import PayHome from './pages/Payment/PayHome';
+import PayRefund from './pages/Payment/PayRefund';
+import PayProduct from './pages/Payment/PayProduct';
+
 
 const GlobalStyles = createGlobalStyle`
   ${reset};
@@ -117,6 +122,17 @@ export default function AppRoutes({ login, setLogin, user }) {
             element={React.cloneElement(element, { login, setLogin, user })} 
           />
         ))}
+
+        {/* Payment 중첩 라우팅 */}
+        <Route 
+          path="/payment" 
+          element={<PayLayout login={login} setLogin={setLogin} user={user} />}
+        >
+          <Route index element={<PayHome login={login} setLogin={setLogin} user={user} />} />
+          <Route path="home" element={<PayHome login={login} setLogin={setLogin} user={user} />} />
+          <Route path="refund" element={<PayRefund login={login} setLogin={setLogin} user={user} />} />
+          <Route path="product" element={<PayProduct login={login} setLogin={setLogin} user={user} />} />
+        </Route>
 
       </Routes>
     </>
