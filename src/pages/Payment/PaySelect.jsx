@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import productImage from '../../assets/finnol_pay_prouct1.svg';
+import { useNavigate } from 'react-router-dom';
 
 const MainWrapper = styled.div`
   display: flex;
@@ -437,6 +438,8 @@ function PaySelect({ user }) {
     }
   };
 
+  const navigate = useNavigate();
+
   return (
     <MainWrapper>
       <HeaderSection>
@@ -520,8 +523,16 @@ function PaySelect({ user }) {
         </SummaryRow>
       </OrderSummarySection>
 
-      <OrderButton>주문하기</OrderButton>
-      <ContinueShopping>계속 쇼핑하기</ContinueShopping>
+      <OrderButton
+        onClick={() => {
+          navigate('/payment/pay');
+        }}
+      >주문하기</OrderButton>
+      <ContinueShopping
+        onClick={() => {
+          navigate('/payment');
+        }}
+      >계속 쇼핑하기</ContinueShopping>
     </MainWrapper>
   );
 }
