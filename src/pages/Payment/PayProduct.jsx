@@ -68,7 +68,7 @@ const ProductPrice = styled.div`
 `;
 
 
-function PayRefund() {
+function PayProduct() {
   return (
     <MainWrapper>
         <ContentWrapper>
@@ -85,5 +85,5 @@ function PayRefund() {
   );
 }
 
-export default PayRefund;
+export default PayProduct;
 

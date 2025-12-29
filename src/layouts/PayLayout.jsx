@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Outlet } from 'react-router-dom';
+import React from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import Sidebar from '../components/Sidebar';
-import axios from 'axios';
 
 const Wrapper = styled.div`
   background-color: #ffffff;
@@ -77,7 +76,12 @@ const TitleLine = styled.div`
 
 function PayLayout({user, login, setLogin}) {
 
-    const navigate = useNavigate();
+    const location = useLocation();
+    
+    // /payment/select 또는 /payment/pay 경로일 때 F.WALLET 표시
+    const isSelectOrPay = location.pathname === '/payment/select' || location.pathname === '/payment/pay';
+    const titleText = isSelectOrPay ? 'F.WALLET' : 'FINNOL PAY';
+    const titleLine = isSelectOrPay ? false : true;
 
     return (
         <Wrapper>
@@ -86,8 +90,8 @@ function PayLayout({user, login, setLogin}) {
                 <MainWrapper>
                     <ContentContainer>
                         <Header>
-                            <TitleText>FINNOL PAY</TitleText>
-                            <TitleLine />
+                            <TitleText>{titleText}</TitleText>
+                            {titleLine && <TitleLine />}
                         </Header>
                         <Outlet />
                     </ContentContainer>
