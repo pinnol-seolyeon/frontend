@@ -40,6 +40,8 @@ import PayLayout from './layouts/PayLayout';
 import PayHome from './pages/Payment/PayHome';
 import PayRefund from './pages/Payment/PayRefund';
 import PayProduct from './pages/Payment/PayProduct';
+import PaySelect from './pages/Payment/PaySelect';
+import Pay from './pages/Payment/Pay';
 
 
 const GlobalStyles = createGlobalStyle`
@@ -132,6 +134,8 @@ export default function AppRoutes({ login, setLogin, user }) {
           <Route path="home" element={<PayHome login={login} setLogin={setLogin} user={user} />} />
           <Route path="refund" element={<PayRefund login={login} setLogin={setLogin} user={user} />} />
           <Route path="product" element={<PayProduct login={login} setLogin={setLogin} user={user} />} />
+          <Route path="select" element={<PaySelect login={login} setLogin={setLogin} user={user} />} />
+          <Route path="pay" element={<Pay login={login} setLogin={setLogin} user={user} />} />
         </Route>
 
       </Routes>
