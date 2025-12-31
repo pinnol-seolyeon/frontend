@@ -12,11 +12,13 @@ import MiniHeader from "../../../components/study/MiniHeader";
 import {useChapter} from "../../../context/ChapterContext";
 import TtsPlayer from "../../../components/TtsPlayer";
 import background from "../../../assets/study_background.png";
-import hoppin from "../../../assets/hopin.svg";
+import hoppin from "../../../assets/hoppin_normal.png";
 import { useActivityTracker } from "../../../hooks/useActivityTracker";
 import api from "../../../api/login/axiosInstance";
-import hoppinVideo from "../../../assets/hoppin_video/hoppin_hello1-1.mp4";
-import hoppinTalkVideo from "../../../assets/hoppin_video/hoppin_talk.mp4";
+// 동영상으로 대체하는 부분 (주석처리)
+// import hoppinVideo from "../../../assets/hoppin_video/hoppin_hello1-1.mp4";
+// import hoppinTalkVideo from "../../../assets/hoppin_video/hoppin_talk.mp4";
+import hoppin_laugh from "../../../assets/hoppin_oh.png";
 
 /*학습하기-1단계-1*/
 const Wrapper = styled.div`
@@ -54,20 +56,28 @@ const ImageWrapper=styled.div`
     display:flex;
     align-items:center;
     justify-content:center;
+    width: 40%; /* 고정된 컨테이너 너비 */
+    height: 65vh; /* 고정된 컨테이너 높이 */
+    min-height: 400px; /* 최소 높이 보장 */
+    max-height: 600px; /* 최대 높이 제한 */
+    
+    /* 반응형: 작은 화면에서는 비율 유지하며 축소 */
+    @media (max-width: 768px) {
+        width: 350px;
+        height: 420px;
+    }
+    
+    @media (max-width: 480px) {
+        width: 280px;
+        height: 336px;
+    }
 `
 
-
-
 const Image=styled.img`
-    display:flex;
-    height:auto;
-    object-fit:contain; /*이미지의 원본 비율을 유지 -> 이미지 전체가 보이도록 안 잘리게 */
-    width: 60%;
-    display:block;
-    
-     /*가로 중앙 정렬, 세로 원하는 위치에 자유롭게 배치*/
-    align-self:center;/*가로 중앙 정렬*/
-    // margin-bottom:0px;
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* 이미지의 원본 비율을 유지하면서 컨테이너에 맞춤 */
+    display: block;
 `;
 
 const Video=styled.video`
@@ -214,7 +224,10 @@ function StudyPage({ user, login, setLogin }){
     const [showToast, setShowToast] = useState(true); // 토스트 표시 여부
     const [isFirstChapter, setIsFirstChapter] = useState(false); // 첫 번째 챕터인지 여부
     const [isTtsPlaying, setIsTtsPlaying] = useState(false); // TTS 재생 중인지 여부
-    const videoRef = useRef(null); // 영상 ref
+    const [currentCharacterImage, setCurrentCharacterImage] = useState(hoppin); // 현재 표시할 캐릭터 이미지
+    const animationIntervalRef = useRef(null); // 애니메이션 interval ref
+    // 동영상으로 대체하는 부분 (주석처리)
+    // const videoRef = useRef(null); // 영상 ref
     const hasPlayedTtsRef = useRef(false); // TTS가 이미 재생되었는지 추적
     const textToReadRef = useRef(""); // 현재 재생 중인 텍스트 추적
     
@@ -332,11 +345,17 @@ function StudyPage({ user, login, setLogin }){
             setPreloadDone(false);
             setIsTtsCompleted(false); // TTS 완료 상태 초기화
             setIsTtsPlaying(false); // TTS 재생 상태 초기화
-            // 영상 정지
-            if (videoRef.current) {
-                videoRef.current.pause();
-                videoRef.current.currentTime = 0;
+            setCurrentCharacterImage(hoppin); // hoppin으로 초기화
+            // 애니메이션 정지
+            if (animationIntervalRef.current) {
+                clearInterval(animationIntervalRef.current);
+                animationIntervalRef.current = null;
             }
+            // 동영상으로 대체하는 부분 (주석처리)
+            // if (videoRef.current) {
+            //     videoRef.current.pause();
+            //     videoRef.current.currentTime = 0;
+            // }
         }else{
             await completeSession(); // Level 1 완료 상태 전송
             navigate(`/study/2?chapterId=${chapterData?.chapterId}`);
@@ -345,13 +364,20 @@ function StudyPage({ user, login, setLogin }){
     }
 
     const handleBack=()=>{
-        // 영상 정지
-        if (videoRef.current) {
-            videoRef.current.pause();
-            videoRef.current.currentTime = 0;
-        }
+
         setIsTtsPlaying(false);
+        setCurrentCharacterImage(hoppin); // hoppin으로 초기화
+        // 애니메이션 정지
+        if (animationIntervalRef.current) {
+            clearInterval(animationIntervalRef.current);
+            animationIntervalRef.current = null;
+        }
         hasPlayedTtsRef.current = false; // TTS 재생 플래그 초기화
+        // 동영상으로 대체하는 부분 (주석처리)
+        // if (videoRef.current) {
+        //     videoRef.current.pause();
+        //     videoRef.current.currentTime = 0;
+        // }
         
         if (step===1){
             setStep(0);
@@ -401,12 +427,46 @@ function StudyPage({ user, login, setLogin }){
         hasPlayedTtsRef.current = false;
         setIsTtsCompleted(false);
         setIsTtsPlaying(false);
+        setCurrentCharacterImage(hoppin); // hoppin으로 초기화
         textToReadRef.current = "";
-        if (videoRef.current) {
-            videoRef.current.pause();
-            videoRef.current.currentTime = 0;
+        // 애니메이션 정지
+        if (animationIntervalRef.current) {
+            clearInterval(animationIntervalRef.current);
+            animationIntervalRef.current = null;
         }
+        // 동영상으로 대체하는 부분 (주석처리)
+        // if (videoRef.current) {
+        //     videoRef.current.pause();
+        //     videoRef.current.currentTime = 0;
+        // }
     }, [step]);
+
+    // TTS 재생 중 애니메이션 처리
+    useEffect(() => {
+        if (isTtsPlaying) {
+            // hoppin과 hoppin_laugh를 번갈아가며 표시
+            let isHoppin = true;
+            animationIntervalRef.current = setInterval(() => {
+                setCurrentCharacterImage(isHoppin ? hoppin_laugh : hoppin);
+                isHoppin = !isHoppin;
+            }, 300); // 300ms마다 변경 (game2처럼 움직이는 효과)
+        } else {
+            // TTS가 끝나면 hoppin으로 고정
+            setCurrentCharacterImage(hoppin);
+            if (animationIntervalRef.current) {
+                clearInterval(animationIntervalRef.current);
+                animationIntervalRef.current = null;
+            }
+        }
+
+        // cleanup
+        return () => {
+            if (animationIntervalRef.current) {
+                clearInterval(animationIntervalRef.current);
+                animationIntervalRef.current = null;
+            }
+        };
+    }, [isTtsPlaying]);
 
       
     
@@ -434,7 +494,8 @@ function StudyPage({ user, login, setLogin }){
                         1/6 선생님과 학습하기
                         </MiniHeader> */}
                     <ImageWrapper>
-                        {isTtsPlaying ? (
+                        {/* 동영상으로 대체하는 부분 (주석처리) */}
+                        {/* {isTtsPlaying ? (
                             <Video
                                 ref={videoRef}
                                 src={step === 0 ? hoppinVideo : hoppinTalkVideo}
@@ -453,7 +514,12 @@ function StudyPage({ user, login, setLogin }){
                             />
                         ) : (
                             <Image src={hoppin} alt="샘플" />
-                        )}
+                        )} */}
+                        {/* TTS 재생 중에는 hoppin과 hoppin_laugh를 번갈아가며 표시, 종료 시 hoppin으로 고정 */}
+                        <Image 
+                            src={currentCharacterImage} 
+                            alt="호핀"
+                        />
                     </ImageWrapper>
                     <TtsPlayer
                         key={`tts-${step}-${textToRead.join('')}`}
@@ -477,25 +543,33 @@ function StudyPage({ user, login, setLogin }){
                         onTtsStart={() => {
                             hasPlayedTtsRef.current = true;
                             setIsTtsPlaying(true);
-                            // 영상 재생 시작 (약간의 지연을 두어 상태 업데이트 후 재생)
-                            setTimeout(() => {
-                                if (videoRef.current) {
-                                    videoRef.current.currentTime = 0;
-                                    videoRef.current.play().catch((e) => {
-                                        console.error("영상 재생 오류:", e);
-                                        setIsTtsPlaying(false);
-                                    });
-                                }
-                            }, 50);
+                            // 동영상으로 대체하는 부분 (주석처리)
+                            // // 영상 재생 시작 (약간의 지연을 두어 상태 업데이트 후 재생)
+                            // setTimeout(() => {
+                            //     if (videoRef.current) {
+                            //         videoRef.current.currentTime = 0;
+                            //         videoRef.current.play().catch((e) => {
+                            //             console.error("영상 재생 오류:", e);
+                            //             setIsTtsPlaying(false);
+                            //         });
+                            //     }
+                            // }, 50);
                         }}
                         onTtsEnd={() => {
                             setIsTtsCompleted(true);
                             setIsTtsPlaying(false);
-                            // 영상 즉시 정지
-                            if (videoRef.current) {
-                                videoRef.current.pause();
-                                videoRef.current.currentTime = 0;
+                            setCurrentCharacterImage(hoppin); // TTS 종료 시 hoppin으로 고정
+                            // 애니메이션 정지
+                            if (animationIntervalRef.current) {
+                                clearInterval(animationIntervalRef.current);
+                                animationIntervalRef.current = null;
                             }
+                            // 동영상으로 대체하는 부분 (주석처리)
+                            // // 영상 즉시 정지
+                            // if (videoRef.current) {
+                            //     videoRef.current.pause();
+                            //     videoRef.current.currentTime = 0;
+                            // }
                         }}
                     />
                     { !preloadDone ? (

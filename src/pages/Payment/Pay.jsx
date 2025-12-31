@@ -234,7 +234,7 @@ const ModifyButton = styled.button`
   cursor: pointer;
   
   &:hover {
-    background-color: #045a9a;
+    background-color:rgb(183, 221, 247);
   }
 `;
 
@@ -446,21 +446,41 @@ function Pay({ user }) {
               <RadioInput
                 type="radio"
                 name="payment"
-                value="paypal"
-                checked={paymentMethod === 'paypal'}
+                value="tosspayments"
+                checked={paymentMethod === 'tosspayments'}
                 onChange={(e) => setPaymentMethod(e.target.value)}
               />
-              <span>페이팔</span>
+              <span>토스페이먼츠</span>
             </PaymentOption>
             <PaymentOption>
               <RadioInput
                 type="radio"
                 name="payment"
-                value="other"
-                checked={paymentMethod === 'other'}
+                value="payco"
+                checked={paymentMethod === 'payco'}
                 onChange={(e) => setPaymentMethod(e.target.value)}
               />
-              <span>기타</span>
+              <span>페이코</span>
+            </PaymentOption>
+            <PaymentOption>
+              <RadioInput
+                type="radio"
+                name="payment"
+                value="quick_transfer"
+                checked={paymentMethod === 'quick_transfer'}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+              />
+              <span>퀵계좌이체</span>
+            </PaymentOption>
+            <PaymentOption>
+              <RadioInput
+                type="radio"
+                name="payment"
+                value="phone"
+                checked={paymentMethod === 'phone'}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+              />
+              <span>휴대폰</span>
             </PaymentOption>
           </Section>
         </RowItem>
