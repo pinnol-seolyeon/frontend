@@ -275,7 +275,9 @@ function Login(){
 최적화되어 있습니다.
 
 태블릿, 노트북 또는 데스크톱에서
-접속해주세요!`}</BlockMessage>
+접속해주세요!
+
+finnol.co.kr`}</BlockMessage>
         </MobileBlockOverlay>
       );
     }

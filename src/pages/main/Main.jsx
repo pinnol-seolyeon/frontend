@@ -11,6 +11,7 @@ import Book from "../../assets/book.svg";
 import Graph from "../../assets/graph.svg";
 import Pencil from "../../assets/pencil.svg";
 import CircleGraph from "../../assets/circle_graph.svg";
+import Lite from "../../assets/lite_analyze.png";
 
 // 이미지를 미리 로드하여 캐시에 저장
 const preloadImages = () => {
@@ -164,7 +165,7 @@ const Main = ({user, login, setLogin}) => {
               <CardWrapper>
                 <Card
                     icon={Book}
-                    title="AI 학습하기"
+                    title="학습하기"
                     description={`AI 선생님과 함께
                       오늘의 학습을 시작해보자!`}
                     backgroundColor = "#FFA546"
@@ -175,6 +176,7 @@ const Main = ({user, login, setLogin}) => {
                 <Card
                   icon={Graph}
                   title="학습 분석"
+                  subImage={Lite}
                   description={`나의 학습 상태를 분석하고
                       피드백을 받아보자!`}
                   backgroundColor = "#478CEE"

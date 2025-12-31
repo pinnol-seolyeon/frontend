@@ -219,10 +219,10 @@ function PayHome({ user, login, setLogin }) {
             <LeftCell></LeftCell>
             <LeftCell></LeftCell>
             <RightCell>
-              <RightLabel>유선전화번호</RightLabel>
+              <RightLabel>전화번호</RightLabel>
             </RightCell>
             <RightCell>
-              <RightValue>010-9562-2930</RightValue>
+              <RightValue>010-8288-2671</RightValue>
             </RightCell>
           </TableRow>
         </tbody>
