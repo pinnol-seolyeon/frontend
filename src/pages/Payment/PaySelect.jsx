@@ -438,6 +438,22 @@ function PaySelect({ user }) {
     }
   };
 
+  const handlePayment = () => {
+    if (!selected) {
+      alert('상품을 선택해주세요.');
+      return;
+    }
+    // Pay.jsx로 이동 (결제 화면) - 수량 정보 전달
+    navigate('/payment/pay', {
+      state: {
+        quantity: quantity,
+        productPrice: productPrice,
+        shippingFee: shippingFee,
+        totalPrice: totalPrice,
+      }
+    });
+  };
+
   const navigate = useNavigate();
 
   return (
@@ -524,10 +540,10 @@ function PaySelect({ user }) {
       </OrderSummarySection>
 
       <OrderButton
-        onClick={() => {
-          navigate('/payment/pay');
-        }}
-      >주문하기</OrderButton>
+        onClick={handlePayment}
+      >
+        주문하기
+      </OrderButton>
       <ContinueShopping
         onClick={() => {
           navigate('/payment');
