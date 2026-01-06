@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import productImage from '../../assets/finnol_pay_prouct1.svg';
+import { useLocation } from 'react-router-dom';
+import { requestPayment, fetchOrdererInfo } from '../../api/payment/paymentRequest';
 
 const MainWrapper = styled.div`
   display: flex;
@@ -332,24 +334,225 @@ const PayButton = styled.button`
   margin-top: 1rem;
   border: none;
   
-  &:hover {
+  &:hover:not(:disabled) {
     background-color: #045a9a;
   }
   
-  &:active {
+  &:active:not(:disabled) {
     transform: scale(0.98);
+  }
+  
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+`;
+
+// Toss 위젯 스타일 커스터마이징
+const TossWidgetWrapper = styled.div`
+  /* Toss 위젯 컨테이너 스타일 */
+  #toss-payment-method {
+    /* 위젯 내부 요소 스타일 오버라이드 */
+    & > * {
+      font-family: inherit;
+    }
+    
+    /* 결제 수단 선택 버튼 스타일 */
+    button,
+    [role="button"] {
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.5rem;
+      transition: all 0.3s;
+      
+      &:hover {
+        border-color: #056FB8;
+        background-color: #f0f7ff;
+      }
+    }
+    
+    /* 선택된 결제 수단 스타일 */
+    [aria-selected="true"],
+    [data-selected="true"] {
+      border-color: #056FB8;
+      background-color: #D1E8F7;
+    }
+  }
+  
+  /* Toss 이용약관 위젯 스타일 */
+  #toss-agreement {
+    & > * {
+      font-family: inherit;
+      background-color: #000000;
+    }
+    
+    /* 체크박스 스타일 */
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+    
+    /* 라벨 스타일 */
+    label {
+      font-size: 14px;
+      color: #000000;
+      cursor: pointer;
+    }
   }
 `;
 
 function Pay({ user }) {
+  const location = useLocation();
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [agreeAll, setAgreeAll] = useState(true);
   const [agreePayment, setAgreePayment] = useState(true);
-  const [quantity, setQuantity] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [widgets, setWidgets] = useState(null);
+  const widgetsInitialized = useRef(false);
+  const [ordererInfo, setOrdererInfo] = useState(null);
+  const [loadingOrdererInfo, setLoadingOrdererInfo] = useState(true);
+  
+  // PaySelect에서 전달받은 정보 또는 기본값
+  const quantity = location.state?.quantity || 1;
+  const productPrice = location.state?.productPrice || 10000;
+  const shippingFee = location.state?.shippingFee || 3000;
+  const totalPrice = location.state?.totalPrice || (productPrice * quantity + shippingFee);
+
+  // 주문자 정보 가져오기
+  useEffect(() => {
+    const loadOrdererInfo = async () => {
+      try {
+        setLoadingOrdererInfo(true);
+        const info = await fetchOrdererInfo();
+        setOrdererInfo(info);
+      } catch (error) {
+        console.error('주문자 정보 로딩 실패:', error);
+        // 에러 발생 시에도 계속 진행 (기본값 사용)
+      } finally {
+        setLoadingOrdererInfo(false);
+      }
+    };
+
+    loadOrdererInfo();
+  }, []);
 
   const handleAgreeAll = (checked) => {
     setAgreeAll(checked);
     setAgreePayment(checked);
+  };
+
+  // Toss Payments 초기화 및 위젯 렌더링 (숨겨진 영역에 렌더링)
+  useEffect(() => {
+    if (widgetsInitialized.current) return;
+    
+    if (window.TossPayments) {
+      const clientKey = process.env.REACT_APP_TOSS_CLIENT_KEY || 'test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm';
+      const tp = window.TossPayments(clientKey);
+      
+      // Widgets 초기화
+      const customerKey = user?.userId || `customer_${Date.now()}`;
+      const widgetInstance = tp.widgets({
+        customerKey: customerKey,
+      });
+      
+      setWidgets(widgetInstance);
+      widgetsInitialized.current = true;
+      
+      // 위젯 초기화 및 렌더링 (숨겨진 영역에 렌더링)
+      initializeWidgets(widgetInstance);
+    } else {
+      console.error('Toss Payments SDK가 로드되지 않았습니다.');
+    }
+  }, [user, totalPrice]);
+
+  // 위젯 초기화 및 렌더링
+  const initializeWidgets = async (widgetInstance) => {
+    if (!widgetInstance) return;
+    
+    try {
+      // 결제 금액 설정
+      await widgetInstance.setAmount({
+        currency: 'KRW',
+        value: totalPrice,
+      });
+
+      // 결제 수단 UI 렌더링 (기존 UI 아래에 렌더링)
+      await widgetInstance.renderPaymentMethods({
+        selector: '#toss-payment-method',
+        variantKey: 'DEFAULT',
+      });
+
+      // 이용약관 UI 렌더링 (기존 UI 아래에 렌더링)
+      await widgetInstance.renderAgreement({
+        selector: '#toss-agreement',
+        variantKey: 'AGREEMENT',
+      });
+    } catch (error) {
+      console.error('위젯 초기화 실패:', error);
+    }
+  };
+
+  // 결제하기 버튼 클릭 - 결제 처리
+  const handlePayment = async () => {
+    if (!widgets) {
+      alert('결제 시스템을 초기화하는 중입니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+
+    // Toss 위젯의 이용약관 동의는 위젯 내부에서 처리되므로 별도 체크 불필요
+
+    setLoading(true);
+
+    try {
+      // 1. 서버에 결제 요청 전송
+      const paymentData = {
+        payType: 'EASY_PAY',
+        amount: totalPrice,
+        quantity: quantity,
+        orderName: 'MONTH',
+        customerEmail: ordererInfo?.email || user?.email,
+        customerName: ordererInfo?.name || user?.name,
+      };
+
+      const response = await requestPayment(paymentData);
+      const orderId = response.data.orderId;
+
+      if (!orderId) {
+        throw new Error('orderId가 응답에 없습니다');
+      }
+
+      // 2. Toss 결제창 호출
+      await widgets.requestPayment({
+        orderId: orderId,
+        orderName: paymentData.orderName,
+        successUrl: `${window.location.origin}/api/payment/success`,
+        failUrl: `${window.location.origin}/api/payment/fail`,
+        customerEmail: paymentData.customerEmail,
+        customerName: paymentData.customerName,
+        customerMobilePhone: ordererInfo?.phone || user?.phone || '010-1234-5678',
+      });
+
+    } catch (error) {
+      console.error('결제 요청 중 오류:', error);
+      
+      // 에러 메시지 추출
+      let errorMessage = '결제 요청 중 오류가 발생했습니다.';
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.originalError?.response?.data?.message) {
+        errorMessage = error.originalError.response.data.message;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -385,15 +588,21 @@ function Pay({ user }) {
             </SectionHeader>
             <InfoRow>
               <InfoLabel>이름</InfoLabel>
-              <InfoValue>{user?.name}</InfoValue>
+              <InfoValue>
+                {loadingOrdererInfo ? '로딩 중...' : (ordererInfo?.name || user?.name || '-')}
+              </InfoValue>
             </InfoRow>
             <InfoRow>
               <InfoLabel>전화번호</InfoLabel>
-              <InfoValue>010-1234-5678</InfoValue>
+              <InfoValue>
+                {loadingOrdererInfo ? '로딩 중...' : (ordererInfo?.phone || user?.phone || '-')}
+              </InfoValue>
             </InfoRow>
             <InfoRow>
               <InfoLabel>이메일</InfoLabel>
-              <InfoValue>finnol.iwannaplay@gmail.com</InfoValue>
+              <InfoValue>
+                {loadingOrdererInfo ? '로딩 중...' : (ordererInfo?.email || user?.email || '-')}
+              </InfoValue>
             </InfoRow>
           </Section>
         </RowItem>
@@ -406,109 +615,41 @@ function Pay({ user }) {
             <SectionTitle>주문 요약</SectionTitle>
             <SummaryRow>
               <SummaryLabel>상품가격</SummaryLabel>
-              <SummaryValue>00,000원</SummaryValue>
+              <SummaryValue>{(productPrice * quantity).toLocaleString()}원</SummaryValue>
             </SummaryRow>
             <SummaryRow>
               <SummaryLabel>배송비</SummaryLabel>
-              <SummaryValue>+ 3,000원</SummaryValue>
+              <SummaryValue>+ {shippingFee.toLocaleString()}원</SummaryValue>
             </SummaryRow>
             <TotalRow>
               <TotalLabel>총 주문금액</TotalLabel>
-              <TotalValue>00,000원</TotalValue>
+              <TotalValue>{totalPrice.toLocaleString()}원</TotalValue>
             </TotalRow>
           </Section>
         </RowItem>
         <RowItem>
           <Section>
-            <SectionTitle>결제 수단</SectionTitle>
-            <PaymentOption>
-              <RadioInput
-                type="radio"
-                name="payment"
-                value="card"
-                checked={paymentMethod === 'card'}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-              />
-              <span>신용카드</span>
-              {paymentMethod === 'card' && <InfoLabel style={{ marginLeft: 'auto' }}>카드사</InfoLabel>}
-            </PaymentOption>
-            <PaymentOption>
-              <RadioInput
-                type="radio"
-                name="payment"
-                value="naver"
-                checked={paymentMethod === 'naver'}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-              />
-              <span>네이버페이</span>
-            </PaymentOption>
-            <PaymentOption>
-              <RadioInput
-                type="radio"
-                name="payment"
-                value="tosspayments"
-                checked={paymentMethod === 'tosspayments'}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-              />
-              <span>토스페이먼츠</span>
-            </PaymentOption>
-            <PaymentOption>
-              <RadioInput
-                type="radio"
-                name="payment"
-                value="payco"
-                checked={paymentMethod === 'payco'}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-              />
-              <span>페이코</span>
-            </PaymentOption>
-            <PaymentOption>
-              <RadioInput
-                type="radio"
-                name="payment"
-                value="quick_transfer"
-                checked={paymentMethod === 'quick_transfer'}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-              />
-              <span>퀵계좌이체</span>
-            </PaymentOption>
-            <PaymentOption>
-              <RadioInput
-                type="radio"
-                name="payment"
-                value="phone"
-                checked={paymentMethod === 'phone'}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-              />
-              <span>휴대폰</span>
-            </PaymentOption>
+            {/* Toss Payments 위젯이 렌더링될 영역 (기존 UI 대신 사용) */}
+            <TossWidgetWrapper>
+              <div id="toss-payment-method"></div>
+            </TossWidgetWrapper>
           </Section>
         </RowItem>
         </Row>
         <Row style={{ flex: 1.5 }}>
         <RightColumn>
           <AgreementBox>
-            <CheckboxWrapper>
-              <CheckboxInput
-                type="checkbox"
-                checked={agreeAll}
-                onChange={(e) => handleAgreeAll(e.target.checked)}
-              />
-              <span>전체 동의</span>
-            </CheckboxWrapper>
-            <CheckboxWrapper>
-              <CheckboxInput
-                type="checkbox"
-                checked={agreePayment}
-                onChange={(e) => {
-                  setAgreePayment(e.target.checked);
-                  if (!e.target.checked) setAgreeAll(false);
-                }}
-              />
-              <span>구매조건 확인 및 결제진행에 동의</span>
-            </CheckboxWrapper>
+            {/* Toss Payments 이용약관 위젯이 렌더링될 영역 */}
+            <TossWidgetWrapper>
+              <div id="toss-agreement"></div>
+            </TossWidgetWrapper>
           </AgreementBox>
-          <PayButton>결제하기</PayButton>
+          <PayButton 
+            onClick={handlePayment}
+            disabled={loading || !widgets}
+          >
+            {loading ? '결제 중...' : '결제하기'}
+          </PayButton>
         </RightColumn>
       </Row>
     </MainWrapper>

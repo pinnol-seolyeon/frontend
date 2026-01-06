@@ -42,6 +42,8 @@ import PayRefund from './pages/Payment/PayRefund';
 import PayProduct from './pages/Payment/PayProduct';
 import PaySelect from './pages/Payment/PaySelect';
 import Pay from './pages/Payment/Pay';
+import PaymentSuccess from './pages/Payment/PaymentSuccess';
+import PaymentFail from './pages/Payment/PaymentFail';
 
 
 const GlobalStyles = createGlobalStyle`
@@ -137,6 +139,10 @@ export default function AppRoutes({ login, setLogin, user }) {
           <Route path="select" element={<PaySelect login={login} setLogin={setLogin} user={user} />} />
           <Route path="pay" element={<Pay login={login} setLogin={setLogin} user={user} />} />
         </Route>
+
+        {/* 결제 성공/실패 페이지 (PayLayout 밖에 별도 라우트) */}
+        <Route path="/api/payment/success" element={<PaymentSuccess />} />
+        <Route path="/api/payment/fail" element={<PaymentFail />} />
 
       </Routes>
     </>
