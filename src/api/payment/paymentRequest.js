@@ -88,3 +88,81 @@ export async function fetchOrdererInfo() {
   }
 }
 
+/**
+ * 주문자 정보 수정 API
+ * @param {string} ordererId - 주문자 ID
+ * @param {Object} ordererData - 수정할 주문자 정보
+ * @param {string} ordererData.name - 이름
+ * @param {string} ordererData.phone - 전화번호
+ * @param {string} ordererData.email - 이메일
+ * @returns {Promise<Object>} 수정된 주문자 정보
+ */
+export async function updateOrdererInfo(ordererId, ordererData) {
+  try {
+    const response = await api.patch(`/api/payment/edit/orderer-info?ordererId=${ordererId}`, {
+      name: ordererData.name,
+      phone: ordererData.phone,
+      email: ordererData.email,
+    });
+    
+    if (!response.data?.data) {
+      throw new Error('주문자 정보 수정에 실패했습니다');
+    }
+
+    console.log('✅ 주문자 정보 수정 성공:', response.data);
+    return response.data.data;
+  } catch (error) {
+    console.error('❌ 주문자 정보 수정 실패:', error);
+    
+    // 에러 메시지 추출
+    let errorMessage = '주문자 정보 수정 중 오류가 발생했습니다.';
+    
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    throw new Error(errorMessage);
+  }
+}
+
+/**
+ * 결제 성공 시 최종 결제 승인 요청 API
+ * @param {string} orderId - 주문 고유번호
+ * @param {string} paymentKey - 토스페이먼츠 결제 구분용 키
+ * @param {number} amount - 실제 결제 금액
+ * @returns {Promise<Object>} 결제 승인 결과
+ */
+export async function confirmPaymentSuccess(orderId, paymentKey, amount) {
+  try {
+    const response = await api.get('/api/payment/success', {
+      params: {
+        orderId: orderId,
+        paymentKey: paymentKey,
+        amount: amount,
+      },
+    });
+    
+    if (!response.data?.data) {
+      throw new Error('결제 승인에 실패했습니다');
+    }
+
+    console.log('✅ 결제 승인 성공:', response.data);
+    return response.data.data;
+  } catch (error) {
+    console.error('❌ 결제 승인 실패:', error);
+    
+    // 에러 메시지 추출
+    let errorMessage = '결제 승인 중 오류가 발생했습니다.';
+    
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    throw new Error(errorMessage);
+  }
+}
+

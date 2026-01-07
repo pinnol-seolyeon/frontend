@@ -67,7 +67,7 @@ const routes = [
   { path: '/login', element: <Login /> },
   {path:'/callback',element:<Callback/>},
   {path:'/callback/oauth2/authorization/kakao',element:<Callback/>},
-  { path: '/childInfo', element: <ChildInfo /> },
+  { path: '/PhoneNumber', element: <ChildInfo /> },
   { path: '/study/1', element: <StudyPage1 /> },
   { path: '/study/2', element: <StudyPage2 /> },
   { path: '/study/level2', element: <StudyLevel2 /> },

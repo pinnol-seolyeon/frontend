@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import productImage from '../../assets/finnol_pay_prouct1.svg';
 import { useLocation } from 'react-router-dom';
-import { requestPayment, fetchOrdererInfo } from '../../api/payment/paymentRequest';
+import { requestPayment, fetchOrdererInfo, updateOrdererInfo } from '../../api/payment/paymentRequest';
 
 const MainWrapper = styled.div`
   display: flex;
@@ -349,6 +349,122 @@ const PayButton = styled.button`
   }
 `;
 
+// 모달 스타일
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+`;
+
+const ModalContent = styled.div`
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+`;
+
+const ModalTitle = styled.h2`
+  font-size: 20px;
+  font-weight: 700;
+  color: #000000;
+  margin: 0;
+`;
+
+const CloseButton = styled.button`
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #676767;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    color: #000000;
+  }
+`;
+
+const ModalInputWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+`;
+
+const ModalLabel = styled.label`
+  font-size: 14px;
+  font-weight: 600;
+  color: #000000;
+`;
+
+const ModalInput = styled.input`
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+  
+  &:focus {
+    outline: none;
+    border-color: #056FB8;
+  }
+`;
+
+const ModalButtonGroup = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+`;
+
+const ModalButton = styled.button`
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  
+  ${props => props.primary ? `
+    background-color: #056FB8;
+    color: #ffffff;
+    
+    &:hover {
+      background-color: #045a9a;
+    }
+  ` : `
+    background-color: #ffffff;
+    color: #676767;
+    border: 1px solid #e0e0e0;
+    
+    &:hover {
+      background-color: #f5f5f5;
+    }
+  `}
+`;
+
 // Toss 위젯 스타일 커스터마이징
 const TossWidgetWrapper = styled.div`
   /* Toss 위젯 컨테이너 스타일 */
@@ -414,6 +530,12 @@ function Pay({ user }) {
   const widgetsInitialized = useRef(false);
   const [ordererInfo, setOrdererInfo] = useState(null);
   const [loadingOrdererInfo, setLoadingOrdererInfo] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editedInfo, setEditedInfo] = useState({
+    name: '',
+    phone: '',
+    email: ''
+  });
   
   // PaySelect에서 전달받은 정보 또는 기본값
   const quantity = location.state?.quantity || 1;
@@ -428,16 +550,106 @@ function Pay({ user }) {
         setLoadingOrdererInfo(true);
         const info = await fetchOrdererInfo();
         setOrdererInfo(info);
+        // 수정 모달용 초기값 설정
+        setEditedInfo({
+          name: info?.name || user?.name || '',
+          phone: info?.phone || user?.phone || '',
+          email: info?.email || user?.email || ''
+        });
       } catch (error) {
         console.error('주문자 정보 로딩 실패:', error);
         // 에러 발생 시에도 계속 진행 (기본값 사용)
+        setEditedInfo({
+          name: user?.name || '',
+          phone: user?.phone || '',
+          email: user?.email || ''
+        });
       } finally {
         setLoadingOrdererInfo(false);
       }
     };
 
     loadOrdererInfo();
-  }, []);
+  }, [user]);
+
+  // 모달 열기
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  // 모달 닫기
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    // 원래 값으로 복원
+    setEditedInfo({
+      name: ordererInfo?.name || user?.name || '',
+      phone: ordererInfo?.phone || user?.phone || '',
+      email: ordererInfo?.email || user?.email || ''
+    });
+  };
+
+  // 정보 수정 핸들러
+  const handleInfoChange = (field, value) => {
+    setEditedInfo(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // 전화번호 포맷팅
+  const formatPhoneNumber = (value) => {
+    const digitsOnly = value.replace(/[^0-9]/g, "");
+    const digits = digitsOnly.slice(0, 11);
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 7) return `${digits.slice(0,3)}-${digits.slice(3)}`;
+    return `${digits.slice(0,3)}-${digits.slice(3,7)}-${digits.slice(7)}`;
+  };
+
+  // 수정 저장
+  const handleSaveInfo = async () => {
+    // 유효성 검사
+    if (!editedInfo.name.trim()) {
+      alert('이름을 입력해주세요.');
+      return;
+    }
+    if (!editedInfo.phone.trim()) {
+      alert('전화번호를 입력해주세요.');
+      return;
+    }
+    if (!editedInfo.email.trim()) {
+      alert('이메일을 입력해주세요.');
+      return;
+    }
+
+    // 이메일 형식 검사
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(editedInfo.email)) {
+      alert('올바른 이메일 형식을 입력해주세요.');
+      return;
+    }
+
+    try {
+      // ordererId 확인
+      const ordererId = ordererInfo?.id;
+      if (!ordererId) {
+        throw new Error('주문자 ID를 찾을 수 없습니다.');
+      }
+
+      // API 호출하여 정보 업데이트
+      const updatedInfo = await updateOrdererInfo(ordererId, {
+        name: editedInfo.name,
+        phone: editedInfo.phone,
+        email: editedInfo.email,
+      });
+
+      setOrdererInfo(updatedInfo);
+      setIsModalOpen(false);
+      alert('주문자 정보가 수정되었습니다.');
+    } catch (error) {
+      console.error('정보 업데이트 실패:', error);
+      alert(error.message || '정보 수정 중 오류가 발생했습니다.');
+    }
+  };
 
   const handleAgreeAll = (checked) => {
     setAgreeAll(checked);
@@ -525,6 +737,9 @@ function Pay({ user }) {
       }
 
       // 2. Toss 결제창 호출
+      // 전화번호에서 하이픈 제거
+      const phoneNumber = (ordererInfo?.phone || user?.phone || '01012345678').replace(/-/g, '');
+      
       await widgets.requestPayment({
         orderId: orderId,
         orderName: paymentData.orderName,
@@ -532,7 +747,7 @@ function Pay({ user }) {
         failUrl: `${window.location.origin}/api/payment/fail`,
         customerEmail: paymentData.customerEmail,
         customerName: paymentData.customerName,
-        customerMobilePhone: ordererInfo?.phone || user?.phone || '010-1234-5678',
+        customerMobilePhone: phoneNumber,
       });
 
     } catch (error) {
@@ -584,7 +799,7 @@ function Pay({ user }) {
           <Section>
             <SectionHeader>
                 <SectionTitle>주문자 정보</SectionTitle>
-                <ModifyButton>수정</ModifyButton>
+                <ModifyButton onClick={handleOpenModal}>수정</ModifyButton>
             </SectionHeader>
             <InfoRow>
               <InfoLabel>이름</InfoLabel>
@@ -652,6 +867,58 @@ function Pay({ user }) {
           </PayButton>
         </RightColumn>
       </Row>
+
+      {/* 주문자 정보 수정 모달 */}
+      {isModalOpen && (
+        <ModalOverlay onClick={handleCloseModal}>
+          <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalHeader>
+              <ModalTitle>주문자 정보 수정</ModalTitle>
+              <CloseButton onClick={handleCloseModal}>×</CloseButton>
+            </ModalHeader>
+
+            <ModalInputWrapper>
+              <ModalLabel>이름</ModalLabel>
+              <ModalInput
+                type="text"
+                value={editedInfo.name}
+                onChange={(e) => handleInfoChange('name', e.target.value)}
+                placeholder="이름을 입력해주세요"
+                maxLength={20}
+              />
+            </ModalInputWrapper>
+
+            <ModalInputWrapper>
+              <ModalLabel>전화번호</ModalLabel>
+              <ModalInput
+                type="text"
+                value={editedInfo.phone}
+                onChange={(e) => {
+                  const formatted = formatPhoneNumber(e.target.value);
+                  handleInfoChange('phone', formatted);
+                }}
+                placeholder="010-1234-5678"
+                maxLength={13}
+              />
+            </ModalInputWrapper>
+
+            <ModalInputWrapper>
+              <ModalLabel>이메일</ModalLabel>
+              <ModalInput
+                type="email"
+                value={editedInfo.email}
+                onChange={(e) => handleInfoChange('email', e.target.value)}
+                placeholder="example@email.com"
+              />
+            </ModalInputWrapper>
+
+            <ModalButtonGroup>
+              <ModalButton onClick={handleCloseModal}>취소</ModalButton>
+              <ModalButton primary onClick={handleSaveInfo}>저장</ModalButton>
+            </ModalButtonGroup>
+          </ModalContent>
+        </ModalOverlay>
+      )}
     </MainWrapper>
   );
 }

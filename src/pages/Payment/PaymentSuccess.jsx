@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { confirmPaymentSuccess } from '../../api/payment/paymentRequest';
 
 const Wrapper = styled.div`
   display: flex;
@@ -83,6 +84,9 @@ const Button = styled.button`
 function PaymentSuccess() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [paymentData, setPaymentData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   useEffect(() => {
     // URL에서 결제 정보 확인
@@ -90,12 +94,63 @@ function PaymentSuccess() {
     const paymentKey = searchParams.get('paymentKey');
     const amount = searchParams.get('amount');
     
-    console.log('✅ 결제 성공:', { orderId, paymentKey, amount });
+    console.log('✅ 결제 성공 파라미터:', { orderId, paymentKey, amount });
+    
+    // 최종 결제 승인 요청
+    const confirmPayment = async () => {
+      if (!orderId || !paymentKey || !amount) {
+        setError('결제 정보가 올바르지 않습니다.');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const result = await confirmPaymentSuccess(orderId, paymentKey, parseInt(amount));
+        setPaymentData(result);
+        console.log('✅ 결제 승인 완료:', result);
+      } catch (err) {
+        console.error('❌ 결제 승인 실패:', err);
+        setError(err.message || '결제 승인 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    confirmPayment();
   }, [searchParams]);
 
   const handleGoHome = () => {
-    navigate('/payment');
+    navigate('/');
   };
+
+  if (loading) {
+    return (
+      <Wrapper>
+        <SuccessIcon>⏳</SuccessIcon>
+        <Title>결제 승인 중...</Title>
+        <Message>
+          결제 승인을 처리하고 있습니다.<br/>
+          잠시만 기다려주세요.
+        </Message>
+      </Wrapper>
+    );
+  }
+
+  if (error) {
+    return (
+      <Wrapper>
+        <SuccessIcon style={{ backgroundColor: '#f44336' }}>✕</SuccessIcon>
+        <Title>결제 승인 실패</Title>
+        <Message>
+          {error}
+        </Message>
+        <Button onClick={handleGoHome}>
+          메인화면으로 돌아가기
+        </Button>
+      </Wrapper>
+    );
+  }
 
   return (
     <Wrapper>
@@ -109,7 +164,7 @@ function PaymentSuccess() {
       <InfoBox>
         <InfoRow>
           <InfoLabel>주문번호</InfoLabel>
-          <InfoValue>{searchParams.get('orderId') || '-'}</InfoValue>
+          <InfoValue>{paymentData?.orderId || searchParams.get('orderId') || '-'}</InfoValue>
         </InfoRow>
         <InfoRow>
           <InfoLabel>결제금액</InfoLabel>
@@ -120,10 +175,22 @@ function PaymentSuccess() {
             }
           </InfoValue>
         </InfoRow>
+        {paymentData?.method && (
+          <InfoRow>
+            <InfoLabel>결제수단</InfoLabel>
+            <InfoValue>{paymentData.method}</InfoValue>
+          </InfoRow>
+        )}
+        {paymentData?.approvedAt && (
+          <InfoRow>
+            <InfoLabel>승인일시</InfoLabel>
+            <InfoValue>{new Date(paymentData.approvedAt).toLocaleString('ko-KR')}</InfoValue>
+          </InfoRow>
+        )}
       </InfoBox>
 
       <Button onClick={handleGoHome}>
-        결제 페이지로 돌아가기
+        메인화면으로 돌아가기
       </Button>
     </Wrapper>
   );
