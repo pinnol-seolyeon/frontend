@@ -36,6 +36,7 @@ const SubImage = styled.img`
     flex-shrink: 1;
     min-width: 1rem;
     min-height: 1rem;
+    border: none;
 `;
 
 const IconImage = styled.img`
@@ -150,7 +151,7 @@ const Card = ({
                 <div>
                     <TitleWrapper>
                         <Title>{title}</Title>
-                        <SubImage src={subImage} />
+                        {subImage && <SubImage src={subImage} alt="" />}
                     </TitleWrapper>
                     
                     <Description>{description}</Description>
