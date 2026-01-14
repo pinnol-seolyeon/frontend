@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import productImage from '../../assets/finnol_pay_prouct1.svg';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { requestPayment, fetchOrdererInfo, updateOrdererInfo } from '../../api/payment/paymentRequest';
 
 const MainWrapper = styled.div`
@@ -200,6 +200,49 @@ const InfoRow = styled.div`
   }
 `;
 
+const CouponWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 0 1rem;
+`;
+
+const CouponInputWrapper = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
+`;
+const CouponLabel = styled.div`
+  font-size: 14px;
+  color: #000000;
+  font-weight: 300;
+`;
+
+const CouponInput = styled.input` 
+  width: 80%;
+  padding: 0.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 400;
+  box-sizing: border-box;
+`;
+
+const CouponButton = styled.button`
+  background-color: #D1E8F7;
+  color: #000000;
+  border: none;
+  border-radius: 5px;
+  padding: 0.5rem 1rem;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background-color:rgb(183, 221, 247);
+  }
+`;
 const SectionHeader = styled.div`
   display: flex;
   flex-direction: row;
@@ -303,7 +346,8 @@ const AgreementBox = styled.div`
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
+  margin-bottom: 1rem;
 `;
 
 const CheckboxWrapper = styled.label`
@@ -316,6 +360,17 @@ const CheckboxWrapper = styled.label`
   color: #000000;
 `;
 
+const CheckboxWrapperIndented = styled.label`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-size: 14px;
+  color: #000000;
+  padding-left: 1.5rem;
+`;
+
 const CheckboxInput = styled.input`
   width: 18px;
   height: 18px;
@@ -324,18 +379,17 @@ const CheckboxInput = styled.input`
 
 const PayButton = styled.button`
   width: 100%;
-  background-color: #056FB8;
-  color: #ffffff;
-  border-radius: 2px;
-  padding: 0.5rem;
-  font-size: 18px;
-  font-weight: 700;
+  background-color: #ffffff;
+  color: #056FB8;
+  border: 1px solid #056FB8;
+  border-radius: 4px;
+  padding: 0.75rem;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-  margin-top: 1rem;
-  border: none;
   
   &:hover:not(:disabled) {
-    background-color: #045a9a;
+    background-color: #f0f7ff;
   }
   
   &:active:not(:disabled) {
@@ -343,7 +397,9 @@ const PayButton = styled.button`
   }
   
   &:disabled {
-    background-color: #ccc;
+    background-color: #f5f5f5;
+    color: #999999;
+    border-color: #e0e0e0;
     cursor: not-allowed;
     opacity: 0.6;
   }
@@ -367,18 +423,17 @@ const ModalContent = styled.div`
   background-color: #ffffff;
   border-radius: 8px;
   padding: 2rem;
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
+  width: 40%;
   overflow-y: auto;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 `;
 
 const ModalHeader = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  position: relative;
 `;
 
 const ModalTitle = styled.h2`
@@ -386,9 +441,12 @@ const ModalTitle = styled.h2`
   font-weight: 700;
   color: #000000;
   margin: 0;
+  text-align: center;
 `;
 
 const CloseButton = styled.button`
+  position: absolute;
+  right: 0;
   background: none;
   border: none;
   font-size: 24px;
@@ -406,26 +464,96 @@ const CloseButton = styled.button`
   }
 `;
 
-const ModalInputWrapper = styled.div`
+const ModalFormRow = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  flex-direction: row;
+  align-items: center;
   margin-bottom: 1.5rem;
+  gap: 1rem;
+  min-width: 0;
 `;
 
 const ModalLabel = styled.label`
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 400;
   color: #000000;
+  padding: 0.5rem 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background-color: #ffffff;
+  white-space: nowrap;
+  min-width: 120px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+`;
+
+const RequiredAsterisk = styled.span`
+  color: #ff0000;
+  font-size: 14px;
 `;
 
 const ModalInput = styled.input`
-  width: 100%;
-  padding: 0.75rem;
+  flex: 1;
+  padding: 0.5rem 0;
+  border: none;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 14px;
+  box-sizing: border-box;
+  background-color: transparent;
+  
+  &:focus {
+    outline: none;
+    border-bottom-color: #056FB8;
+  }
+`;
+
+const EmailInputWrapper = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 0.5rem;
+  min-width: 0;
+  
+  &:focus-within {
+    border-bottom-color: #056FB8;
+  }
+`;
+
+const EmailInput = styled.input`
+  flex: 1 1 0;
+  min-width: 60px;
+  padding: 0;
+  border: none;
+  font-size: 14px;
+  box-sizing: border-box;
+  background-color: transparent;
+  
+  &:focus {
+    outline: none;
+  }
+`;
+
+const EmailSeparator = styled.span`
+  font-size: 14px;
+  color: #000000;
+  padding: 0 0.25rem;
+  flex-shrink: 0;
+`;
+
+const EmailDomainSelect = styled.select`
+  flex: 1 1 0;
+  min-width: 100px;
+  padding: 0.5rem;
   border: 1px solid #e0e0e0;
   border-radius: 4px;
   font-size: 14px;
-  box-sizing: border-box;
+  background-color: #ffffff;
+  cursor: pointer;
   
   &:focus {
     outline: none;
@@ -433,36 +561,48 @@ const ModalInput = styled.input`
   }
 `;
 
+const EmailDirectInputButton = styled.button`
+  padding: 0.5rem 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: #ffffff;
+  color: #000000;
+  cursor: pointer;
+  white-space: nowrap;
+  
+  &:hover {
+    background-color: #f5f5f5;
+  }
+`;
+
+const EmailDescription = styled.div`
+  font-size: 12px;
+  color: #999999;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+  padding-left: calc(120px + 1rem);
+`;
+
 const ModalButtonGroup = styled.div`
   display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
+  justify-content: center;
+  margin-top: 2rem;
 `;
 
 const ModalButton = styled.button`
-  padding: 0.75rem 1.5rem;
+  padding: 0.75rem 2rem;
   border-radius: 4px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   border: none;
+  background-color: #D1E8F7;
+  color: #000000;
   
-  ${props => props.primary ? `
-    background-color: #056FB8;
-    color: #ffffff;
-    
-    &:hover {
-      background-color: #045a9a;
-    }
-  ` : `
-    background-color: #ffffff;
-    color: #676767;
-    border: 1px solid #e0e0e0;
-    
-    &:hover {
-      background-color: #f5f5f5;
-    }
-  `}
+  &:hover {
+    background-color: rgb(183, 221, 247);
+  }
 `;
 
 // Toss 위젯 스타일 커스터마이징
@@ -520,11 +660,21 @@ const TossWidgetWrapper = styled.div`
   }
 `;
 
+const Column = styled.div`
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+`;
+
 function Pay({ user }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState('card');
-  const [agreeAll, setAgreeAll] = useState(true);
-  const [agreePayment, setAgreePayment] = useState(true);
+  const [agreeAll, setAgreeAll] = useState(false);
+  const [agreePayment, setAgreePayment] = useState(false);
   const [loading, setLoading] = useState(false);
   const [widgets, setWidgets] = useState(null);
   const widgetsInitialized = useRef(false);
@@ -534,14 +684,16 @@ function Pay({ user }) {
   const [editedInfo, setEditedInfo] = useState({
     name: '',
     phone: '',
-    email: ''
+    generalPhone: '',
+    emailLocal: '',
+    emailDomain: '',
+    emailDomainSelect: '직접입력'
   });
   
   // PaySelect에서 전달받은 정보 또는 기본값
   const quantity = location.state?.quantity || 1;
   const productPrice = location.state?.productPrice || 10000;
-  const shippingFee = location.state?.shippingFee || 3000;
-  const totalPrice = location.state?.totalPrice || (productPrice * quantity + shippingFee);
+  const totalPrice = location.state?.totalPrice || (productPrice * quantity);
 
   // 주문자 정보 가져오기
   useEffect(() => {
@@ -551,18 +703,28 @@ function Pay({ user }) {
         const info = await fetchOrdererInfo();
         setOrdererInfo(info);
         // 수정 모달용 초기값 설정
+        const email = info?.email || user?.email || '';
+        const [emailLocal = '', emailDomain = ''] = email.split('@');
         setEditedInfo({
           name: info?.name || user?.name || '',
           phone: info?.phone || user?.phone || '',
-          email: info?.email || user?.email || ''
+          generalPhone: '',
+          emailLocal: emailLocal,
+          emailDomain: emailDomain,
+          emailDomainSelect: emailDomain || '직접입력'
         });
       } catch (error) {
         console.error('주문자 정보 로딩 실패:', error);
         // 에러 발생 시에도 계속 진행 (기본값 사용)
+        const email = user?.email || '';
+        const [emailLocal = '', emailDomain = ''] = email.split('@');
         setEditedInfo({
           name: user?.name || '',
           phone: user?.phone || '',
-          email: user?.email || ''
+          generalPhone: '',
+          emailLocal: emailLocal,
+          emailDomain: emailDomain,
+          emailDomainSelect: emailDomain || '직접입력'
         });
       } finally {
         setLoadingOrdererInfo(false);
@@ -581,10 +743,15 @@ function Pay({ user }) {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     // 원래 값으로 복원
+    const email = ordererInfo?.email || user?.email || '';
+    const [emailLocal = '', emailDomain = ''] = email.split('@');
     setEditedInfo({
       name: ordererInfo?.name || user?.name || '',
       phone: ordererInfo?.phone || user?.phone || '',
-      email: ordererInfo?.email || user?.email || ''
+      generalPhone: '',
+      emailLocal: emailLocal,
+      emailDomain: emailDomain,
+      emailDomainSelect: emailDomain || '직접입력'
     });
   };
 
@@ -594,6 +761,23 @@ function Pay({ user }) {
       ...prev,
       [field]: value
     }));
+  };
+
+  // 이메일 도메인 선택 핸들러
+  const handleEmailDomainChange = (value) => {
+    if (value === '직접입력') {
+      setEditedInfo(prev => ({
+        ...prev,
+        emailDomainSelect: '직접입력',
+        emailDomain: ''
+      }));
+    } else {
+      setEditedInfo(prev => ({
+        ...prev,
+        emailDomainSelect: value,
+        emailDomain: value
+      }));
+    }
   };
 
   // 전화번호 포맷팅
@@ -613,17 +797,18 @@ function Pay({ user }) {
       return;
     }
     if (!editedInfo.phone.trim()) {
-      alert('전화번호를 입력해주세요.');
+      alert('휴대전화를 입력해주세요.');
       return;
     }
-    if (!editedInfo.email.trim()) {
+    if (!editedInfo.emailLocal.trim() || !editedInfo.emailDomain.trim()) {
       alert('이메일을 입력해주세요.');
       return;
     }
 
-    // 이메일 형식 검사
+    // 이메일 조합
+    const email = `${editedInfo.emailLocal}@${editedInfo.emailDomain}`;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(editedInfo.email)) {
+    if (!emailRegex.test(email)) {
       alert('올바른 이메일 형식을 입력해주세요.');
       return;
     }
@@ -639,7 +824,7 @@ function Pay({ user }) {
       const updatedInfo = await updateOrdererInfo(ordererId, {
         name: editedInfo.name,
         phone: editedInfo.phone,
-        email: editedInfo.email,
+        email: email,
       });
 
       setOrdererInfo(updatedInfo);
@@ -654,6 +839,16 @@ function Pay({ user }) {
   const handleAgreeAll = (checked) => {
     setAgreeAll(checked);
     setAgreePayment(checked);
+  };
+
+  const handleAgreePayment = (checked) => {
+    setAgreePayment(checked);
+    if (!checked) {
+      setAgreeAll(false);
+    } else {
+      // 모든 개별 동의가 체크되면 전체 동의도 체크
+      setAgreeAll(true);
+    }
   };
 
   // Toss Payments 초기화 및 위젯 렌더링 (숨겨진 영역에 렌더링)
@@ -753,6 +948,14 @@ function Pay({ user }) {
     } catch (error) {
       console.error('결제 요청 중 오류:', error);
       
+      // 401 에러 발생 시 로그인 페이지로 리다이렉트
+      const status = error.status || error.originalError?.response?.status || error.response?.status;
+      if (status === 401) {
+        alert('로그인이 필요합니다. 로그인 페이지로 이동합니다.');
+        navigate('/login');
+        return;
+      }
+      
       // 에러 메시지 추출
       let errorMessage = '결제 요청 중 오류가 발생했습니다.';
       
@@ -822,9 +1025,33 @@ function Pay({ user }) {
           </Section>
         </RowItem>
 
+        <RowItem>
+          <Section>
+            <SectionTitle>쿠폰</SectionTitle>
+            <CouponWrapper>
+              <CouponLabel>쿠폰 번호</CouponLabel>
+              <CouponInputWrapper>
+                <CouponInput type="text" placeholder="쿠폰 번호를 입력해주세요" />
+                <CouponButton>적용</CouponButton>
+              </CouponInputWrapper>
+            </CouponWrapper>
+          </Section>
+        </RowItem>
+
       </Row>
 
-      <Row style={{ flex: 1.5 }}>
+      <Row style={{ flex: 3 }}>
+        <RowItem>
+          <Section>
+            {/* Toss Payments 위젯이 렌더링될 영역 (기존 UI 대신 사용) */}
+            <TossWidgetWrapper>
+              <div id="toss-payment-method"></div>
+              <div id="toss-agreement"></div>
+            </TossWidgetWrapper>
+          </Section>
+        </RowItem>
+
+        <Column>
         <RowItem>
           <Section>
             <SectionTitle>주문 요약</SectionTitle>
@@ -832,53 +1059,58 @@ function Pay({ user }) {
               <SummaryLabel>상품가격</SummaryLabel>
               <SummaryValue>{(productPrice * quantity).toLocaleString()}원</SummaryValue>
             </SummaryRow>
-            <SummaryRow>
-              <SummaryLabel>배송비</SummaryLabel>
-              <SummaryValue>+ {shippingFee.toLocaleString()}원</SummaryValue>
-            </SummaryRow>
             <TotalRow>
               <TotalLabel>총 주문금액</TotalLabel>
               <TotalValue>{totalPrice.toLocaleString()}원</TotalValue>
             </TotalRow>
           </Section>
         </RowItem>
+
         <RowItem>
-          <Section>
-            {/* Toss Payments 위젯이 렌더링될 영역 (기존 UI 대신 사용) */}
-            <TossWidgetWrapper>
-              <div id="toss-payment-method"></div>
-            </TossWidgetWrapper>
-          </Section>
-        </RowItem>
-        </Row>
-        <Row style={{ flex: 1.5 }}>
-        <RightColumn>
           <AgreementBox>
-            {/* Toss Payments 이용약관 위젯이 렌더링될 영역 */}
-            <TossWidgetWrapper>
-              <div id="toss-agreement"></div>
-            </TossWidgetWrapper>
+            <CheckboxWrapper>
+              <CheckboxInput 
+                type="checkbox" 
+                checked={agreeAll}
+                onChange={(e) => handleAgreeAll(e.target.checked)}
+              />
+              <span>전체 동의</span>
+            </CheckboxWrapper>
+            <CheckboxWrapperIndented>
+              <CheckboxInput 
+                type="checkbox" 
+                checked={agreePayment}
+                onChange={(e) => handleAgreePayment(e.target.checked)}
+              />
+              <span>구매조건 확인 및 결제진행에 동의</span>
+            </CheckboxWrapperIndented>
           </AgreementBox>
           <PayButton 
             onClick={handlePayment}
-            disabled={loading || !widgets}
+            disabled={loading || !widgets || !agreePayment}
           >
             {loading ? '결제 중...' : '결제하기'}
           </PayButton>
-        </RightColumn>
-      </Row>
+        </RowItem>
+
+
+        </Column>
+
+        </Row>
 
       {/* 주문자 정보 수정 모달 */}
       {isModalOpen && (
         <ModalOverlay onClick={handleCloseModal}>
           <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
-              <ModalTitle>주문자 정보 수정</ModalTitle>
+              <ModalTitle>주문자 정보</ModalTitle>
               <CloseButton onClick={handleCloseModal}>×</CloseButton>
             </ModalHeader>
 
-            <ModalInputWrapper>
-              <ModalLabel>이름</ModalLabel>
+            <ModalFormRow>
+              <ModalLabel>
+                주문하시는 분 <RequiredAsterisk>*</RequiredAsterisk>
+              </ModalLabel>
               <ModalInput
                 type="text"
                 value={editedInfo.name}
@@ -886,10 +1118,12 @@ function Pay({ user }) {
                 placeholder="이름을 입력해주세요"
                 maxLength={20}
               />
-            </ModalInputWrapper>
+            </ModalFormRow>
 
-            <ModalInputWrapper>
-              <ModalLabel>전화번호</ModalLabel>
+            <ModalFormRow>
+              <ModalLabel>
+                휴대전화 <RequiredAsterisk>*</RequiredAsterisk>
+              </ModalLabel>
               <ModalInput
                 type="text"
                 value={editedInfo.phone}
@@ -900,21 +1134,57 @@ function Pay({ user }) {
                 placeholder="010-1234-5678"
                 maxLength={13}
               />
-            </ModalInputWrapper>
+            </ModalFormRow>
 
-            <ModalInputWrapper>
-              <ModalLabel>이메일</ModalLabel>
-              <ModalInput
-                type="email"
-                value={editedInfo.email}
-                onChange={(e) => handleInfoChange('email', e.target.value)}
-                placeholder="example@email.com"
-              />
-            </ModalInputWrapper>
+            <ModalFormRow>
+              <ModalLabel>
+                이메일 <RequiredAsterisk>*</RequiredAsterisk>
+              </ModalLabel>
+              <EmailInputWrapper>
+                <EmailInput
+                  type="text"
+                  value={editedInfo.emailLocal}
+                  onChange={(e) => handleInfoChange('emailLocal', e.target.value)}
+                  placeholder="example"
+                />
+                <EmailSeparator>@</EmailSeparator>
+                {editedInfo.emailDomainSelect === '직접입력' ? (
+                  <EmailInput
+                    type="text"
+                    value={editedInfo.emailDomain}
+                    onChange={(e) => handleInfoChange('emailDomain', e.target.value)}
+                    placeholder="email.com"
+                  />
+                ) : (
+                  <EmailInput
+                    type="text"
+                    value={editedInfo.emailDomain}
+                    onChange={(e) => handleInfoChange('emailDomain', e.target.value)}
+                    placeholder="email.com"
+                    readOnly
+                  />
+                )}
+                <EmailDomainSelect
+                  value={editedInfo.emailDomainSelect}
+                  onChange={(e) => handleEmailDomainChange(e.target.value)}
+                >
+                  <option value="직접입력">직접입력</option>
+                  <option value="gmail.com">gmail.com</option>
+                  <option value="naver.com">naver.com</option>
+                  <option value="kakao.com">kakao.com</option>
+                  <option value="daum.net">daum.net</option>
+                  <option value="hanmail.net">hanmail.net</option>
+                </EmailDomainSelect>
+              </EmailInputWrapper>
+            </ModalFormRow>
+
+            <EmailDescription>
+              이메일을 통해 주문처리과정을 보내드립니다.<br/>
+              이메일 주소란에는 반드시 수신가능한 이메일주소를 입력해 주세요.
+            </EmailDescription>
 
             <ModalButtonGroup>
-              <ModalButton onClick={handleCloseModal}>취소</ModalButton>
-              <ModalButton primary onClick={handleSaveInfo}>저장</ModalButton>
+              <ModalButton onClick={handleSaveInfo}>수정완료</ModalButton>
             </ModalButtonGroup>
           </ModalContent>
         </ModalOverlay>
