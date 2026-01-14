@@ -57,7 +57,7 @@ const ImageWrapper=styled.div`
     align-items:center;
     justify-content:center;
     width: 40%; /* 고정된 컨테이너 너비 */
-    height: 65vh; /* 고정된 컨테이너 높이 */
+    height: 50vh; /* 고정된 컨테이너 높이 */
     min-height: 400px; /* 최소 높이 보장 */
     max-height: 600px; /* 최대 높이 제한 */
     

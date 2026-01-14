@@ -8,7 +8,7 @@ const MainWrapper = styled.div`
   flex-direction: column;
   width: 100%;
   align-items: center;
-  gap: 2rem;
+  gap: 1rem;
 `;
 
 const HeaderLine = styled.div`
@@ -44,7 +44,7 @@ const HeaderColumn = styled.div`
   font-weight: 600;
   
   &:first-child {
-    flex: 2;
+    flex: 2.5;
   }
 `;
 
@@ -67,9 +67,10 @@ const ProductCard = styled.div`
   background-color: #ffffff;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  padding: 1.5rem;
+  padding: 1rem;
   gap: 2rem;
   align-items: stretch;
+  margin: 1rem 0;
   
   @media (max-width: 768px) {
     flex-direction: column;
@@ -86,10 +87,11 @@ const ProductColumn = styled.div`
   padding-right: 2rem;
   border-right: 0.5px solid #e0e0e0;
   height: 100%;
+  justify-content: center;
   align-items: stretch;
   
   &:first-child {
-    flex: 2;
+    flex: 2.5;
   }
   
   &:last-child {
@@ -128,33 +130,13 @@ const ProductImage = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 120px;
-  width: 120px;
-  height: 120px;
-  
+
   img {
-    width: 100%;
-    height: 100%;
+    width: 80%;
+    height: 80%;
     object-fit: contain;
   }
-  
-  @media (max-width: 1024px) {
-    min-width: 100px;
-    width: 100px;
-    height: 100px;
-  }
-  
-  @media (max-width: 768px) {
-    min-width: 80px;
-    width: 80px;
-    height: 80px;
-  }
-  
-  @media (max-width: 480px) {
-    min-width: 60px;
-    width: 60px;
-    height: 60px;
-  }
+
 `;
 
 const ProductDetails = styled.div`
@@ -162,6 +144,7 @@ const ProductDetails = styled.div`
   flex-direction: column;
   gap: 0.75rem;
   flex: 1;
+  height: 100%;
 `;
 
 const ProductName = styled.div`
@@ -251,7 +234,7 @@ const QuantityControl = styled.div`
   gap: 1rem;
   font-size: 16px;
   color: #056FB8;
-  width: 100%;
+  width: 80%;
   padding: 0.5rem;
 `;
 
@@ -262,8 +245,6 @@ const QuantityButton = styled.button`
   color: #056FB8;
   cursor: pointer;
   padding: 0;
-  width: 24px;
-  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -322,12 +303,12 @@ const OrderSummarySection = styled.div`
   width: 100%;
   gap: 1rem;
   padding-top: 1rem;
-  border-top: 0.5px solid #e0e0e0;
 `;
 
 const OrderCount = styled.div`
-  font-size: 14px;
-  color: #676767;
+  font-size: 16px;
+  color: #000000;
+  font-weight: 500;
   margin-bottom: 1rem;
 `;
 
@@ -336,7 +317,7 @@ const SummaryRow = styled.div`
   flex-direction: row;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
+  gap: 3rem;
   flex-wrap: wrap;
 `;
 
@@ -378,18 +359,18 @@ const Operator = styled.div`
 
 const OrderButton = styled.button`
   background-color: #ffffff;
-  color: #000000;
-  border: 2px solid #FFD700;
-  border-radius: 4px;
+  color: #056FB8;
+  border: 1px solid #056FB8;
+  border-radius: 5px;
   padding: 1rem 2rem;
   font-size: 18px;
   font-weight: 700;
   cursor: pointer;
-  width: 100%;
+  width: 50%;
   margin-top: 1rem;
   
   &:hover {
-    background-color: #fffef0;
+    background-color:rgb(240, 248, 255);
   }
   
   @media (max-width: 768px) {
@@ -412,12 +393,13 @@ const ContinueShopping = styled.div`
 `;
 
 function PaySelect({ user }) {
-  const [selectAll, setSelectAll] = useState(false);
-  const [selected, setSelected] = useState(false);
+  const [selectAll, setSelectAll] = useState(true);
+  const [selected, setSelected] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const productPrice = 10000;
   const shippingFee = 3000;
-  const totalPrice = productPrice * quantity + shippingFee;
+  const displayQuantity = selected ? quantity : 0;
+  const totalPrice = productPrice * displayQuantity;
 
   const handleSelectAll = (checked) => {
     setSelectAll(checked);
@@ -468,12 +450,6 @@ function PaySelect({ user }) {
             />
             <HeaderText>상품 정보</HeaderText>
           </HeaderColumn>
-          <HeaderColumn>
-            상품정보
-          </HeaderColumn>
-          <HeaderColumn>
-            주문금액
-          </HeaderColumn>
         </HeaderRow>
       </HeaderSection>
       
@@ -511,25 +487,22 @@ function PaySelect({ user }) {
             </QuantityControl>
           </QuantitySection>
         </ProductColumn>
-        <ProductColumn>
-          <PriceSection>
-            <Price>{productPrice.toLocaleString()}원</Price>
-            <BuyNowButton>바로구매</BuyNowButton>
-          </PriceSection>
-        </ProductColumn>
       </ProductCard>
 
+      <HeaderLine />
+
+
       <OrderSummarySection>
-        <OrderCount>총 주문 상품 {quantity}개</OrderCount>
+        <OrderCount>총 주문 상품 <span style={{ color: '#056FB8' }}>{displayQuantity}</span>개</OrderCount>
         <SummaryRow>
           <SummaryItem>
-            <SummaryAmount>{(productPrice * quantity).toLocaleString()}원</SummaryAmount>
+            <SummaryAmount>{productPrice.toLocaleString()}원</SummaryAmount>
             <SummaryLabel>상품금액</SummaryLabel>
           </SummaryItem>
-          <Operator>+</Operator>
+          <Operator>x</Operator>
           <SummaryItem>
-            <SummaryAmount>{shippingFee.toLocaleString()}원</SummaryAmount>
-            <SummaryLabel>배송비</SummaryLabel>
+            <SummaryAmount><span style={{ color: '#056FB8' }}>{displayQuantity}</span></SummaryAmount>
+            <SummaryLabel>상품 수량</SummaryLabel>
           </SummaryItem>
           <Operator>=</Operator>
           <SummaryItem>
