@@ -800,6 +800,14 @@ function Pay({ user }) {
       alert('휴대전화를 입력해주세요.');
       return;
     }
+    
+    // 전화번호 형식 검증 (010-XXXX-XXXX 형태)
+    const phoneRegex = /^010-\d{4}-\d{4}$/;
+    if (!phoneRegex.test(editedInfo.phone)) {
+      alert('전화번호는 010-XXXX-XXXX 형태로 입력해주세요.');
+      return;
+    }
+    
     if (!editedInfo.emailLocal.trim() || !editedInfo.emailDomain.trim()) {
       alert('이메일을 입력해주세요.');
       return;

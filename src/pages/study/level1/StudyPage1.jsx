@@ -19,6 +19,7 @@ import api from "../../../api/login/axiosInstance";
 // import hoppinVideo from "../../../assets/hoppin_video/hoppin_hello1-1.mp4";
 // import hoppinTalkVideo from "../../../assets/hoppin_video/hoppin_talk.mp4";
 import hoppin_laugh from "../../../assets/hoppin_oh.png";
+import hoppin_moving from "../../../assets/hoppin_moving.gif";
 
 /*학습하기-1단계-1*/
 const Wrapper = styled.div`
@@ -441,31 +442,42 @@ function StudyPage({ user, login, setLogin }){
         // }
     }, [step]);
 
-    // TTS 재생 중 애니메이션 처리
+    // 기존 코드: 이미지가 왔다갔다 하는 코드 (나중에 참고용으로 주석 처리)
+    // useEffect(() => {
+    //     if (isTtsPlaying) {
+    //         // hoppin과 hoppin_laugh를 번갈아가며 표시
+    //         let isHoppin = true;
+    //         animationIntervalRef.current = setInterval(() => {
+    //             setCurrentCharacterImage(isHoppin ? hoppin_laugh : hoppin);
+    //             isHoppin = !isHoppin;
+    //         }, 300); // 300ms마다 변경 (game2처럼 움직이는 효과)
+    //     } else {
+    //         // TTS가 끝나면 hoppin으로 고정
+    //         setCurrentCharacterImage(hoppin);
+    //         if (animationIntervalRef.current) {
+    //             clearInterval(animationIntervalRef.current);
+    //             animationIntervalRef.current = null;
+    //         }
+    //     }
+
+    //     // cleanup
+    //     return () => {
+    //         if (animationIntervalRef.current) {
+    //             clearInterval(animationIntervalRef.current);
+    //             animationIntervalRef.current = null;
+    //         }
+    //     };
+    // }, [isTtsPlaying]);
+
+    // 새로운 코드: TTS 재생 중에는 gif, 재생 안 할 때는 정적 이미지
     useEffect(() => {
         if (isTtsPlaying) {
-            // hoppin과 hoppin_laugh를 번갈아가며 표시
-            let isHoppin = true;
-            animationIntervalRef.current = setInterval(() => {
-                setCurrentCharacterImage(isHoppin ? hoppin_laugh : hoppin);
-                isHoppin = !isHoppin;
-            }, 300); // 300ms마다 변경 (game2처럼 움직이는 효과)
+            // TTS 재생 중: gif 표시
+            setCurrentCharacterImage(hoppin_moving);
         } else {
-            // TTS가 끝나면 hoppin으로 고정
+            // TTS 재생 안 할 때: 정적 이미지(hoppin) 표시
             setCurrentCharacterImage(hoppin);
-            if (animationIntervalRef.current) {
-                clearInterval(animationIntervalRef.current);
-                animationIntervalRef.current = null;
-            }
         }
-
-        // cleanup
-        return () => {
-            if (animationIntervalRef.current) {
-                clearInterval(animationIntervalRef.current);
-                animationIntervalRef.current = null;
-            }
-        };
     }, [isTtsPlaying]);
 
       
@@ -515,7 +527,8 @@ function StudyPage({ user, login, setLogin }){
                         ) : (
                             <Image src={hoppin} alt="샘플" />
                         )} */}
-                        {/* TTS 재생 중에는 hoppin과 hoppin_laugh를 번갈아가며 표시, 종료 시 hoppin으로 고정 */}
+                        {/* TTS 재생 중에는 gif, 재생 안 할 때는 정적 이미지 표시 */}
+                        {/* 기존 코드: hoppin과 hoppin_laugh를 번갈아가며 표시하는 방식 (주석 처리) */}
                         <Image 
                             src={currentCharacterImage} 
                             alt="호핀"
