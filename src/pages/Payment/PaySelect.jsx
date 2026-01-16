@@ -397,7 +397,6 @@ function PaySelect({ user }) {
   const [selected, setSelected] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const productPrice = 10000;
-  const shippingFee = 3000;
   const displayQuantity = selected ? quantity : 0;
   const totalPrice = productPrice * displayQuantity;
 
@@ -430,7 +429,6 @@ function PaySelect({ user }) {
       state: {
         quantity: quantity,
         productPrice: productPrice,
-        shippingFee: shippingFee,
         totalPrice: totalPrice,
       }
     });
