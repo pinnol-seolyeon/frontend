@@ -2,7 +2,7 @@ import styled from "styled-components";
 import React from "react";
 import nu03 from "../../../assets/introduce/section9_03.svg";
 import img1 from "../../../assets/introduce/section9_img1.svg";
-import img2 from "../../../assets/introduce/section9_img2.svg";
+import img2 from "../../../assets/introduce/section9_img2_.png";
 
 const Wrapper = styled.div`
     width: 100%;
@@ -11,7 +11,6 @@ const Wrapper = styled.div`
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: 3rem 4rem;
     box-sizing: border-box;
 `;
 
@@ -22,6 +21,8 @@ const LectSection = styled.div`
     align-items: flex-start;
     justify-content: flex-start;
     gap: 1.5rem;
+    padding: 3rem 0 0 4rem;
+
 
     img {
         width: 70%;
@@ -32,16 +33,15 @@ const LectSection = styled.div`
 
 const RightSection = styled.div`
     flex: 0 1 55%;
-    position: relative;
+    align-self: stretch;
     display: flex;
     align-items: flex-end;
-    justify-content: flex-end;
+    justify-content: center;
 `;
 
 const RightImgWrap = styled.div`
-    position: relative;
     img {
-        width: 70%;
+        width: 90%;
         object-fit: contain;
     }
 `;
