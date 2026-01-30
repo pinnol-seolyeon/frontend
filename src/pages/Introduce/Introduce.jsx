@@ -37,12 +37,12 @@ const SECTIONS = [
     { id: 1, background: "linear-gradient(180deg, #1877B8 80%, #F0EDE5 100%)", Content: Section1 },
     { id: 2, background: "linear-gradient(180deg, #EBEDEB80 0%, #046EB7 100%)", Content: Section2 },
     { id: 3, background: "#f5f5f5", Content: Section3 },
-    { id: 4, background: "#ffffff", Content: Section4 },
-    { id: 5, background: "#e8f4f8", Content: Section5 },
-    { id: 6, background: "#fff4e6", Content: Section6 },
-    { id: 7, background: "#f0e6fa", Content: Section7 },
-    { id: 8, background: "#e3f2fd", Content: Section8 },
-    { id: 9, background: "#e0f2f1", Content: Section9 },
+    { id: 4, background: "#FDFDFD", Content: Section4 },
+    { id: 5, background: "#ffffff", Content: Section5 },
+    { id: 6, background: "#0065AC", Content: Section6 },
+    { id: 7, background: "#ffffff", Content: Section7 },
+    { id: 8, background: "#ffffff", Content: Section8 },
+    { id: 9, background: "#ffffff", Content: Section9 },
 ];
 
 const Introduce = () => {

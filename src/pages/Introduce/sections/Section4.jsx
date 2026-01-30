@@ -8,9 +8,9 @@ const Wrapper = styled.div`
     height: 100%;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 3rem;
-    padding: 3rem 4rem;
+    padding: 0 4rem;
     box-sizing: border-box;
     text-align: left;
 `;
@@ -23,7 +23,11 @@ const Content = styled.div`
 `;
 
 const ImageWrapper = styled.div`
-
+    width: fit-content;
+    align-self: flex-end;
+    img {
+        width: 50vw;
+    }
 `;
 
 const Logo = styled.div`
@@ -31,20 +35,23 @@ const Logo = styled.div`
         width: 50%;
     }
     align-self: flex-start;
+    margin-bottom: 2rem;
 `;
 
 const Body = styled.p`
-    font-size: 15px;
+    font-size: 20px;
     font-weight: 600;
     line-height: 1.6;
-    white-space: pre-line;
+    white-space: pre;
     color: #000;
+    margin-bottom: 3rem;
+    overflow: visible;
 `;
 
 const Bold = styled.span`
     font-weight: 700;
     color: #046EB7;
-    font-size: 30px;
+    font-size: 40px;
 `;
 
 const Section4 = () => {
@@ -67,7 +74,7 @@ const Section4 = () => {
                 </Body>
             </Content>
             <ImageWrapper>
-
+                <img src={thinking} alt="FINNOL" />
             </ImageWrapper>
         </Wrapper>
     );
