@@ -11,11 +11,18 @@ import Section8 from "./sections/Section8";
 import Section9 from "./sections/Section9";
 
 const FullpageContainer = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     width: 100%;
     height: 100vh;
-    overflow-y: scroll;
+    overflow-y: auto;
+    overflow-x: hidden;
     scroll-snap-type: y mandatory;
     scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
 
     scrollbar-width: none;
     &::-webkit-scrollbar {
@@ -28,7 +35,7 @@ const SectionWrapper = styled.section`
     height: 100vh;
     min-height: 100vh;
     scroll-snap-align: start;
-    scroll-snap-stop: always;
+    scroll-snap-stop: normal;
     box-sizing: border-box;
     background: ${(props) => props.$background};
 `;
