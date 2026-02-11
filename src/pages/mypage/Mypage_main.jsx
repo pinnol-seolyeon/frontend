@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
@@ -149,6 +149,37 @@ const HoldingDaysText = styled.span`
   font-weight: 400;
   color: #454953;
   margin-left: 0.5rem;
+`;
+
+const Toast = styled.div`
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  color: #454545;
+  padding: 1rem 2rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10001;
+  font-size: 15px;
+  font-weight: 500;
+  max-width: 90%;
+  text-align: center;
+  line-height: 1.5;
+  animation: toastSlide 0.3s ease-out;
+  white-space: pre-line;
+
+  @keyframes toastSlide {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
 `;
 
 const ModalOverlay = styled.div`
@@ -551,6 +582,21 @@ const Mypage_main = ({ user, login, setLogin }) => {
   const [holdingActive, setHoldingActive] = useState(false);
   const [holdingEndDate, setHoldingEndDate] = useState(null);
   const [releaseModalOpen, setReleaseModalOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState(null);
+
+  const tomorrow = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  })();
+
+  useEffect(() => {
+    if (!toastMessage) return;
+    const timer = setTimeout(() => setToastMessage(null), 3000);
+    return () => clearTimeout(timer);
+  }, [toastMessage]);
+
   const myName = user?.name ?? '-';
   const ticketExpiryDate = '2026.03.03';
   const myPhone = formatPhone(user?.phone);
@@ -666,8 +712,26 @@ const Mypage_main = ({ user, login, setLogin }) => {
                     onClick={() => {
                       const start = Array.isArray(holdingDateRange) ? holdingDateRange[0] : holdingDateRange;
                       const end = Array.isArray(holdingDateRange) ? holdingDateRange[1] : start;
-                      if (start) setHoldingStep('setDone');
-                      else alert('날짜를 선택해 주세요.');
+                      if (!start) {
+                        setToastMessage('날짜를 선택해 주세요.');
+                        return;
+                      }
+                      const startDate = new Date(start);
+                      startDate.setHours(0, 0, 0, 0);
+                      if (startDate.getTime() < tomorrow.getTime()) {
+                        setToastMessage('홀딩은 최소 1일 전부터 가능합니다');
+                        return;
+                      }
+                      if (end) {
+                        const endDate = new Date(end);
+                        const oneDay = 24 * 60 * 60 * 1000;
+                        const daysCount = Math.floor((endDate - startDate) / oneDay) + 1;
+                        if (daysCount > 7) {
+                          setToastMessage('최대 7일까지 가능합니다');
+                          return;
+                        }
+                      }
+                      setHoldingStep('setDone');
                     }}
                   >
                     확인
@@ -735,6 +799,7 @@ const Mypage_main = ({ user, login, setLogin }) => {
                   setHoldingActive(false);
                   setHoldingEndDate(null);
                   setReleaseModalOpen(false);
+                  setToastMessage(`홀딩이 해제되었습니다.\n 학습을 다시 시작해보세요!`);
                   // TODO: API 연동 후 홀딩 해제 요청
                 }}
               >
@@ -744,6 +809,7 @@ const Mypage_main = ({ user, login, setLogin }) => {
           </ModalBox>
         </ModalOverlay>
       )}
+      {toastMessage && <Toast>{toastMessage}</Toast>}
     </Wrapper>
   );
 };
