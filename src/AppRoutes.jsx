@@ -46,6 +46,7 @@ import PaymentSuccess from './pages/Payment/PaymentSuccess';
 import PaymentFail from './pages/Payment/PaymentFail';
 import Introduce from './pages/Introduce/Introduce';
 import Mypage_main from './pages/mypage/Mypage_main';
+import Mypage_profileedit from './pages/mypage/Mypage_profileedit';
 
 
 const GlobalStyles = createGlobalStyle`
@@ -98,7 +99,8 @@ const routes = [
   {path:'/review/game2/ready',element:<ReviewGame2Ready/>},
   {path:'/review/game3/ready',element:<ReviewGame3Ready/>},
   {path: '/introduce', element: <Introduce />},
-  {path: '/mypage', element: <Mypage_main />}
+  {path: '/mypage', element: <Mypage_main />},
+  {path: '/mypage/profileedit', element: <Mypage_profileedit />}
 ];
 
 export default function AppRoutes({ login, setLogin, user }) {
