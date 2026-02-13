@@ -24,7 +24,7 @@ const MainWrapper = styled.div`
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 4rem;
+  padding: 2rem 4rem;
   
   @media (max-width: 768px) {
     padding: 1rem;

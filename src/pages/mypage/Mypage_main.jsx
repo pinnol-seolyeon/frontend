@@ -27,7 +27,7 @@ const MainWrapper = styled.div`
   flex-direction: column;
   align-items: flex-start;
   justify-content: flex-start;
-  padding: 4rem;
+  padding: 2rem 4rem;
   
   @media (max-width: 768px) {
     padding: 1rem;
@@ -71,7 +71,7 @@ const TicketRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 2rem;
+  // gap: 2rem;
   padding: 0.25rem 0;
 `;
 
@@ -147,7 +147,7 @@ const ReleaseButton = styled.button`
 const HoldingDaysText = styled.span`
   font-size: 14px;
   font-weight: 400;
-  color: #454953;
+  color: #000000;
   margin-left: 0.5rem;
 `;
 
@@ -653,7 +653,7 @@ const Mypage_main = ({ user, login, setLogin }) => {
               <TicketValue>2026.01.01 ~ 2026.03.01 <GrayText>(2개월)</GrayText></TicketValue>
             </TicketRow>
             <TicketRow>
-              <TicketLabel>내 전화번호</TicketLabel>
+              <TicketLabel></TicketLabel>
               {holdingActive ? (
                 <>
                   <ReleaseButton type="button" onClick={() => setReleaseModalOpen(true)}>
