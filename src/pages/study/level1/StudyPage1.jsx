@@ -19,7 +19,7 @@ import api from "../../../api/login/axiosInstance";
 // import hoppinVideo from "../../../assets/hoppin_video/hoppin_hello1-1.mp4";
 // import hoppinTalkVideo from "../../../assets/hoppin_video/hoppin_talk.mp4";
 import hoppin_laugh from "../../../assets/hoppin_oh.png";
-import hoppin_moving from "../../../assets/hoppingif_2.gif";
+import hoppin_moving from "../../../assets/hoppin_talk.gif";
 
 /*학습하기-1단계-1*/
 const Wrapper = styled.div`
