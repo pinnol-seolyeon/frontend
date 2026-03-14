@@ -1182,13 +1182,30 @@ export default function Game2({ user }) {
     
     console.log("✅ 퀴즈 알림 깜빡이기 시작! 3초 후 퀴즈 표시");
     
+    // 퀴즈 알림 사운드 3번 재생 (0.5초 간격)
+    quizAlertBlinkCountRef.current = 0;
+    const alertInterval = setInterval(() => {
+      if (quizAlertBlinkCountRef.current < 3 && quizAlertSoundRef.current) {
+        quizAlertSoundRef.current.currentTime = 0;
+        quizAlertSoundRef.current.play().catch(err => console.warn('퀴즈 알림 사운드 재생 실패:', err));
+        quizAlertBlinkCountRef.current++;
+      } else {
+        clearInterval(alertInterval);
+      }
+    }, 500);
+    
     // 3초 깜빡이다가 퀴즈 표시
     const quizStartTimer = setTimeout(() => {
       setIsQuizActive(true);
       setShowQuiz(true);
       setShowQuizAlert(false);
       setIsPaused(true);
-      // 알림 시간은 이미 pauseStartTime에서 시작했으므로 여기서는 추가 안 함
+      
+      // 퀴즈 오픈 사운드 재생
+      if (quizOpenSoundRef.current) {
+        quizOpenSoundRef.current.currentTime = 0;
+        quizOpenSoundRef.current.play().catch(err => console.warn('퀴즈 오픈 사운드 재생 실패:', err));
+      }
       
       // 중복 방지: 사용한 퀴즈 인덱스 기록 및 카운트 증가
       if (pendingQuizIndexRef.current !== null) {
@@ -1198,7 +1215,10 @@ export default function Game2({ user }) {
       quizShownCountRef.current += 1;
     }, 3000);
     
-    return () => clearTimeout(quizStartTimer);
+    return () => {
+      clearTimeout(quizStartTimer);
+      clearInterval(alertInterval);
+    };
   }, [showQuizAlert, isQuizActive]);
   
   // 게임 종료 시 코인 저장 및 퀴즈 결과 전송
@@ -1214,13 +1234,26 @@ export default function Game2({ user }) {
     
     const checkGameEndPassed = () => {
       // 게임 종료 이미지가 화면에 꽉 차면 (left가 0 이상) 3초 후 게임 종료
-      if (gameEndXRef.current >= 0) {
+      if (gameEndXRef.current >= 0 && !gameOverSoundPlayedRef.current) {
         console.log("✅ 게임 종료 라인 도착! 3초 후 결과 표시");
+        gameOverSoundPlayedRef.current = true; // 플래그 설정 (한 번만 재생)
+        
+        // 게임 오버 사운드 재생
+        if (gameOverSoundRef.current) {
+          gameOverSoundRef.current.currentTime = 0;
+          gameOverSoundRef.current.play().catch(err => console.warn('게임 오버 사운드 재생 실패:', err));
+        }
+        
         setTimeout(() => {
           setGameEnded(true);
           setIsGameRunning(false);
           setShowGameEnd(false);
           setShowResults(true);
+          
+          // BGM 정지
+          if (mainBGMRef.current) {
+            mainBGMRef.current.pause();
+          }
         }, 3000);
       }
     };
@@ -1248,8 +1281,18 @@ export default function Game2({ user }) {
     if (isCorrect) {
       setCoins(prev => prev + 10);
       setQuizResultFeedback('correct');
+      // 정답 사운드 재생
+      if (correctSoundRef.current) {
+        correctSoundRef.current.currentTime = 0;
+        correctSoundRef.current.play().catch(err => console.warn('정답 사운드 재생 실패:', err));
+      }
     } else {
       setQuizResultFeedback('wrong');
+      // 오답 사운드 재생
+      if (wrongSoundRef.current) {
+        wrongSoundRef.current.currentTime = 0;
+        wrongSoundRef.current.play().catch(err => console.warn('오답 사운드 재생 실패:', err));
+      }
     }
     
     // 1초 후 피드백 이미지 제거
@@ -1329,6 +1372,14 @@ export default function Game2({ user }) {
         speed: 9,
       });
       lastBulletTimeRef.current = now;
+      
+      // 총알 사운드 재생 (1~6 순환)
+      if (gunShotSoundsRef.current.length > 0) {
+        const sound = gunShotSoundsRef.current[currentGunShotIndexRef.current];
+        sound.currentTime = 0;
+        sound.play().catch(err => console.warn('총알 사운드 재생 실패:', err));
+        currentGunShotIndexRef.current = (currentGunShotIndexRef.current + 1) % gunShotSoundsRef.current.length;
+      }
     }
   };
   
@@ -1527,6 +1578,13 @@ export default function Game2({ user }) {
         setShowCoinEffect(true);
         if (coinEffectTimerRef.current) clearTimeout(coinEffectTimerRef.current);
         coinEffectTimerRef.current = setTimeout(() => setShowCoinEffect(false), 400);
+        
+        // 코인 사운드 재생
+        if (coinSoundRef.current) {
+          coinSoundRef.current.currentTime = 0;
+          coinSoundRef.current.play().catch(err => console.warn('코인 사운드 재생 실패:', err));
+        }
+        
         return false; // 코인 제거
       }
 
@@ -1560,6 +1618,13 @@ export default function Game2({ user }) {
         setSafeZoneAttacked(true);
         // 일정 시간 후 원래 상태로 복구
         setTimeout(() => setSafeZoneAttacked(false), 500);
+        
+        // 세이프존 사운드 재생
+        if (safeZoneSoundRef.current) {
+          safeZoneSoundRef.current.currentTime = 0;
+          safeZoneSoundRef.current.play().catch(err => console.warn('세이프존 사운드 재생 실패:', err));
+        }
+        
         return false; // 바이러스 제거
       }
       
@@ -1583,6 +1648,19 @@ export default function Game2({ user }) {
         hitVirus.attackedTime = Date.now();
         const gain = typeof hitVirus.reward === 'number' ? hitVirus.reward : 1;
         setCoins(prev => prev + gain);
+        
+        // 바이러스 타격 사운드 재생
+        let soundIndex = 0;
+        if (hitVirus.type === 'enemy1') soundIndex = 0;
+        else if (hitVirus.type === 'enemy2') soundIndex = 1;
+        else if (hitVirus.type === 'enemy3') soundIndex = 2;
+        
+        const sound = virusHitSoundsRef.current[soundIndex];
+        if (sound) {
+          sound.currentTime = 0;
+          sound.play().catch(err => console.warn('바이러스 타격 사운드 재생 실패:', err));
+        }
+        
         return false; // 총알 제거
       }
       return true;
@@ -1775,8 +1853,20 @@ export default function Game2({ user }) {
     lastCoinSpawnTimeRef.current = 0;
     totalPausedTimeRef.current = 0; // 일시정지 시간 초기화
     pauseStartTimeRef.current = null;
+    gameOverSoundPlayedRef.current = false; // 게임 오버 사운드 플래그 초기화
     setIsGameRunning(true);
   }, [quizLoaded, isGameStarted, isGameRunning]);
+  
+  // BGM 재생
+  useEffect(() => {
+    if (isGameRunning && !isPaused && mainBGMRef.current) {
+      mainBGMRef.current.play().catch(err => {
+        console.warn('메인 BGM 재생 실패:', err);
+      });
+    } else if ((isPaused || !isGameRunning) && mainBGMRef.current) {
+      mainBGMRef.current.pause();
+    }
+  }, [isGameRunning, isPaused]);
 
   useEffect(() => {
     if (!quizLoaded || !isGameStarted) return;

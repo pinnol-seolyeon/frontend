@@ -1,5 +1,5 @@
 import styled from 'styled-components';
-import finnolLogo from '../assets/finnol-logo.png';
+import finnolLogo from '../assets/finnol_beta4.png';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import userimg from '../assets/user.svg';

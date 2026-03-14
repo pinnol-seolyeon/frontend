@@ -292,7 +292,9 @@ function StudyPage({ user, login, setLogin }){
                             onTtsEnd={() => setIsTtsCompleted(true)}  // TTS 재생 완료 시 호출
                         />
                         { !preloadDone ? (
-                            <TextBox>화면을 준비 중입니다...</TextBox>
+                            <SpeechBubble>
+                                <TextBox>화면을 준비 중입니다...</TextBox>
+                            </SpeechBubble>
                         ) : (
                         <SpeechBubble>
                             <TextBox>

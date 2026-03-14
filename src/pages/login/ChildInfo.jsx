@@ -18,6 +18,7 @@ function ChildInfo(){
     const navigate = useNavigate();
 
     const [phoneNumber, setPhoneNumber] = useState("");
+    const [childName, setChildName] = useState("");
     const [agreement,setAgreement]=useState(false);
 
     const formatKoreanPhoneNumber = (value) => {
@@ -31,6 +32,10 @@ function ChildInfo(){
     const handlePhoneNumberChange = (e) => {
         const formatted = formatKoreanPhoneNumber(e.target.value);
         setPhoneNumber(formatted);
+    };
+
+    const handleNameChange = (e) => {
+        setChildName(e.target.value);
     };
 
     const handleAgreementChange=(e)=>{
@@ -54,7 +59,8 @@ function ChildInfo(){
             credentials:"include",
             body: JSON.stringify({
                 phoneNumber: phoneNumber,
-                agreement: agreement
+                agreement: agreement,
+                name: childName
             })
         })
         .then((res) => {
@@ -89,6 +95,19 @@ function ChildInfo(){
                         placeholder="전화번호를 입력해주세요."
                     />
                 </InputWrapper>
+
+                <InputWrapper>
+                    <Label>이름</Label>
+                    <StyledInput 
+                        type="text" 
+                        value={childName} 
+                        onChange={handleNameChange}
+                        inputMode="text"
+                        maxLength={10}
+                        placeholder="이름을 입력해주세요."
+                    />
+                </InputWrapper>
+
 
                 <InputWrapper>
                     <Label>개인정보 수집 및 이용 동의</Label>

@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { useEffect, useState } from "react";
-import logo from '../../assets/finnol-logo.png';
+import logo from '../../assets/finnol-logo-beta.png';
 import kakaologin from "../../assets/kakaologin.png";
 import hopin from "../../assets/hopin.svg";
 
@@ -275,7 +275,9 @@ function Login(){
 최적화되어 있습니다.
 
 태블릿, 노트북 또는 데스크톱에서
-접속해주세요!`}</BlockMessage>
+접속해주세요!
+
+finnol.co.kr`}</BlockMessage>
         </MobileBlockOverlay>
       );
     }

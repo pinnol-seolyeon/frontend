@@ -21,6 +21,24 @@ const CardWrapper = styled.div`
     }
 `;
 
+const TitleWrapper = styled.div`
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+`;
+
+const SubImage = styled.img`
+    width: 2rem;
+    object-fit: contain;
+    flex-shrink: 1;
+    min-width: 1rem;
+    min-height: 1rem;
+    border: none;
+`;
+
 const IconImage = styled.img`
     width: 8rem;
     height: 8rem;
@@ -60,7 +78,6 @@ const Title = styled.h3`
     font-size: 1.5rem;
     font-weight: 700;
     color: white;
-    margin: 0 0 1rem 0;
     line-height: 1.3;
     text-align: left;
     white-space: nowrap;
@@ -121,6 +138,7 @@ const Button = styled.button`
 const Card = ({ 
     icon, 
     title, 
+    subImage,
     description, 
     buttonText = "바로가기", 
     backgroundColor = "linear-gradient(135deg, #FF8A65, #FF7043)",
@@ -131,7 +149,11 @@ const Card = ({
         <CardWrapper style={{ background: backgroundColor }}>
             <ContentSection>
                 <div>
-                    <Title>{title}</Title>
+                    <TitleWrapper>
+                        <Title>{title}</Title>
+                        {subImage && <SubImage src={subImage} alt="" />}
+                    </TitleWrapper>
+                    
                     <Description>{description}</Description>
                 </div>
                 

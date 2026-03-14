@@ -1,6 +1,6 @@
 // AppRoutes.jsx
 import React from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, BrowserRouter } from 'react-router-dom';
 import { createGlobalStyle } from "styled-components";
 import reset from "styled-reset";
 
@@ -36,6 +36,18 @@ import ReviewGame2 from './pages/game/ReviewGame2';
 import ReviewGame3 from './pages/game/ReviewGame3';
 import ReviewGame2Ready from './pages/game/ReviewGame2Ready';
 import ReviewGame3Ready from './pages/game/ReviewGame3Ready';
+import PayLayout from './layouts/PayLayout';
+import PayHome from './pages/Payment/PayHome';
+import PayRefund from './pages/Payment/PayRefund';
+import PayProduct from './pages/Payment/PayProduct';
+import PaySelect from './pages/Payment/PaySelect';
+import Pay from './pages/Payment/Pay';
+import PaymentSuccess from './pages/Payment/PaymentSuccess';
+import PaymentFail from './pages/Payment/PaymentFail';
+import Introduce from './pages/Introduce/Introduce';
+import Mypage_main from './pages/mypage/Mypage_main';
+import Mypage_profileedit from './pages/mypage/Mypage_profileedit';
+
 
 const GlobalStyles = createGlobalStyle`
   ${reset};
@@ -58,7 +70,7 @@ const routes = [
   { path: '/login', element: <Login /> },
   {path:'/callback',element:<Callback/>},
   {path:'/callback/oauth2/authorization/kakao',element:<Callback/>},
-  { path: '/childInfo', element: <ChildInfo /> },
+  { path: '/PhoneNumber', element: <ChildInfo /> },
   { path: '/study/1', element: <StudyPage1 /> },
   { path: '/study/2', element: <StudyPage2 /> },
   { path: '/study/level2', element: <StudyLevel2 /> },
@@ -86,6 +98,9 @@ const routes = [
   {path:'/review/game3',element:<ReviewGame3/>},
   {path:'/review/game2/ready',element:<ReviewGame2Ready/>},
   {path:'/review/game3/ready',element:<ReviewGame3Ready/>},
+  {path: '/introduce', element: <Introduce />},
+  {path: '/mypage', element: <Mypage_main />},
+  {path: '/mypage/profileedit', element: <Mypage_profileedit />}
 ];
 
 export default function AppRoutes({ login, setLogin, user }) {
@@ -117,6 +132,23 @@ export default function AppRoutes({ login, setLogin, user }) {
             element={React.cloneElement(element, { login, setLogin, user })} 
           />
         ))}
+
+        {/* Payment 중첩 라우팅 */}
+        <Route 
+          path="/payment" 
+          element={<PayLayout login={login} setLogin={setLogin} user={user} />}
+        >
+          <Route index element={<PayHome login={login} setLogin={setLogin} user={user} />} />
+          <Route path="home" element={<PayHome login={login} setLogin={setLogin} user={user} />} />
+          <Route path="refund" element={<PayRefund login={login} setLogin={setLogin} user={user} />} />
+          <Route path="product" element={<PayProduct login={login} setLogin={setLogin} user={user} />} />
+          <Route path="select" element={<PaySelect login={login} setLogin={setLogin} user={user} />} />
+          <Route path="pay" element={<Pay login={login} setLogin={setLogin} user={user} />} />
+        </Route>
+
+        {/* 결제 성공/실패 페이지 (PayLayout 밖에 별도 라우트) */}
+        <Route path="/api/payment/success" element={<PaymentSuccess />} />
+        <Route path="/api/payment/fail" element={<PaymentFail />} />
 
       </Routes>
     </>

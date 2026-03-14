@@ -10,6 +10,7 @@ import React, { useEffect, useRef, useState } from "react";
  *   autoPlay (기본 true): true면 currentIndex나 단계 바뀔 때 자동 재생
  *   style: <audio> 태그 스타일
  *   onPreloadDone: 모든 문장 캐싱 완료 시 호출되는 콜백
+ *   onTtsStart: TTS 재생이 시작될 때 호출되는 콜백
  *   onTtsEnd: TTS 재생이 끝날 때 호출되는 콜백
  */
 export default function TtsPlayer({
@@ -20,6 +21,7 @@ export default function TtsPlayer({
   autoPlay = true,
   style = { display: "none" },
   onPreloadDone,
+  onTtsStart,
   onTtsEnd,
 }) {
   const audioRef = useRef(null);
@@ -202,7 +204,12 @@ export default function TtsPlayer({
       }
 
       handleCanPlay = () => {
-        audio.play().catch((e) => {
+        audio.play().then(() => {
+          // TTS 재생 시작 콜백 호출
+          if (onTtsStart) {
+            onTtsStart();
+          }
+        }).catch((e) => {
           console.error("재생 오류:", e);
           console.error("실패한 URL:", urlToPlay);
         });
@@ -238,7 +245,7 @@ export default function TtsPlayer({
       if (handleCanPlay) audio.removeEventListener("canplay", handleCanPlay);
       if (handleError) audio.removeEventListener("error", handleError);
     };
-  }, [currentIndex, isAnsweringPhase, isPreloading, autoPlay]); // preloadAudio 제거
+  }, [currentIndex, isAnsweringPhase, isPreloading, autoPlay, onTtsStart]); // preloadAudio 제거
 
   // (3-1) TTS 재생 종료 감지
   useEffect(() => {
@@ -269,7 +276,12 @@ export default function TtsPlayer({
     const urlToPlay = urlList[currentIndex];
     if (audioRef.current && urlToPlay) {
       audioRef.current.src = urlToPlay;
-      audioRef.current.play().catch((e) => console.error("재생 오류:", e));
+      audioRef.current.play().then(() => {
+        // TTS 재생 시작 콜백 호출
+        if (onTtsStart) {
+          onTtsStart();
+        }
+      }).catch((e) => console.error("재생 오류:", e));
     }
   };
 
