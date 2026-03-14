@@ -800,7 +800,6 @@ const Mypage_main = ({ user, login, setLogin }) => {
                   setHoldingEndDate(null);
                   setReleaseModalOpen(false);
                   setToastMessage(`홀딩이 해제되었습니다.\n 학습을 다시 시작해보세요!`);
-                  // TODO: API 연동 후 홀딩 해제 요청
                 }}
               >
                 해제
