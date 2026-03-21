@@ -1,70 +1,64 @@
-# Getting Started with Create React App
+## 1. 인수인계 파일
+노션 > 프론트엔드 > 인수인계 참고
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## 2. github 커밋 메시지 규칙
 
-## Available Scripts
+아래는 커밋 메시지 작성 시 사용하는 태그입니다. 커밋 메시지는 반드시 명확한 목적과 함께 아래 규칙을 따릅니다.
 
-In the project directory, you can run:
 
-### `npm start`
+| 태그      | 설명                           | 예시                           |
+|-----------|--------------------------------|--------------------------------|
+| FEAT      | 새로운 기능 개발에 대한 커밋     | `[FEAT] 로그인 기능 추가`        |
+| FIX       | 버그 수정에 대한 커밋            | `[FIX] 로그인 오류 수정`         |
+| BUILD     | 빌드 관련 파일 수정 / 모듈 설치 또는 삭제에 대한 커밋 | -            |
+| CHORE     | 그 외 자잘한 수정에 대한 커밋 | -         |
+| CI        | ci 관련 설정 수정에 대한 커밋  | `[CI] GitHub Actions 설정 변경`      |
+| DOCS      | 문서 수정에 대한 커밋     | `[DOCS] README 수정` |
+| CHORE     | 빌드, 패키지 매니저 설정 등     | `[CHORE] 패키지 업데이트`        |
+| STYLE     | 코드 스타일 혹은 포맷 등에 관한 커밋   | `[STYLE] 코드 포맷 정리`           |
+| REFACTOR  | 코드 리팩토링에 대한 커밋     | `[REFACTOR] 중복 로직 제거`  |
+| TEST      | 테스트 코드 수정에 대한 커밋   | `[TEST] 로그인 유닛 테스트 추가`           |
+| PERF      | 성능 개선에 대한 커밋      | `[PERF] 렌더링 최적화`  |
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+> 커밋 메시지 예시: [Feat] Onboarding 페이지 구현 완료, Findemail 기능 개발 <br/>
+> `태그: 변경 내용 간략히 설명`
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
 
-### `npm test`
+## 3. Pull Request 템플릿
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+PR작성시 아래의 템플릿을 활용해주세요.
 
-### `npm run build`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```md
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### ✅PR 타입(하나 이상의 PR 타입을 선택해주세요)
+- [ ] 기능 추가
+- [ ] 기능 삭제
+- [ ] 버그 수정
+- [ ] 의존성, 환경 변수, 빌드 관련 코드 업데이트
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### ✅반영 브랜치
+ex) feat/login -> dev
 
-### `npm run eject`
+### ✅작업 상세 내용
+ex) 로그인 시, 구글 소셜 로그인 기능을 추가했습니다.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### ✅스크린샷 (선택)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 4. 작업 내용 및 전달 내용
 
-## Learn More
+- userflow : figma 참고 (figma.com/design/1dR52kjv6OAbW0E8rPBSy7/FINNOL웹서비스?t=VDCFy2tdPq8GGA3n-0)
+- swagger 주소 : http://localhost:8080/swagger-ui/index.html#/ (로컬 실행 필요)
+  * 백엔드 dev 파일을 프론트 작업 컴퓨터로 가져와서 로컬로 돌리면서 실행해야합니다 (cookie 때문)
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## 5. 작업 규칙
 
-### Code Splitting
+- 개발 이후 **기능 기반 브랜치**를 생성해서 작업합니다. (ex. feat/main, fix/quiz 등) 
+- 작업 완료 후 **dev 브랜치로 Pull Request를 생성**합니다.
+- `main` 브랜치에는 직접 커밋하지 않으며, **리뷰 및 승인 후 병합**합니다.
+- dev 브랜치는 개발용, main 브랜치는 배포용 입니다.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
