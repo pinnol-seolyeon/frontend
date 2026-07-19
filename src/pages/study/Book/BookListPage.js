@@ -77,7 +77,7 @@ const BookGrid = styled.div`
 `;
 
 const BookCard = styled.div`
-  background: #ffffff;
+  background: ${props => props.status === 'locked' ? '#F7F7F7' : '#ffffff'};
   padding: 1.5rem;
   border-radius: 20px;
   text-align: center;
@@ -91,6 +91,7 @@ const BookCard = styled.div`
   flex: 1;
   min-width: 280px;
   max-width: 350px;
+  opacity: ${props => props.status === 'locked' ? 0.65 : 1};
   
   @media (max-width: 768px) {
     min-width: 200px;
@@ -113,6 +114,12 @@ const IconContainer = styled.div`
   margin: 0 auto 1rem;
   font-size: 2.5rem;
   background-color: #F7F7F7;
+`;
+
+const LockIcon = styled.img`
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
 `;
 
 const BookTitle = styled.h3`
@@ -147,6 +154,10 @@ const ActionButton = styled.button`
   background: #DADADA;
   color: #9E9E9E;
   font-weight: 500;
+
+  &:disabled {
+    cursor: not-allowed;
+  }
   
   ${props => props.variant === 'continue' && `
     background: #2D7BED;
@@ -184,7 +195,7 @@ const BookCardComponent = ({ book, onSelect }) => {
         {book.level && <div style={{ fontSize: '12px', color: '#666', marginBottom: '0.5rem' }}>{book.level}</div>}
         
         <IconContainer color={book.iconColor}>
-          {book.icon}
+          {book.status === 'locked' ? <LockIcon src={lock} alt="잠금" /> : book.icon}
         </IconContainer>
         
         <BookTitle>{book.title}</BookTitle>
@@ -194,7 +205,7 @@ const BookCardComponent = ({ book, onSelect }) => {
       <div>
         <ActionButton 
           variant={getButtonVariant()}
-          onClick={() => onSelect(book.path)}
+          onClick={() => book.status !== 'locked' && onSelect(book.path)}
           disabled={book.status === 'locked'}
         >
           {getButtonText()}
@@ -313,16 +324,30 @@ function BookListPage({ user, login, setLogin }) {
       return [];
     }
 
+    const isBookCompleted = (book) => (
+      book.status === 'completed'
+      || book.progressStatus === 'completed'
+      || book.completed === true
+      || book.isCompleted === true
+    );
+
+    const currentBookIndex = apiBookList.findIndex((book) => !isBookCompleted(book));
+
     return apiBookList.map((book, index) => {
+      const status = isBookCompleted(book)
+        ? 'completed'
+        : index === currentBookIndex
+          ? 'in_progress'
+          : 'locked';
+
       // API 데이터 구조에 맞게 매핑
       const bookData = {
         id: book.id,
-        // title: book.title,
-        title: "레벨 1",
+        title: book.title,
         icon: "📚", // 기본 아이콘 설정
         path: `/book/chapter/${book.id}`, // 책 ID를 포함한 경로
         description: `재미있게 학습해보세요!`,
-        status: "in_progress" // 기본적으로 학습 가능한 상태로 설정
+        status
       };
 
       return bookData;

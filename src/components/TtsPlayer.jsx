@@ -29,6 +29,32 @@ export default function TtsPlayer({
   const [isPreloading, setIsPreloading] = useState(false);
   const [preloadError, setPreloadError] = useState(null);
   const preloadAudioRef = useRef([[], []]); // ref로 최신 preloadAudio 유지
+  const skippedPlaybackKeyRef = useRef(null);
+  const callbacksRef = useRef({ onPreloadDone, onTtsEnd });
+  const activeText = (isAnsweringPhase ? answers : sentences)[currentIndex] ?? '';
+
+  callbacksRef.current = { onPreloadDone, onTtsEnd };
+
+  const completeWithoutAudio = (reason, playbackKey) => {
+    const key = playbackKey ?? `${isAnsweringPhase ? 'answer' : 'question'}:${currentIndex}:${activeText}`;
+    if (skippedPlaybackKeyRef.current === key) return;
+
+    skippedPlaybackKeyRef.current = key;
+    console.warn(`TTS를 건너뛰고 학습을 계속합니다: ${reason}`);
+    callbacksRef.current.onPreloadDone?.();
+    callbacksRef.current.onTtsEnd?.();
+  };
+
+  // TTS 요청이나 재생 상태와 무관하게 학습 UI는 즉시 진행 가능하게 한다.
+  // 부모 컴포넌트의 상태 초기화 effect 이후에 실행되도록 다음 tick으로 넘긴다.
+  useEffect(() => {
+    const progressTimer = setTimeout(() => {
+      callbacksRef.current.onPreloadDone?.();
+      callbacksRef.current.onTtsEnd?.();
+    }, 0);
+
+    return () => clearTimeout(progressTimer);
+  }, [currentIndex, isAnsweringPhase, activeText]);
 
   // (1) 질문 문장 캐싱
   useEffect(() => {
@@ -74,6 +100,7 @@ export default function TtsPlayer({
         console.error("질문 문장 캐싱 중 에러:", e);
         setPreloadError(e.message);
         setIsPreloading(false);
+        completeWithoutAudio(e.message);
       });
   }, [sentences]);
 
@@ -150,6 +177,7 @@ export default function TtsPlayer({
         console.error("답변 문장 캐싱 중 에러:", e);
         setPreloadError(e.message);
         setIsPreloading(false);
+        completeWithoutAudio(e.message);
       });
   }, [answers]);
 
@@ -163,16 +191,19 @@ export default function TtsPlayer({
     const urlList = preloadAudioRef.current[phaseIndex];
     if (!urlList || urlList.length === 0) {
       console.warn("URL 리스트가 비어있습니다:", { phaseIndex, urlList });
+      completeWithoutAudio("재생할 음성 데이터가 없습니다");
       return;
     }
     if (currentIndex < 0 || currentIndex >= urlList.length) {
       console.warn("currentIndex가 범위를 벗어났습니다:", { currentIndex, urlListLength: urlList.length });
+      completeWithoutAudio("재생할 문장 인덱스를 찾을 수 없습니다");
       return;
     }
 
     const urlToPlay = urlList[currentIndex];
     if (!urlToPlay) {
       console.warn("URL이 없습니다:", { phaseIndex, currentIndex, urlListLength: urlList.length });
+      completeWithoutAudio("음성 URL이 없습니다");
       return;
     }
 
@@ -182,6 +213,7 @@ export default function TtsPlayer({
     // Blob URL이 유효한지 확인 (URL이 blob:으로 시작하는지 확인)
     if (!urlToPlay.startsWith('blob:')) {
       console.error("유효하지 않은 Blob URL:", urlToPlay);
+      completeWithoutAudio("음성 URL이 유효하지 않습니다");
       return;
     }
 
@@ -200,6 +232,7 @@ export default function TtsPlayer({
       // URL이 여전히 유효한지 다시 확인
       if (!urlToPlay || !urlToPlay.startsWith('blob:')) {
         console.error("URL이 유효하지 않음:", urlToPlay);
+        completeWithoutAudio("음성 URL이 만료되었습니다");
         return;
       }
 
@@ -212,6 +245,7 @@ export default function TtsPlayer({
         }).catch((e) => {
           console.error("재생 오류:", e);
           console.error("실패한 URL:", urlToPlay);
+          completeWithoutAudio(e.message || "음성을 재생할 수 없습니다");
         });
         if (handleCanPlay) audio.removeEventListener("canplay", handleCanPlay);
         if (handleError) audio.removeEventListener("error", handleError);
@@ -222,6 +256,7 @@ export default function TtsPlayer({
         console.error("실패한 URL:", urlToPlay);
         console.error("오디오 네트워크 상태:", audio.networkState);
         console.error("오디오 준비 상태:", audio.readyState);
+        completeWithoutAudio("음성을 불러올 수 없습니다");
         if (handleCanPlay) audio.removeEventListener("canplay", handleCanPlay);
         if (handleError) audio.removeEventListener("error", handleError);
       };
@@ -235,6 +270,7 @@ export default function TtsPlayer({
         audio.load();
       } catch (error) {
         console.error("오디오 src 설정 오류:", error);
+        completeWithoutAudio(error.message || "음성을 설정할 수 없습니다");
         if (handleCanPlay) audio.removeEventListener("canplay", handleCanPlay);
         if (handleError) audio.removeEventListener("error", handleError);
     }

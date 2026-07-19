@@ -248,9 +248,9 @@ function StudyPage({ user, login, setLogin }){
                 const data = await fetchChapters(chapterData.bookId);
                 console.log("🔍 챕터 리스트 데이터:", data);
                 
-                // API 응답 구조: data.data.chapterList.content[0].chapterId
-                if (data && data.data && data.data.chapterList && Array.isArray(data.data.chapterList.content)) {
-                    const chapters = data.data.chapterList.content;
+                // API 응답 구조: data.data.chapterList[0].chapterId
+                if (Array.isArray(data?.data?.chapterList)) {
+                    const chapters = data.data.chapterList;
                     if (chapters.length > 0) {
                         const firstChapterId = chapters[0].chapterId;
                         const currentChapterId = chapterData.chapterId;
