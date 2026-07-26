@@ -1,12 +1,11 @@
 import api from '../login/axiosInstance';
 
-export async function fetchCurrentSituation(page = 0) {
+export async function fetchCurrentSituation() {
   const response = await api.get('/api/current-situation', {
-    params: { page },
     withCredentials: true,
     skipAuthRedirect: true,
   });
-  return response.data?.data; // expected to be a page object with content array
+  return response.data?.data;
 }
 
 export async function fetchQuizListByChapter(chapterId) {

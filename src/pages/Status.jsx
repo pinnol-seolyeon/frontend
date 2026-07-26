@@ -155,12 +155,12 @@ const Status = ({user, login, setLogin}) => {
     const load = async () => {
       try {
         // 두 API를 병렬로 호출
-        const [page, overallPercent] = await Promise.all([
-          fetchCurrentSituation(0),
+        const [currentSituations, overallPercent] = await Promise.all([
+          fetchCurrentSituation(),
           fetchTotalProgress()
         ]);
         
-        const list = Array.isArray(page?.content) ? page.content : [];
+        const list = Array.isArray(currentSituations) ? currentSituations : [];
 
         const mapped = list.map((item, idx) => ({
           id: item.chapterId || idx,

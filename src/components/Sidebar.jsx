@@ -10,6 +10,7 @@ import studyimg from '../assets/study.svg';
 import analyzeimg from '../assets/analysis.svg';
 import reviewimg from '../assets/review.svg';
 import statusimg from '../assets/status.svg';
+import paymentimg from '../assets/moneybag.svg';
 import sidebarOpened from '../assets/sidebar_opened.svg';
 import sidebarClosed from '../assets/sidebar_closed.svg';
 import { removeCookie } from '../utils/cookie';
@@ -190,9 +191,11 @@ const UserProfile = styled.div`
   gap: 0.75rem;
 `;
 
-const UserAvatar = styled.div`
+const UserAvatar = styled.button`
   width: 3.1rem;
   height: 3.1rem;
+  padding: 0;
+  border: 0;
   background-color: #D6EAFF;
   border-radius: 50%;
   display: flex;
@@ -201,6 +204,19 @@ const UserAvatar = styled.div`
   color: #2D7BED;
   font-size: 20px;
   font-weight: 700;
+  overflow: hidden;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 3px solid #478CEE;
+    outline-offset: 2px;
+  }
+`;
+
+const UserAvatarImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 const UserInfo = styled.div`
@@ -382,6 +398,12 @@ const MenuText = styled.div`
   display: ${props => props.collapsed ? 'none' : 'block'};
 `;
 
+const PaymentMenuItem = styled(MenuItem).attrs({ as: 'button', type: 'button' })`
+  width: 100%;
+  border: 0;
+  font: inherit;
+`;
+
 const BottomSection = styled.div`
   width: 100%;
 `;
@@ -526,8 +548,16 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
       navigate(targetPath);
     };
 
+    const handlePaymentClick = () => {
+      window.location.assign('http://localhost:8080/payment.html');
+    };
+
     const handleLogoClick = () => {
       navigate('/main');
+    };
+
+    const handleProfileClick = () => {
+      navigate('/mypage');
     };
 
     const isActive = (path) => {
@@ -586,8 +616,16 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
           {isUserReady && (
           <UserSection collapsed={collapsed}>
             <UserProfile>
-              <UserAvatar>
-                {user?.name?.[0] || ''}
+              <UserAvatar
+                type="button"
+                onClick={handleProfileClick}
+                aria-label="마이페이지로 이동"
+              >
+                {user?.profileImage ? (
+                  <UserAvatarImage src={user.profileImage} alt="" />
+                ) : (
+                  user?.name?.[0] || ''
+                )}
               </UserAvatar>
               <UserInfo collapsed={collapsed}>
                 <UserName>{user?.name || '홍길동'}</UserName>
@@ -629,6 +667,14 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
                 <MenuText collapsed={collapsed}>{item.text}</MenuText>
               </MenuItem>
             ))}
+            <PaymentMenuItem
+              collapsed={collapsed}
+              onClick={handlePaymentClick}
+              aria-label="결제 페이지로 이동"
+            >
+              <MenuIcon><img src={paymentimg} alt="" /></MenuIcon>
+              <MenuText collapsed={collapsed}>결제하기</MenuText>
+            </PaymentMenuItem>
           </NavigationMenu>
         </TopSection>
 

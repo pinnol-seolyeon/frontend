@@ -257,9 +257,9 @@ function ChapterPage({ user, login, setLogin }) {
         console.log("📚 Data type:", typeof data);
         console.log("📚 Is array:", Array.isArray(data));
         
-        // Handle the specific API response structure
-        if (data && data.data && data.data.chapterList && Array.isArray(data.data.chapterList.content)) {
-          setChapters(data.data.chapterList.content);
+        // Handle the chapter list API response structure
+        if (Array.isArray(data?.data?.chapterList)) {
+          setChapters(data.data.chapterList);
           setCurrentChapterId(data.data.currentChapterId);
           setCurrentLevel(data.data.currentLevel); // currentLevel 저장
           setIsAvailable(data.data.isAvailable !== undefined ? data.data.isAvailable : true); // isAvailable 저장
