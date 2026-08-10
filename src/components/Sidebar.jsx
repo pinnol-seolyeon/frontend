@@ -549,7 +549,7 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
     };
 
     const handlePaymentClick = () => {
-      navigate('/payment');
+      navigate('/payment/product');
     };
 
     const handleLogoClick = () => {
