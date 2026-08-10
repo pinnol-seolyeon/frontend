@@ -549,7 +549,7 @@ function Sidebar({ login, text, setLogin, userProgress, user, pageInfo, defaultC
     };
 
     const handlePaymentClick = () => {
-      window.location.assign('http://localhost:8080/payment.html');
+      navigate('/payment');
     };
 
     const handleLogoClick = () => {
