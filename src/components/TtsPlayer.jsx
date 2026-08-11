@@ -27,7 +27,6 @@ export default function TtsPlayer({
   const audioRef = useRef(null);
   const [preloadAudio, setPreloadAudio] = useState([[], []]);
   const [isPreloading, setIsPreloading] = useState(false);
-  const [preloadError, setPreloadError] = useState(null);
   const preloadAudioRef = useRef([[], []]); // ref로 최신 preloadAudio 유지
   const skippedPlaybackKeyRef = useRef(null);
   const callbacksRef = useRef({ onPreloadDone, onTtsEnd });
@@ -61,7 +60,6 @@ export default function TtsPlayer({
     if (!sentences.length) return;
 
     setIsPreloading(true);
-    setPreloadError(null);
 
     Promise.all(
       sentences.map(async (text) => {
@@ -98,7 +96,6 @@ export default function TtsPlayer({
       })
       .catch((e) => {
         console.error("질문 문장 캐싱 중 에러:", e);
-        setPreloadError(e.message);
         setIsPreloading(false);
         completeWithoutAudio(e.message);
       });
@@ -125,7 +122,6 @@ export default function TtsPlayer({
     }
 
     setIsPreloading(true);
-    setPreloadError(null);
 
     // 이전 답변 URL들 정리 (질문 URL은 유지)
     setPreloadAudio((prev) => {
@@ -175,7 +171,6 @@ export default function TtsPlayer({
       })
       .catch((e) => {
         console.error("답변 문장 캐싱 중 에러:", e);
-        setPreloadError(e.message);
         setIsPreloading(false);
         completeWithoutAudio(e.message);
       });
@@ -341,11 +336,6 @@ export default function TtsPlayer({
       <audio ref={audioRef} style={style} controls={!style?.display} />
       {isPreloading && (
         <p style={{ textAlign: "center", color: "#555" }}>
-        </p>
-      )}
-      {preloadError && (
-        <p style={{ textAlign: "center", color: "red" }}>
-          캐싱 오류: {preloadError}
         </p>
       )}
       {/* {!autoPlay && (

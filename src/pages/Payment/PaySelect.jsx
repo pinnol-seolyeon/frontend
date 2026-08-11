@@ -396,7 +396,7 @@ function PaySelect({ user }) {
   const [selectAll, setSelectAll] = useState(true);
   const [selected, setSelected] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const productPrice = 10000;
+  const productPrice = 30000;
   const displayQuantity = selected ? quantity : 0;
   const totalPrice = productPrice * displayQuantity;
 

@@ -692,7 +692,7 @@ function Pay({ user }) {
   
   // PaySelect에서 전달받은 정보 또는 기본값
   const quantity = location.state?.quantity || 1;
-  const productPrice = location.state?.productPrice || 10000;
+  const productPrice = location.state?.productPrice || 30000;
   const totalPrice = location.state?.totalPrice || (productPrice * quantity);
 
   // 주문자 정보 가져오기

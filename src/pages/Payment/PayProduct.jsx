@@ -154,7 +154,7 @@ function PayProduct() {
             >
               <ProductTitle>OOO</ProductTitle>
               <ProductSubTitle>- 1개월 권 -</ProductSubTitle>
-              <ProductPrice>₩ 10,000</ProductPrice>
+              <ProductPrice>₩ 30,000</ProductPrice>
             </ProductContent>
 
             <NextButton 
@@ -169,4 +169,3 @@ function PayProduct() {
 }
 
 export default PayProduct;
-
