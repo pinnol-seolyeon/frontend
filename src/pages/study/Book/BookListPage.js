@@ -331,14 +331,25 @@ function BookListPage({ user, login, setLogin }) {
       || book.isCompleted === true
     );
 
-    const sortedBookList = [...apiBookList].sort((a, b) => {
-      const aLevel = Number(a.bookLevel);
-      const bLevel = Number(b.bookLevel);
-      const normalizedALevel = Number.isFinite(aLevel) ? aLevel : Number.POSITIVE_INFINITY;
-      const normalizedBLevel = Number.isFinite(bLevel) ? bLevel : Number.POSITIVE_INFINITY;
+    const getBookLevel = (book) => {
+      const value = book.bookLevel;
 
-      return normalizedALevel - normalizedBLevel;
-    });
+      if (value === null || value === undefined || String(value).trim() === '') {
+        return Number.POSITIVE_INFINITY;
+      }
+
+      const numericLevel = Number(value);
+      if (Number.isFinite(numericLevel)) {
+        return numericLevel;
+      }
+
+      const levelMatch = String(value).match(/-?\d+(?:\.\d+)?/);
+      return levelMatch ? Number(levelMatch[0]) : Number.POSITIVE_INFINITY;
+    };
+
+    const sortedBookList = [...apiBookList].sort(
+      (a, b) => getBookLevel(a) - getBookLevel(b)
+    );
 
     const currentBookIndex = sortedBookList.findIndex((book) => !isBookCompleted(book));
 
