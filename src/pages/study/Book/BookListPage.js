@@ -331,9 +331,18 @@ function BookListPage({ user, login, setLogin }) {
       || book.isCompleted === true
     );
 
-    const currentBookIndex = apiBookList.findIndex((book) => !isBookCompleted(book));
+    const sortedBookList = [...apiBookList].sort((a, b) => {
+      const aLevel = Number(a.bookLevel);
+      const bLevel = Number(b.bookLevel);
+      const normalizedALevel = Number.isFinite(aLevel) ? aLevel : Number.POSITIVE_INFINITY;
+      const normalizedBLevel = Number.isFinite(bLevel) ? bLevel : Number.POSITIVE_INFINITY;
 
-    return apiBookList.map((book, index) => {
+      return normalizedALevel - normalizedBLevel;
+    });
+
+    const currentBookIndex = sortedBookList.findIndex((book) => !isBookCompleted(book));
+
+    return sortedBookList.map((book, index) => {
       const status = isBookCompleted(book)
         ? 'completed'
         : index === currentBookIndex
