@@ -181,48 +181,54 @@ function PayHome({ user, login, setLogin }) {
             </RightCell>
           </TableRow>
 
-          {/* 5행: 전화, 빈 열, 빈 열, 통신판매업신고번호, 2023-0000-1111 */}
+          {/* 5행: 전화, 고객센터 전화번호, 빈 열, 통신판매업신고번호, 신고번호 */}
           <TableRow>
             <LeftCell>
               <LeftText>전화</LeftText>
             </LeftCell>
-            <LeftCell></LeftCell>
+            <LeftCell>
+              <RightValue>010-9562-2930</RightValue>
+            </LeftCell>
             <LeftCell></LeftCell>
             <RightCell>
               <RightLabel>통신판매업신고번호</RightLabel>
             </RightCell>
             <RightCell>
-              <RightValue>2023-0000-1111</RightValue>
+              <RightValue>2025-서울용산-1252</RightValue>
             </RightCell>
           </TableRow>
 
-          {/* 6행: 이메일, 빈 열, 빈 열, 사업장주소, 서울시 00구 0000 */}
+          {/* 6행: 이메일, 고객센터 이메일, 빈 열, 사업장주소, 주소 */}
           <TableRow>
             <LeftCell>
               <LeftText>이메일</LeftText>
             </LeftCell>
-            <LeftCell></LeftCell>
+            <LeftCell>
+              <RightValue>seolyeon_edu@naver.com</RightValue>
+            </LeftCell>
             <LeftCell></LeftCell>
             <RightCell>
               <RightLabel>사업장주소</RightLabel>
             </RightCell>
             <RightCell>
-              <RightValue>서울시 00구 0000</RightValue>
+              <RightValue>서울특별시 용산구 청파로47길 90, B101</RightValue>
             </RightCell>
           </TableRow>
 
-          {/* 7행: 민원접수, 빈 열, 빈 열, 유선전화번호, 010-9562-2930 */}
+          {/* 7행: 민원접수, 민원접수 전화번호, 빈 열, 전화번호, 전화번호 */}
           <TableRow>
             <LeftCell>
               <LeftText>민원접수</LeftText>
             </LeftCell>
-            <LeftCell></LeftCell>
+            <LeftCell>
+              <RightValue>010-8288-2671</RightValue>
+            </LeftCell>
             <LeftCell></LeftCell>
             <RightCell>
               <RightLabel>전화번호</RightLabel>
             </RightCell>
             <RightCell>
-              <RightValue>010-8288-2671</RightValue>
+              <RightValue>010-9562-2930</RightValue>
             </RightCell>
           </TableRow>
         </tbody>
@@ -232,4 +238,3 @@ function PayHome({ user, login, setLogin }) {
 }
 
 export default PayHome;
-
