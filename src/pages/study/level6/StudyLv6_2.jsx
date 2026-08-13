@@ -15,8 +15,8 @@ import hoppin from "../../../assets/hopin.svg";
 
 /*학습하기-6단계-2*/
 
-const LEVEL_6_INTRO = "오늘 배운 내용을 바탕으로 가족들과 함께 이야기 나눌 수 있는 주제를 한 가지 준비했어요.";
-const LEVEL_6_OUTRO = "정답은 없어요. 오늘 배운 내용을 떠올리면서 가족들의 생각도 들어보세요! 😊";
+const LEVEL_6_INTRO = "오늘 배운 내용을 바탕으로 가족들과 함께 이야기 나눌 수 있는 주제를 한 가지 준비했어.";
+const LEVEL_6_OUTRO = "정답은 없어. 오늘 배운 내용을 떠올리면서 가족들의 생각도 들어봐! 😊";
 
 const Wrapper=styled.div`
     width:100%;
