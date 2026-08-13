@@ -15,6 +15,9 @@ import hoppin from "../../../assets/hopin.svg";
 
 /*학습하기-6단계-2*/
 
+const LEVEL_6_INTRO = "오늘 배운 내용을 바탕으로 가족들과 함께 이야기 나눌 수 있는 주제를 한 가지 준비했어요.";
+const LEVEL_6_OUTRO = "정답은 없어요. 오늘 배운 내용을 떠올리면서 가족들의 생각도 들어보세요! 😊";
+
 const Wrapper=styled.div`
     width:100%;
     min-height:100vh;
@@ -338,7 +341,15 @@ function StudyLevel6_2({ user, login, setLogin }){
                                         wordBreak: 'keep-all',
                                         whiteSpace: 'pre-line'
                                     }}>
-                                        {topic}
+                                        <div>{LEVEL_6_INTRO}</div>
+                                        <div style={{
+                                            margin: '1.5rem 0',
+                                            fontWeight: '600',
+                                            color: '#478CEE'
+                                        }}>
+                                            {topic}
+                                        </div>
+                                        <div>{LEVEL_6_OUTRO}</div>
                                     </div>
                                 )}
                             </TextBox>

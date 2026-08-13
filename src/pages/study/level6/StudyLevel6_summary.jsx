@@ -19,6 +19,9 @@ import questionIcon from "../../../assets/question_icon.svg";
 
 /*학습하기-6단계-요약*/
 
+const LEVEL_5_INTRO = "오늘 무엇을 배웠는지 기억나나요? 😊 지금부터 오늘 배운 내용에서 꼭 기억해야 할 핵심 포인트를 하나씩 살펴볼게요!";
+const LEVEL_5_OUTRO = "오늘 배운 내용, 이제 잘 정리됐나요? 😊 중요한 내용은 꼭 기억해 두세요. 그리고 오늘 배운 것을 우리 생활에서는 어떻게 활용할 수 있을지 생각해 보는 것도 좋아요!";
+
 const Wrapper=styled.div`
     width:100%;
     min-height:100vh;
@@ -321,9 +324,17 @@ function StudyPage({ user, login, setLogin }){
                         .flat();
                     console.log("🐋분할된 최종 문장 배열:", splitSentences);
 
-                    setSentences(splitSentences);
+                    setSentences([
+                        LEVEL_5_INTRO,
+                        ...splitSentences,
+                        LEVEL_5_OUTRO,
+                    ]);
                 } else {
-                    setSentences(["요약 내용이 없습니다."]);
+                    setSentences([
+                        LEVEL_5_INTRO,
+                        "요약 내용이 없습니다.",
+                        LEVEL_5_OUTRO,
+                    ]);
                 }
                 
                 setCurrentIndex(0);
