@@ -991,7 +991,7 @@ function Pay({ user }) {
                 <img src={productImage} />
             </ProductImage>
             <ProductDetails>
-              <ProductName>커리큘럼 이름</ProductName>
+              <ProductName>핀놀 6단계 금융성장 커리큘럼</ProductName>
               <TagWrapper>
                 <TagContent>
                     <TagMust>필수</TagMust>
